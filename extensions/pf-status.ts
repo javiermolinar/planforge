@@ -1,7 +1,7 @@
 const GATE_STATE_ENTRY_TYPE = "planforge-approval-gate-state";
 const WIDGET_KEY = "planforge-dashboard";
 
-const EXECUTION_MODES = new Set(["auto", "supervised", "fast"]);
+const EXECUTION_MODES = new Set(["auto", "supervised", "fast", "none"]);
 
 function normalizeExecutionMode(value) {
   const normalized = String(value || "").trim().toLowerCase();
@@ -11,6 +11,7 @@ function normalizeExecutionMode(value) {
 const DEFAULT_GATE_STATE = {
   enabled: false,
   approved: false,
+  approvalConsumed: false,
   scopeVersion: 0,
   executionMode: "auto",
 };
@@ -22,6 +23,7 @@ function normalizeGateState(raw) {
   return {
     enabled: Boolean(raw.enabled),
     approved: Boolean(raw.approved),
+    approvalConsumed: Boolean(raw.approvalConsumed),
     scopeVersion: Math.max(0, scopeVersion),
     executionMode: normalizeExecutionMode(raw.executionMode),
   };
@@ -31,6 +33,9 @@ function gateStatusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
   if (!state.enabled) return `PF gate: off${modeLabel}`;
+  if (state.approved && state.approvalConsumed) {
+    return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}), awaiting /pf-continue`;
+  }
   if (state.approved) return `PF gate: approved (scope v${state.scopeVersion}${modeLabel})`;
   return `PF gate: waiting approval (scope v${state.scopeVersion}${modeLabel})`;
 }
@@ -47,8 +52,10 @@ function buildStatusLines(gateState) {
     `Updated: ${now}`,
     "",
     "Commands:",
-    "- /pf-continue (approve current supervised scope)",
+    "- /pf-continue (approve next supervised mutating checkpoint)",
     "- /pf-status (open this panel)",
+    "",
+    "Each /pf-continue grants one mutating checkpoint.",
     "",
     "Task checklist commands were removed.",
     "Use the rolling plan file for task tracking.",

@@ -28,7 +28,7 @@ Start with:
 /skill:planforge
 ```
 
-`/skill:planforge` is supervised by default (propose one action, then use `/pf-continue` to approve and execute it).
+`/skill:planforge` is supervised by default (propose one mutating checkpoint, then use `/pf-continue` to approve and execute that checkpoint).
 
 If you prefer faster unsupervised execution, use:
 
@@ -59,9 +59,11 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 
 Planforge includes a lightweight stateful approval gate for Pi:
 
-- Auto-enables when you start with `/skill:planforge` or `/skill:forge-*`.
-- In supervised mode, use `/pf-continue` to approve and execute the currently proposed action.
+- Auto-enables when you start with `/skill:planforge` or mutating `forge-*` workflows.
+- In supervised mode, use `/pf-continue` to approve and execute the currently proposed mutating checkpoint (phase/task boundary).
+- Each `/pf-continue` grants one mutating checkpoint, not per-command approvals within that checkpoint.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
+- In `/skill:forge-investigate`, the gate stays off for read-only investigation (no `/pf-continue` needed).
 - Before `/pf-continue`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).
 - Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval.
 - Use `/pf-status` for a right-side overlay panel with current state on demand.

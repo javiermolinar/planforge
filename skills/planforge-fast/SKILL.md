@@ -5,7 +5,7 @@ description: Fast front door for implementation work. Keeps planning discipline 
 
 # Orchestrator (Fast / Unsupervised)
 
-Use this skill when speed is prioritized and the user accepts reduced per-action oversight.
+Use this skill when speed is prioritized and the user accepts reduced checkpoint-level oversight.
 
 ## Rules
 
@@ -38,7 +38,7 @@ If constraints change after approval, re-plan and re-request approval.
 
 ## Unsupervised execution mode
 
-After scope approval, this skill executes steps directly (no per-action approval loop).
+After scope approval, this skill executes steps directly (no checkpoint approval loop).
 
 - Keep user updates concise at meaningful checkpoints.
 - Surface scope drift immediately.

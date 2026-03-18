@@ -56,8 +56,8 @@ Planforge should then:
 3. get explicit scope approval
 4. create a semantic branch if needed
 5. create a rolling plan
-6. propose one action at a time and wait for `/pf-continue`
-7. verify each meaningful step
+6. propose one implementation checkpoint at a time and wait for `/pf-continue`
+7. execute bounded work for that checkpoint and verify each meaningful step
 8. suggest a fresh-context review before completion
 
 ## Quickstart
@@ -84,15 +84,17 @@ Use `-l` only if you want a project-local install for the current repo.
 
 | Mode | Start command | Best for | Behavior |
 |---|---|---|---|
-| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one action at a time and wait for explicit `/pf-continue` before execution |
-| Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without per-action approvals after scope approval |
+| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one mutating checkpoint at a time and wait for explicit `/pf-continue` before executing that checkpoint |
+| Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without checkpoint approvals after scope approval |
 
 ### Supervised approvals (Pi)
 
 Planforge ships a lightweight approval gate extension:
 
 - In `/skill:planforge`, mutating tool calls are blocked until you send `/pf-continue`.
+- Each `/pf-continue` approves one mutating checkpoint (phase/task boundary), not every individual command inside it.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
+- In `/skill:forge-investigate`, the gate stays off for read-only investigation (no `/pf-continue` needed).
 - If scope changes after approval, the gate revokes approval and requires `/pf-continue` again.
 - Use `/pf-status` to open the right-side status overlay on demand.
 

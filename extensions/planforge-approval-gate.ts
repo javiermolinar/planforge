@@ -2,7 +2,7 @@ const STATE_ENTRY_TYPE = "planforge-approval-gate-state";
 
 const STATUS_KEY = "planforge-gate";
 
-const EXECUTION_MODES = new Set(["auto", "supervised", "fast"]);
+const EXECUTION_MODES = new Set(["auto", "supervised", "fast", "none"]);
 
 function normalizeExecutionMode(value) {
   const normalized = String(value || "").trim().toLowerCase();
@@ -12,6 +12,7 @@ function normalizeExecutionMode(value) {
 const DEFAULT_STATE = {
   enabled: false,
   approved: false,
+  approvalConsumed: false,
   scopeVersion: 0,
   approvedScopeVersion: 0,
   executionMode: "auto",
@@ -25,6 +26,7 @@ const TRIVIAL_ACK =
 
 const PLANFORGE_SUPERVISED_SKILL_CMD = /^\s*\/skill:planforge\b/i;
 const PLANFORGE_FAST_SKILL_CMD = /^\s*\/skill:planforge-fast\b/i;
+const PLANFORGE_INVESTIGATE_SKILL_CMD = /^\s*\/skill:forge-investigate\b/i;
 const FORGE_SKILL_CMD = /^\s*\/skill:forge-[a-z0-9-]+\b/i;
 const CONTROL_COMMAND = /^\s*\/[a-z0-9:-]+\b/i;
 
@@ -54,6 +56,12 @@ function isAllowedPreApprovalBash(command) {
   return segments.every((segment) => PRE_APPROVAL_BASH_ALLOWLIST.some((pattern) => pattern.test(segment)));
 }
 
+function isMutatingToolCall(event) {
+  const toolName = String(event?.toolName || "");
+  const bashCommand = String(event?.input?.command || "");
+  return toolName === "edit" || toolName === "write" || (toolName === "bash" && !isAllowedPreApprovalBash(bashCommand));
+}
+
 function normalizeState(raw) {
   if (!raw || typeof raw !== "object") return { ...DEFAULT_STATE };
   const state = raw;
@@ -65,6 +73,7 @@ function normalizeState(raw) {
   return {
     enabled: Boolean(state.enabled),
     approved: Boolean(state.approved),
+    approvalConsumed: Boolean(state.approvalConsumed),
     scopeVersion: Math.max(0, scopeVersion),
     approvedScopeVersion: Math.max(0, approvedScopeVersion),
     executionMode: normalizeExecutionMode(state.executionMode),
@@ -77,6 +86,9 @@ function statusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
   if (!state.enabled) return `PF gate: off${modeLabel}`;
+  if (state.approved && state.approvalConsumed) {
+    return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}), awaiting /pf-continue`;
+  }
   if (state.approved) return `PF gate: approved (scope v${state.scopeVersion}${modeLabel})`;
   return `PF gate: waiting approval (scope v${state.scopeVersion}${modeLabel})`;
 }
@@ -113,6 +125,7 @@ export default function (pi) {
       {
         enabled: true,
         approved: true,
+        approvalConsumed: false,
         scopeVersion: scope,
         approvedScopeVersion: scope,
       },
@@ -143,6 +156,7 @@ export default function (pi) {
       {
         enabled: true,
         approved: false,
+        approvalConsumed: false,
         scopeVersion: nextScope,
         approvedScopeVersion: 0,
       },
@@ -154,8 +168,18 @@ export default function (pi) {
   }
 
   function handleContinue(ctx) {
+    const mode = normalizeExecutionMode(state.executionMode);
+
+    if (mode === "none") {
+      ctx.ui.notify(
+        "Planforge is in investigation mode. /pf-continue is not needed for read-only investigation.",
+        "info"
+      );
+      return;
+    }
+
     if (!state.enabled) {
-      if (normalizeExecutionMode(state.executionMode) === "fast") {
+      if (mode === "fast") {
         ctx.ui.notify(
           "Planforge is in fast mode. Switch to /skill:planforge if you want supervised approvals.",
           "info"
@@ -167,9 +191,10 @@ export default function (pi) {
         {
           enabled: true,
           approved: false,
+          approvalConsumed: false,
           scopeVersion: Math.max(1, state.scopeVersion || 1),
           approvedScopeVersion: 0,
-          executionMode: normalizeExecutionMode(state.executionMode) === "auto" ? "supervised" : state.executionMode,
+          executionMode: mode === "auto" ? "supervised" : mode,
         },
         "continue-auto-enable",
         ctx,
@@ -179,6 +204,24 @@ export default function (pi) {
     }
 
     if (state.approved) {
+      if (state.approvalConsumed) {
+        const nextScope = Math.max(1, state.scopeVersion || 1) + 1;
+        setState(
+          {
+            enabled: true,
+            approved: true,
+            approvalConsumed: false,
+            scopeVersion: nextScope,
+            approvedScopeVersion: nextScope,
+          },
+          "continue-next-checkpoint",
+          ctx,
+          "success",
+          `Planforge gate approved for next mutating checkpoint (scope v${nextScope}).`
+        );
+        return;
+      }
+
       ctx.ui.notify(`Continue acknowledged (scope v${Math.max(1, state.scopeVersion || 1)}).`, "info");
       return;
     }
@@ -195,7 +238,7 @@ export default function (pi) {
   });
 
   pi.registerCommand("pf-continue", {
-    description: "Approve current Planforge scope and continue supervised execution",
+    description: "Approve current Planforge mutating checkpoint and continue supervised execution",
     handler: async (_args, ctx) => {
       handleContinue(ctx);
     },
@@ -213,6 +256,7 @@ export default function (pi) {
         {
           enabled: false,
           approved: false,
+          approvalConsumed: false,
           scopeVersion: 0,
           approvedScopeVersion: 0,
           executionMode: "fast",
@@ -230,6 +274,7 @@ export default function (pi) {
         {
           enabled: true,
           approved: false,
+          approvalConsumed: false,
           scopeVersion: Math.max(1, state.scopeVersion || 1),
           approvedScopeVersion: 0,
           executionMode: "supervised",
@@ -242,14 +287,33 @@ export default function (pi) {
       return { action: "continue" };
     }
 
+    if (PLANFORGE_INVESTIGATE_SKILL_CMD.test(text)) {
+      setState(
+        {
+          enabled: false,
+          approved: false,
+          approvalConsumed: false,
+          scopeVersion: 0,
+          approvedScopeVersion: 0,
+          executionMode: "none",
+        },
+        "switch-forge-investigate",
+        ctx,
+        "info",
+        "Investigation mode detected. Approval gate is off for read-only operations."
+      );
+      return { action: "continue" };
+    }
+
     if (!state.enabled && FORGE_SKILL_CMD.test(text) && normalizeExecutionMode(state.executionMode) !== "fast") {
       setState(
         {
           enabled: true,
           approved: false,
+          approvalConsumed: false,
           scopeVersion: 1,
           approvedScopeVersion: 0,
-          executionMode: normalizeExecutionMode(state.executionMode) === "auto" ? "supervised" : state.executionMode,
+          executionMode: "supervised",
         },
         "auto-enable-forge-skill",
         ctx,
@@ -263,9 +327,7 @@ export default function (pi) {
     }
 
     if (CONTINUE_APPROVAL.test(text)) {
-      if (!state.approved) {
-        approveCurrentScope(ctx, "continue-input", true);
-      }
+      handleContinue(ctx);
       return { action: "continue" };
     }
 
@@ -284,12 +346,32 @@ export default function (pi) {
     return { action: "continue" };
   });
 
-  pi.on("before_agent_start", async (event) => {
+  pi.on("before_agent_start", async (event, ctx) => {
+    const mode = normalizeExecutionMode(state.executionMode);
+
+    if (mode === "none") {
+      return {
+        systemPrompt: `${event.systemPrompt}\n\n[Planforge investigation mode]\nRead-only investigation is active. Do not call mutating tools (edit/write/mutating bash). If implementation is needed, ask to switch skills first.`,
+      };
+    }
+
     if (!state.enabled) return;
 
+    if (state.approved && state.approvalConsumed) {
+      setState(
+        {
+          approved: false,
+          approvalConsumed: false,
+          approvedScopeVersion: 0,
+        },
+        "checkpoint-approval-expired",
+        ctx
+      );
+    }
+
     const gateNote = state.approved
-      ? `Current scope v${state.scopeVersion} is approved. Mutating tools are allowed for this scope only.`
-      : `Current scope v${Math.max(1, state.scopeVersion || 1)} is NOT approved. Request /pf-continue before calling mutating tools.`;
+      ? `Current mutating checkpoint (scope v${state.scopeVersion}) is approved. Mutating tools are allowed for this checkpoint.`
+      : `Current mutating checkpoint (scope v${Math.max(1, state.scopeVersion || 1)}) is NOT approved. Request /pf-continue before calling mutating tools.`;
 
     return {
       systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.`,
@@ -297,24 +379,49 @@ export default function (pi) {
   });
 
   pi.on("tool_call", async (event, ctx) => {
-    if (!state.enabled || state.approved) {
+    const mode = normalizeExecutionMode(state.executionMode);
+    const toolName = String(event?.toolName || "");
+    const bashCommand = String(event?.input?.command || "");
+    const isMutatingCall = isMutatingToolCall(event);
+
+    if (mode === "none") {
+      if (isMutatingCall) {
+        const reason =
+          "Planforge investigate mode is read-only. Switch to /skill:planforge or /skill:planforge-fast before mutating tools.";
+        if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
+        return { block: true, reason };
+      }
       return;
     }
 
-    if (event?.toolName === "edit" || event?.toolName === "write") {
-      const reason = "Planforge gate blocked mutation: /pf-continue approval is required for current scope.";
+    if (!state.enabled) {
+      return;
+    }
+
+    if (state.approved) {
+      if (isMutatingCall && !state.approvalConsumed) {
+        setState(
+          {
+            approvalConsumed: true,
+          },
+          "checkpoint-mutation-seen",
+          ctx
+        );
+      }
+      return;
+    }
+
+    if (toolName === "edit" || toolName === "write") {
+      const reason = "Planforge gate blocked mutation: /pf-continue approval is required for current checkpoint.";
       if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
       return { block: true, reason };
     }
 
-    if (event?.toolName === "bash") {
-      const command = String(event?.input?.command || "");
-      if (!isAllowedPreApprovalBash(command)) {
-        const reason =
-          "Planforge gate blocked bash command before /pf-continue. Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd.";
-        if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
-        return { block: true, reason };
-      }
+    if (toolName === "bash" && !isAllowedPreApprovalBash(bashCommand)) {
+      const reason =
+        "Planforge gate blocked bash command before /pf-continue. Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd.";
+      if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
+      return { block: true, reason };
     }
   });
 }

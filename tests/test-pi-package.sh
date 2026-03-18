@@ -15,13 +15,21 @@ grep -q 'registerCommand("pf-continue"' extensions/planforge-approval-gate.ts
 grep -q 'registerCommand("pf-status"' extensions/pf-status.ts
 grep -q 'CONTINUE_APPROVAL' extensions/planforge-approval-gate.ts
 grep -q 'PLANFORGE_FAST_SKILL_CMD' extensions/planforge-approval-gate.ts
+grep -q 'PLANFORGE_INVESTIGATE_SKILL_CMD' extensions/planforge-approval-gate.ts
+grep -q 'approvalConsumed' extensions/planforge-approval-gate.ts
+grep -q 'checkpoint-mutation-seen' extensions/planforge-approval-gate.ts
+grep -q 'checkpoint-approval-expired' extensions/planforge-approval-gate.ts
+grep -q 'Each /pf-continue grants one mutating checkpoint.' extensions/pf-status.ts
+grep -q 'Investigation mode detected. Approval gate is off for read-only operations.' extensions/planforge-approval-gate.ts
 grep -q 'Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd.' extensions/planforge-approval-gate.ts
 grep -q 'pi install /absolute/path/to/planforge' README.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' README.md
 grep -q '/skill:planforge' README.md
 grep -q '/skill:planforge-fast' README.md
 grep -q '/pf-continue' README.md
+grep -q 'one mutating checkpoint' README.md
 grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
+grep -q 'gate stays off for read-only investigation' README.md
 grep -q 'PLANFORGE_HOME' README.md
 grep -q 'docs/tooling.md' README.md
 grep -q 'docs/releases.md' README.md
@@ -31,6 +39,8 @@ grep -q 'git push origin v' docs/releases.md
 test -f .github/workflows/ci.yml
 grep -q 'test-plan-scripts.sh' .github/workflows/ci.yml
 grep -q 'test-pi-package.sh' .github/workflows/ci.yml
+grep -q 'test-approval-gate-behavior.sh' .github/workflows/ci.yml
+test -x tests/test-approval-gate-behavior.sh
 test -f .github/workflows/release.yml
 grep -q 'tags:' .github/workflows/release.yml
 grep -q 'v\*' .github/workflows/release.yml
@@ -117,6 +127,8 @@ grep -q 'pi config' docs/pi.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' docs/pi.md
 grep -q '/skill:planforge-fast' docs/pi.md
 grep -q '/pf-continue' docs/pi.md
+grep -q 'grants one mutating checkpoint' docs/pi.md
+grep -q 'gate stays off for read-only investigation' docs/pi.md
 grep -q 'PLANFORGE_HOME' docs/tooling.md
 grep -q 'scorecard-init' docs/tooling.md
 grep -q 'plan-next-init' docs/tooling.md

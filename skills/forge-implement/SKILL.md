@@ -26,28 +26,29 @@ Use this after planning is approved and branch context is ready.
 
 ## Supervised implementation loop (when required)
 
-When running under supervised mode:
+When running under supervised mode, approve work by implementation task/checkpoint (not per command):
 
-1. Propose exactly one action with an id.
+1. Propose one implementation checkpoint with an id.
 2. Wait for explicit approval (`/pf-continue`).
-3. Execute only that approved action.
-4. Report result and propose the next single action.
+3. Execute the bounded commands needed to complete that checkpoint.
+4. Report result and propose the next checkpoint.
 
-Proposal format:
+Checkpoint proposal format:
 
 ```md
-Proposed action: I<n>
-- Tool: <read|bash|edit|write|...>
-- Command/Args: <exact command or concise args summary>
+Proposed checkpoint: I<n>
+- Task: <task id/title>
 - Mutating: <yes/no>
+- Planned operations: <short list of expected edits/commands>
 - Purpose: <why now>
-- Expected outcome: <what changes/what we learn>
+- Expected outcome: <what is complete when checkpoint ends>
 ```
 
 Rules:
 
-- Do not batch multiple tool calls under one approval.
-- If command/args change materially, issue a new id and re-request approval.
+- Do not request `/pf-continue` for purely read-only steps.
+- Do not bundle unrelated tasks into one checkpoint approval.
+- If task scope changes materially, issue a new id and re-request approval before further mutation.
 
 ## TDD gate (strict when required)
 
@@ -79,7 +80,7 @@ For write-path changes, implementation must preserve and report semantics from t
 - change made
 - verification attempted
 - TDD evidence status (red seen? green seen?) when required
-- approval status for last action (when supervised)
+- approval status for current checkpoint (when supervised)
 - follow-up risks or gaps
 
 ## Rolling plan updates

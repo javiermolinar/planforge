@@ -1,6 +1,6 @@
 ---
 name: planforge
-description: Supervised-by-default front door for implementation work. Plans first, challenges complexity, and requires explicit approval before each action.
+description: Supervised-by-default front door for implementation work. Plans first, challenges complexity, and requires explicit approval at phase/task checkpoints.
 ---
 
 # Orchestrator (Supervised Default)
@@ -21,7 +21,7 @@ Use this skill for normal build/change/fix work when safety and operator control
 - Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
 - Keep an explicit 80/20 tactical-to-strategic split: most effort ships the requested change, while a strategic slice improves maintainability and reduces future complexity.
 - Apply the broken window rule: if you touch an area with obvious quality debt, either fix at least one small local issue now or log it explicitly in backlog/checkpoints.
-- This skill is **supervised by default**: propose one action, wait for explicit approval, execute one action.
+- This skill is **supervised by default**: request explicit approval at mutating checkpoints (phase transitions and implementation-task boundaries), not for every individual command.
 
 ## Scope approval gate (non-negotiable)
 
@@ -44,7 +44,7 @@ If requirements/constraints change after approval, approval is invalidated. Re-p
 
 ## Required pre-mutation checklist
 
-Before the first mutating action in the current scope, print:
+Before starting a mutating checkpoint in the current scope, print:
 
 ```md
 Pre-mutation gate:
@@ -54,37 +54,39 @@ Pre-mutation gate:
 - Runtime/harness gate allows mutation now? [yes/no]
 - TDD required for this scope? [yes/no]
 - If TDD required: failing test reproduced before production edits? [yes/no]
-- Next action mutates repo? [yes/no]
+- Next checkpoint includes repo mutation? [yes/no]
 ```
 
 If any answer blocks mutation, stop and request approval.
 
-## Supervised action loop (default)
+## Supervised checkpoint loop (default)
 
-After scope approval, run one-step-at-a-time:
+After scope approval, run by checkpoint instead of per-command approvals.
 
-1. Propose exactly one next action with an id.
-2. Wait for explicit approval (`/pf-continue`).
-3. Execute only that approved action.
-4. Report result succinctly.
-5. Propose the next single action.
+Approval checkpoints are:
+- plan -> implementation transition (first mutating phase)
+- each implementation task boundary (before starting a task with mutations)
+- any material scope change or strategy change
 
-Proposal format:
+Within an approved checkpoint, execute the bounded set of commands needed to complete that checkpoint.
+
+Checkpoint proposal format:
 
 ```md
-Proposed action: A<n>
-- Tool: <read|bash|edit|write|...>
-- Command/Args: <exact command or concise args summary>
+Proposed checkpoint: C<n>
+- Phase/Task: <phase name or task id/title>
 - Mutating: <yes/no>
+- Planned operations: <short list of expected commands/edits>
 - Purpose: <why now>
-- Expected outcome: <what we learn/change>
+- Expected outcome: <what will be complete when this checkpoint ends>
 ```
 
 Rules:
 
-- Do not batch multiple tool calls under one approval.
-- If command/args change materially, issue a new action id and re-request approval.
-- If user says reject, propose a revised action.
+- Do not ask for `/pf-continue` for purely read-only investigation steps.
+- Do not bundle unrelated phases/tasks into one checkpoint approval.
+- If checkpoint scope changes materially, issue a new checkpoint id and re-request approval.
+- If user says reject, propose a revised checkpoint.
 
 ## Skill handoff checkpoint
 
@@ -112,7 +114,7 @@ Then load that skill and follow it.
 11. Create rolling branch plan with `../../scripts/plan-init`.
 12. Emit explicit skill handoff line.
 13. Invoke the next skill.
-14. Enter supervised action loop (propose → approve → execute one action).
+14. Enter supervised checkpoint loop (propose checkpoint → approve → execute bounded work).
 
 Flow guardrails:
 

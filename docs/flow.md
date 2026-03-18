@@ -8,7 +8,7 @@ Planforge is opinionated:
 - prefer the simpler path
 - stay single-agent by default
 - suggest multiagent or worktrees only when worth the overhead
-- use supervised execution by default via `/skill:planforge` (propose one action, wait approval, execute one action)
+- use supervised execution by default via `/skill:planforge` (propose one mutating checkpoint, wait approval, execute bounded checkpoint work)
 
 ## Design philosophy
 
@@ -26,12 +26,13 @@ Use `docs/philosophy.md` as the source of truth for:
 ## Execution modes
 
 - `planforge` (default): supervised mode for serious development workflows.
-  - one action proposal at a time
-  - explicit approval (`/pf-continue`) before execution
+  - one mutating checkpoint proposal at a time (phase/task boundary)
+  - explicit approval (`/pf-continue`) before executing that checkpoint
+  - each `/pf-continue` grants one mutating checkpoint (not per command)
   - scope changes trigger re-planning and re-approval
 - `planforge-fast`: unsupervised mode when speed is prioritized.
   - still requires scope approval before non-trivial mutation
-  - no per-action approval loop after scope approval
+  - no checkpoint approval loop after scope approval
   - recommend switching back to supervised mode if risk grows
 
 ## Branch policy

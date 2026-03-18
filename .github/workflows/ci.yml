@@ -17,3 +17,6 @@ jobs:
 
       - name: Run Pi package smoke tests
         run: bash tests/test-pi-package.sh
+
+      - name: Run approval gate behavior tests
+        run: bash tests/test-approval-gate-behavior.sh
