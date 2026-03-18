@@ -18,6 +18,7 @@ It favors:
 - best-effort verification with honest reporting
 - fresh-context review for riskier work
 - lightweight rolling plans instead of heavyweight specs
+- explicit complexity checks: change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns
 
 ## Example
 

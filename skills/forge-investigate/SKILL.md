@@ -22,6 +22,15 @@ Use this skill when the first job is understanding reality.
 - unknowns or risks
 - recommended next step
 
+## Complexity mapping
+
+When relevant, map:
+
+- dependency surface
+- hidden control flow
+- unclear ownership or boundaries
+- unknown unknowns that should become explicit risks, questions, or tests
+
 ## Guardrails
 
 - Prefer local repo evidence over external summaries.

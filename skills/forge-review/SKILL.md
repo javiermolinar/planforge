@@ -20,6 +20,18 @@ Use this in a fresh context window when work is large enough or risky enough to 
 - regressions
 - maintainability
 - missing test coverage
+- complexity impact
+
+## Complexity review
+
+Review whether the change increased:
+
+- change amplification
+- cognitive load
+- dependency surface
+- obscurity
+
+Call out when a change spreads one behavior across too many places, hides simple behavior behind indirection, or introduces dependencies without enough payoff.
 
 ## Output
 

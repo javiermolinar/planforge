@@ -9,6 +9,23 @@ Planforge is opinionated:
 - stay single-agent by default
 - suggest multiagent or worktrees only when worth the overhead
 
+## Design philosophy
+
+Planforge treats complexity as the main enemy.
+
+Good changes:
+- reduce change amplification
+- reduce cognitive load
+- reduce dependency surface
+- reduce obscurity
+- turn unknown unknowns into explicit risks, questions, or tests
+
+Bad changes:
+- spread one behavior across too many places
+- increase the amount a reader must keep in mind
+- add dependencies without enough leverage
+- hide behavior behind indirection, vague naming, or unclear ownership
+
 ## Branch policy
 
 - On `main` / `master` / trunk-like branches, non-trivial implementation should move to a new branch after plan approval.
@@ -26,6 +43,11 @@ Each plan contains:
 - test table
 - backlog
 - checkpoints
+
+The planning process should also surface:
+- a complexity check
+- dependencies
+- obscurity and unknowns
 
 Plan files use managed section markers so shell helpers can update them cheaply and predictably. Use `plan-list` to discover saved plans across repos and branches. Use `plan-branch-name` when you want deterministic semantic branch naming without spending extra tokens formatting a slug.
 

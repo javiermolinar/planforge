@@ -15,6 +15,7 @@ Use this before claiming something is fixed, done, or ready.
 - State what was not verified.
 - Do not overstate confidence.
 - For external API or networked tools, explicitly ask whether verification covered timeout handling, malformed external payload handling, and at least one automated failure-path test.
+- Call out remaining complexity risk explicitly: unresolved change amplification, cognitive load, dependency surface, obscurity, or unknown unknowns.
 
 ## Output
 
@@ -22,3 +23,4 @@ Use this before claiming something is fixed, done, or ready.
 - results
 - remaining uncertainty
 - missing network-hardening checks, if any
+- unresolved complexity risks, if any

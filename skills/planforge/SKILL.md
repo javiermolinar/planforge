@@ -15,6 +15,8 @@ Use this skill for normal build/change/fix work.
 - Do not silently widen scope.
 - Single-agent by default.
 - Suggest multiagent or worktrees only when clearly justified.
+- Treat complexity as the main enemy: explicitly reason about change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns.
+- Prefer plans that reduce the number of places a future change must touch and make hidden behavior more visible.
 
 ## Flow
 
