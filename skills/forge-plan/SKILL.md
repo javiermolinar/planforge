@@ -37,6 +37,17 @@ Use this after the direction is clear and implementation is likely.
 
 Do not ask for plan approval until the Plan summary and Assumptions table are present.
 
+## Pushback / revision loop
+
+If the user pushes back, changes scope, or asks for plan adjustments after seeing a summary:
+
+- Re-post a revised **Plan summary** before anything else.
+- Include an updated **test table** in that same response.
+- Make the delta explicit (what changed vs prior summary).
+- Then continue with clarifications only after the revised summary is visible.
+
+Never continue toward implementation with a stale summary.
+
 ## Plan summary
 
 Provide a concise summary of:

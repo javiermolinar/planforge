@@ -436,7 +436,7 @@ export default function (pi) {
     return {
       systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}\n${policyReadOnlyHint(
         bashPolicy
-      )}\nIf scope changes, re-post plan + tests and request re-approval before mutating actions.`,
+      )}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.`,
     };
   });
 

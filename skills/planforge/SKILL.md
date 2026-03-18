@@ -67,6 +67,7 @@ If any answer blocks mutation, stop and request approval.
 Flow guardrails:
 - Steps 9-12 are forbidden until step 7 is completed for the current scope.
 - If scope changes at any point, return to step 5, update plan + test table, and request re-approval.
+- If the user pushes back on the plan, the next assistant response must re-show a revised plan summary + updated test table before any further discussion.
 
 ## Skill routing
 
