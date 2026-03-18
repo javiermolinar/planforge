@@ -1,5 +1,7 @@
 # Planforge
 
+![Planforge](./forge.png)
+
 Planforge is a lightweight, harness-agnostic workflow for coding agents.
 
 It favors:
