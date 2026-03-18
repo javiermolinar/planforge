@@ -56,7 +56,7 @@ Planforge should then:
 3. get explicit scope approval
 4. create a semantic branch if needed
 5. create a rolling plan
-6. propose one action at a time and wait for `/continue`
+6. propose one action at a time and wait for `/pf-continue`
 7. verify each meaningful step
 8. suggest a fresh-context review before completion
 
@@ -84,19 +84,17 @@ Use `-l` only if you want a project-local install for the current repo.
 
 | Mode | Start command | Best for | Behavior |
 |---|---|---|---|
-| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one action at a time and wait for explicit `/continue` before execution |
+| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one action at a time and wait for explicit `/pf-continue` before execution |
 | Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without per-action approvals after scope approval |
 
 ### Supervised approvals (Pi)
 
 Planforge ships a lightweight approval gate extension:
 
-- In `/skill:planforge`, mutating tool calls are blocked until you send `/continue`.
+- In `/skill:planforge`, mutating tool calls are blocked until you send `/pf-continue` (legacy `/continue` alias still works).
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
-- If scope changes after approval, the gate revokes approval and requires `/continue` again.
-- A lightweight dashboard widget is always visible with gate status + top TODOs.
-- Use `/pf-todo` to manage checklist items (`add`, `done`, `undone`, `rm`, `clear`, `list`).
-- Use `/pf-overlay` to open a right-side overlay with full state + todo details.
+- If scope changes after approval, the gate revokes approval and requires `/pf-continue` again.
+- Use `/pf-status` to open the right-side status overlay on demand (`/pf-overlay` is an alias).
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
 

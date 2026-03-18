@@ -27,7 +27,7 @@ Use `docs/philosophy.md` as the source of truth for:
 
 - `planforge` (default): supervised mode for serious development workflows.
   - one action proposal at a time
-  - explicit approval (`/continue`) before execution
+  - explicit approval (`/pf-continue`, with legacy `/continue` alias) before execution
   - scope changes trigger re-planning and re-approval
 - `planforge-fast`: unsupervised mode when speed is prioritized.
   - still requires scope approval before non-trivial mutation
