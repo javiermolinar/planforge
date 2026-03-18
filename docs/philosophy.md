@@ -150,6 +150,24 @@ Each principle below uses the same structure:
 - micro-optimizations in non-dominant code paths
 - complexity introduced for hypothetical performance concerns
 
+## 9) Progress requires explicit acceptance
+
+**Statement**
+- Do not advance incremental delivery steps without explicit user acceptance.
+
+**Intent**
+- Prevent silent drift and ensure each increment matches user intent before moving forward.
+
+**Operational rule**
+- After each step/scenario result, request explicit acceptance.
+- If the user pushes back, revise the same step and re-validate before advancing.
+- Treat "accepted" as a completion criterion alongside technical verification.
+
+**Red flags**
+- advancing to the next step while feedback is unresolved
+- interpreting silence as approval
+- bundling multiple uncertain steps to avoid acceptance checks
+
 ## Linux interface example
 
 The Linux file interface is a good deep-module mental model: a small set of core calls provides access to substantial implementation complexity. The interface remains comparatively simple while complexity is hidden behind it.
@@ -167,3 +185,4 @@ Treat these as strict warnings in planning, implementation, and review:
 - premature optimization without measurement evidence
 - fancy algorithmic complexity where simpler code would suffice
 - weak data abstractions that leak internals to callers
+- advancing checkpoints without explicit user acceptance

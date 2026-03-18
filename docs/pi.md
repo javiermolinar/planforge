@@ -61,7 +61,8 @@ Planforge includes a lightweight stateful approval gate for Pi:
 
 - Auto-enables when you start with `/skill:planforge` or mutating `forge-*` workflows.
 - In supervised mode, use `/pf-continue` to approve and execute the currently proposed mutating checkpoint (phase/task boundary).
-- Each `/pf-continue` grants one mutating checkpoint, not per-command approvals within that checkpoint.
+- In supervised mutation flow, each `/pf-continue` grants one mutating checkpoint, not per-command approvals within that checkpoint.
+- If a scenario result is awaiting acceptance, `/pf-continue` records acceptance first; send it again to approve the next mutating checkpoint.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
 - In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf-continue` needed).
 - Before `/pf-continue`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).

@@ -88,7 +88,7 @@ Rules:
 - Do not bundle unrelated phases/tasks into one checkpoint approval.
 - If checkpoint scope changes materially, issue a new checkpoint id and re-request approval.
 - If user says reject, propose a revised checkpoint.
-- After each completed scenario/checkpoint, require explicit user satisfaction before advancing to the next scenario.
+- After each completed scenario/checkpoint, require explicit user satisfaction before advancing to the next scenario (in Pi supervised mode, `/pf-continue` can serve as explicit acceptance).
 - If user pushback indicates the scenario is not right, stay on the same scenario, propose a correction checkpoint, and do not advance.
 
 ## Skill handoff checkpoint

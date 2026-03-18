@@ -62,7 +62,8 @@ Planforge should then:
 5. create a rolling plan
 6. propose one implementation checkpoint at a time and wait for `/pf-continue`
 7. execute bounded work for that checkpoint and verify each meaningful step
-8. suggest a fresh-context review before completion
+8. wait for explicit user acceptance before advancing to the next scenario/checkpoint
+9. suggest a fresh-context review before completion
 
 ## Quickstart
 
@@ -96,7 +97,8 @@ Use `-l` only if you want a project-local install for the current repo.
 Planforge ships a lightweight approval gate extension:
 
 - In `/skill:planforge`, mutating tool calls are blocked until you send `/pf-continue`.
-- Each `/pf-continue` approves one mutating checkpoint (phase/task boundary), not every individual command inside it.
+- In supervised mutation flow, each `/pf-continue` approves one mutating checkpoint (phase/task boundary), not every individual command inside it.
+- If a scenario result is awaiting user acceptance, `/pf-continue` first records acceptance; send it again to approve the next mutating checkpoint.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
 - In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf-continue` needed).
 - If scope changes after approval, the gate revokes approval and requires `/pf-continue` again.

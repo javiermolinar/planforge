@@ -9,6 +9,13 @@ function normalizeExecutionMode(value) {
   return EXECUTION_MODES.has(normalized) ? normalized : "auto";
 }
 
+const ACCEPTANCE_STATES = new Set(["none", "awaiting", "accepted", "revise_requested"]);
+
+function normalizeAcceptanceState(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return ACCEPTANCE_STATES.has(normalized) ? normalized : "none";
+}
+
 const DEFAULT_STATE = {
   enabled: false,
   approved: false,
@@ -16,11 +23,14 @@ const DEFAULT_STATE = {
   scopeVersion: 0,
   approvedScopeVersion: 0,
   executionMode: "auto",
+  acceptanceState: "none",
+  pendingScopeAdvance: false,
   updatedAt: 0,
   lastReason: "init",
 };
 
 const CONTINUE_APPROVAL = /^\s*(\/?pf-continue)\s*[.!]*\s*$/i;
+const REQUEST_REVISION = /^\s*(needs? changes?|revise|not right|fix this)\s*[.!]*\s*$/i;
 const TRIVIAL_ACK =
   /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|pf-continue)\s*[.!]*\s*$/i;
 
@@ -95,6 +105,8 @@ function normalizeState(raw) {
     scopeVersion: Math.max(0, scopeVersion),
     approvedScopeVersion: Math.max(0, approvedScopeVersion),
     executionMode: normalizeExecutionMode(state.executionMode),
+    acceptanceState: normalizeAcceptanceState(state.acceptanceState),
+    pendingScopeAdvance: Boolean(state.pendingScopeAdvance),
     updatedAt: Number.isFinite(state.updatedAt) ? Number(state.updatedAt) : 0,
     lastReason: typeof state.lastReason === "string" ? state.lastReason : "restored",
   };
@@ -103,8 +115,15 @@ function normalizeState(raw) {
 function statusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
+  const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
   if (mode === "none") return `PF gate: investigate read-only${modeLabel}`;
   if (!state.enabled) return `PF gate: off${modeLabel}`;
+  if (acceptanceState === "awaiting") {
+    return `PF gate: awaiting scenario acceptance (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel})`;
+  }
+  if (acceptanceState === "revise_requested") {
+    return `PF gate: revision requested (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel})`;
+  }
   if (state.approved && state.approvalConsumed) {
     return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}), awaiting /pf-continue`;
   }
@@ -139,7 +158,8 @@ export default function (pi) {
   }
 
   function approveCurrentScope(ctx, reason, notify = true) {
-    const scope = Math.max(1, state.scopeVersion || 1);
+    const baseScope = Math.max(1, state.scopeVersion || 1);
+    const scope = state.pendingScopeAdvance ? baseScope + 1 : baseScope;
     setState(
       {
         enabled: true,
@@ -147,6 +167,8 @@ export default function (pi) {
         approvalConsumed: false,
         scopeVersion: scope,
         approvedScopeVersion: scope,
+        acceptanceState: "accepted",
+        pendingScopeAdvance: false,
       },
       reason,
       ctx,
@@ -178,11 +200,46 @@ export default function (pi) {
         approvalConsumed: false,
         scopeVersion: nextScope,
         approvedScopeVersion: 0,
+        acceptanceState: "none",
+        pendingScopeAdvance: false,
       },
       reason,
       ctx,
       "warning",
       message || "Planforge gate: scope changed. Re-post plan + tests and request explicit approval."
+    );
+  }
+
+  function handleAccept(ctx) {
+    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    if (acceptanceState !== "awaiting" && acceptanceState !== "revise_requested") {
+      if (ctx?.hasUI) ctx.ui.notify("No scenario is currently awaiting acceptance.", "info");
+      return;
+    }
+
+    setState(
+      {
+        acceptanceState: "accepted",
+      },
+      "scenario-accepted",
+      ctx,
+      "success",
+      "Scenario accepted. Ask for the next checkpoint, then use /pf-continue again to approve mutation."
+    );
+  }
+
+  function handleRevise(ctx, reason = "scenario-revision-requested") {
+    setState(
+      {
+        acceptanceState: "revise_requested",
+        approved: false,
+        approvalConsumed: false,
+        approvedScopeVersion: 0,
+      },
+      reason,
+      ctx,
+      "warning",
+      "Scenario revision requested. Revise this scenario before advancing."
     );
   }
 
@@ -214,12 +271,20 @@ export default function (pi) {
           scopeVersion: Math.max(1, state.scopeVersion || 1),
           approvedScopeVersion: 0,
           executionMode: mode === "auto" ? "supervised" : mode,
+          acceptanceState: "accepted",
+          pendingScopeAdvance: false,
         },
         "continue-auto-enable",
         ctx,
         "info",
         "Planforge gate enabled. Approving current scope."
       );
+    }
+
+    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    if (acceptanceState === "awaiting" || acceptanceState === "revise_requested") {
+      handleAccept(ctx);
+      return;
     }
 
     if (state.approved) {
@@ -232,6 +297,8 @@ export default function (pi) {
             approvalConsumed: false,
             scopeVersion: nextScope,
             approvedScopeVersion: nextScope,
+            acceptanceState: "accepted",
+            pendingScopeAdvance: false,
           },
           "continue-next-checkpoint",
           ctx,
@@ -279,6 +346,8 @@ export default function (pi) {
           scopeVersion: 0,
           approvedScopeVersion: 0,
           executionMode: "fast",
+          acceptanceState: "none",
+          pendingScopeAdvance: false,
         },
         "switch-planforge-fast",
         ctx,
@@ -297,6 +366,8 @@ export default function (pi) {
           scopeVersion: Math.max(1, state.scopeVersion || 1),
           approvedScopeVersion: 0,
           executionMode: "supervised",
+          acceptanceState: "accepted",
+          pendingScopeAdvance: false,
         },
         "switch-planforge-supervised",
         ctx,
@@ -315,6 +386,8 @@ export default function (pi) {
           scopeVersion: 0,
           approvedScopeVersion: 0,
           executionMode: "none",
+          acceptanceState: "none",
+          pendingScopeAdvance: false,
         },
         "switch-forge-investigate",
         ctx,
@@ -333,6 +406,8 @@ export default function (pi) {
           scopeVersion: 1,
           approvedScopeVersion: 0,
           executionMode: "supervised",
+          acceptanceState: "accepted",
+          pendingScopeAdvance: false,
         },
         "auto-enable-forge-skill",
         ctx,
@@ -350,11 +425,22 @@ export default function (pi) {
       return { action: "continue" };
     }
 
+    if (REQUEST_REVISION.test(text)) {
+      handleRevise(ctx, "scenario-revision-message");
+      return { action: "continue" };
+    }
+
     if (CONTROL_COMMAND.test(text)) {
       return { action: "continue" };
     }
 
-    if (state.approved && text && !TRIVIAL_ACK.test(text)) {
+    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    if (acceptanceState === "awaiting" && text && !TRIVIAL_ACK.test(text)) {
+      handleRevise(ctx, "scenario-revision-followup");
+      return { action: "continue" };
+    }
+
+    if (state.approved && !state.approvalConsumed && text && !TRIVIAL_ACK.test(text)) {
       invalidateForScopeChange(
         ctx,
         "user-followup-invalidated-approval",
@@ -388,12 +474,20 @@ export default function (pi) {
       );
     }
 
+    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    const acceptanceNote =
+      acceptanceState === "awaiting"
+        ? "Current scenario result is awaiting user acceptance. Ask for explicit acceptance (in Pi supervised mode, /pf-continue acknowledges acceptance) before proposing the next scenario."
+        : acceptanceState === "revise_requested"
+          ? "Current scenario has revision requested. Revise the same scenario; do not advance to the next scenario yet."
+          : "";
+
     const gateNote = state.approved
       ? `Current mutating checkpoint (scope v${state.scopeVersion}) is approved. Mutating tools are allowed for this checkpoint.`
       : `Current mutating checkpoint (scope v${Math.max(1, state.scopeVersion || 1)}) is NOT approved. Request /pf-continue before calling mutating tools.`;
 
     return {
-      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.`,
+      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}\n${acceptanceNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.`,
     };
   });
 
@@ -422,6 +516,8 @@ export default function (pi) {
         setState(
           {
             approvalConsumed: true,
+            acceptanceState: "awaiting",
+            pendingScopeAdvance: true,
           },
           "checkpoint-mutation-seen",
           ctx

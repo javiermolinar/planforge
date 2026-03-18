@@ -8,12 +8,20 @@ function normalizeExecutionMode(value) {
   return EXECUTION_MODES.has(normalized) ? normalized : "auto";
 }
 
+const ACCEPTANCE_STATES = new Set(["none", "awaiting", "accepted", "revise_requested"]);
+
+function normalizeAcceptanceState(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return ACCEPTANCE_STATES.has(normalized) ? normalized : "none";
+}
+
 const DEFAULT_GATE_STATE = {
   enabled: false,
   approved: false,
   approvalConsumed: false,
   scopeVersion: 0,
   executionMode: "auto",
+  acceptanceState: "none",
 };
 
 function normalizeGateState(raw) {
@@ -26,14 +34,22 @@ function normalizeGateState(raw) {
     approvalConsumed: Boolean(raw.approvalConsumed),
     scopeVersion: Math.max(0, scopeVersion),
     executionMode: normalizeExecutionMode(raw.executionMode),
+    acceptanceState: normalizeAcceptanceState(raw.acceptanceState),
   };
 }
 
 function gateStatusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
+  const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
   if (mode === "none") return `PF gate: investigate read-only${modeLabel}`;
   if (!state.enabled) return `PF gate: off${modeLabel}`;
+  if (acceptanceState === "awaiting") {
+    return `PF gate: awaiting scenario acceptance (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel})`;
+  }
+  if (acceptanceState === "revise_requested") {
+    return `PF gate: revision requested (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel})`;
+  }
   if (state.approved && state.approvalConsumed) {
     return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}), awaiting /pf-continue`;
   }
@@ -50,13 +66,15 @@ function buildStatusLines(gateState) {
     `State: ${gateStatusLine(gateState)}`,
     `Execution mode: ${normalizeExecutionMode(gateState.executionMode)}`,
     `Scope version: v${Math.max(1, gateState.scopeVersion || 1)}`,
+    `Scenario acceptance: ${normalizeAcceptanceState(gateState.acceptanceState)}`,
     `Updated: ${now}`,
     "",
     "Commands:",
-    "- /pf-continue (approve next supervised mutating checkpoint)",
+    "- /pf-continue (accept current scenario or approve next supervised mutating checkpoint)",
     "- /pf-status (open this panel)",
     "",
-    "Each /pf-continue grants one mutating checkpoint.",
+    "In supervised mutation flow, each /pf-continue grants one mutating checkpoint.",
+    "If a scenario is awaiting acceptance, /pf-continue marks it accepted first.",
     "",
     "Task checklist commands were removed.",
     "Use the rolling plan file for task tracking.",

@@ -28,12 +28,26 @@ Use `docs/philosophy.md` as the source of truth for:
 - `planforge` (default): supervised mode for serious development workflows.
   - one mutating checkpoint proposal at a time (phase/task boundary)
   - explicit approval (`/pf-continue`) before executing that checkpoint
-  - each `/pf-continue` grants one mutating checkpoint (not per command)
+  - in supervised mutation flow, each `/pf-continue` grants one mutating checkpoint (not per command)
+  - if a scenario result is awaiting acceptance, `/pf-continue` records acceptance first
   - scope changes trigger re-planning and re-approval
 - `planforge-fast`: unsupervised mode when speed is prioritized.
   - still requires scope approval before non-trivial mutation
   - no checkpoint approval loop after scope approval
   - recommend switching back to supervised mode if risk grows
+
+## Terminology (canonical)
+
+Use these terms consistently:
+
+- **Phase**: a larger roadmap chunk that may contain multiple implementation steps.
+- **Step**: a user-visible unit of incremental delivery tracked in the implementation ledger.
+- **Scenario**: synonym for step outcome during acceptance discussion.
+- **Checkpoint**: the approval/execution boundary for mutating work in supervised mode.
+
+Operational mapping:
+- In supervised mode, a checkpoint usually executes one step/scenario slice.
+- A step is not complete until user acceptance is explicit.
 
 ## Branch policy
 

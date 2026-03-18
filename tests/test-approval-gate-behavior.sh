@@ -169,28 +169,44 @@ async function testCheckpointLifecycle() {
 
   state = harness.getState();
   assert(state.approvalConsumed === true, "first mutation should consume checkpoint approval");
+  assert(state.acceptanceState === "awaiting", "after mutation, scenario should await user acceptance");
 
   await harness.runCommand("pf-continue", {});
   state = harness.getState();
-  assert(state.approved === true && state.approvalConsumed === false, "pf-continue should approve next checkpoint");
-  assert(state.scopeVersion === scopeV1 + 1, "next checkpoint approval should increment scope version");
-  const scopeV2 = state.scopeVersion;
-
-  await harness.runCommand("pf-continue", {});
-  state = harness.getState();
-  assert(state.scopeVersion === scopeV2, "pf-continue should not increment scope while current checkpoint is still unused");
-
-  await harness.emit("tool_call", { toolName: "edit", input: { path: "docs/pi.md" } });
-  state = harness.getState();
-  assert(state.approvalConsumed === true, "second checkpoint should also become consumed on first mutation");
+  assert(state.acceptanceState === "accepted", "pf-continue should first acknowledge scenario acceptance");
+  assert(state.scopeVersion === scopeV1, "acceptance ack should not increment scope version");
 
   await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
   state = harness.getState();
   assert(state.approved === false, "consumed approval should expire before the next agent start");
   assert(state.approvalConsumed === false, "approvalConsumed should reset after expiry");
 
+  await harness.runCommand("pf-continue", {});
+  state = harness.getState();
+  assert(state.approved === true && state.approvalConsumed === false, "pf-continue should approve next checkpoint after acceptance");
+  assert(state.scopeVersion === scopeV1 + 1, "next checkpoint approval should increment scope version");
+
+  await harness.emit("tool_call", { toolName: "edit", input: { path: "docs/pi.md" } });
+  state = harness.getState();
+  assert(state.approvalConsumed === true, "second checkpoint should become consumed on first mutation");
+  assert(state.acceptanceState === "awaiting", "second mutation should await acceptance again");
+
+  await harness.emit("input", { text: "needs changes" });
+  state = harness.getState();
+  assert(state.acceptanceState === "revise_requested", "pushback should mark scenario revision requested");
+  assert(state.approved === false, "pushback should clear approval for further mutation");
+
+  await harness.runCommand("pf-continue", {});
+  state = harness.getState();
+  assert(state.acceptanceState === "accepted", "pf-continue should accept revised scenario once user is satisfied");
+  assert(state.approved === false, "accepting scenario alone should not auto-approve mutation in this state");
+
+  await harness.runCommand("pf-continue", {});
+  state = harness.getState();
+  assert(state.approved === true, "a second pf-continue should approve the next checkpoint after acceptance");
+
   const blockedWithoutApproval = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
-  assert(blockedWithoutApproval && blockedWithoutApproval.block === true, "mutation should be blocked once approval expires");
+  assert(blockedWithoutApproval === undefined, "mutation should be allowed after new checkpoint approval");
 }
 
 (async () => {

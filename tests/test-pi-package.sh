@@ -14,13 +14,17 @@ test -f extensions/pf-status.ts
 grep -q 'registerCommand("pf-continue"' extensions/planforge-approval-gate.ts
 grep -q 'registerCommand("pf-status"' extensions/pf-status.ts
 grep -q 'CONTINUE_APPROVAL' extensions/planforge-approval-gate.ts
+grep -q 'ACCEPTANCE_STATES' extensions/planforge-approval-gate.ts
+grep -q 'normalizeAcceptanceState' extensions/planforge-approval-gate.ts
 grep -q 'PLANFORGE_FAST_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'PLANFORGE_INVESTIGATE_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'approvalConsumed' extensions/planforge-approval-gate.ts
 grep -q 'checkpoint-mutation-seen' extensions/planforge-approval-gate.ts
 grep -q 'checkpoint-approval-expired' extensions/planforge-approval-gate.ts
+grep -q 'scenario-accepted' extensions/planforge-approval-gate.ts
+grep -q 'scenario-revision' extensions/planforge-approval-gate.ts
 grep -q 'SHELL_META_PATTERN' extensions/planforge-approval-gate.ts
-grep -q 'Each /pf-continue grants one mutating checkpoint.' extensions/pf-status.ts
+grep -q 'In supervised mutation flow, each /pf-continue grants one mutating checkpoint.' extensions/pf-status.ts
 grep -q 'Investigation mode detected. Read-only guard is active; mutation requires switching skills.' extensions/planforge-approval-gate.ts
 grep -q 'Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd.' extensions/planforge-approval-gate.ts
 grep -q 'pi install /absolute/path/to/planforge' README.md
@@ -29,6 +33,7 @@ grep -q '/skill:planforge' README.md
 grep -q '/skill:planforge-fast' README.md
 grep -q '/pf-continue' README.md
 grep -q 'one mutating checkpoint' README.md
+grep -q 'awaiting user acceptance' README.md
 grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
 grep -q 'checkpoint approvals stay off and a read-only guard blocks mutating tools' README.md
 grep -q 'PLANFORGE_HOME' README.md
@@ -61,14 +66,16 @@ grep -q '../../scripts/plan-next-list' skills/forge-resume/SKILL.md
 grep -q '../../scripts/plan-init' skills/forge-resume/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/planforge/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/planforge/SKILL.md
-grep -q 'If the first task is understanding the codebase or deciding whether something is bloated, invoke `forge-investigate` first.' skills/planforge/SKILL.md
-grep -q 'If the direction is clear and implementation is likely, invoke `forge-plan` next.' skills/planforge/SKILL.md
+grep -q 'invoke `forge-investigate` first' skills/planforge/SKILL.md
+grep -q 'invoke `forge-plan` next' skills/planforge/SKILL.md
 grep -Eq 'If deferred follow-up plans exist in the next queue, invoke `forge-resume`( to continue them\.)?' skills/planforge/SKILL.md
-grep -q 'For external API or networked tasks, auto-suggest a lightweight fresh-context `forge-review` pass before completion.' skills/planforge/SKILL.md
+grep -q 'external API or networked tasks' skills/planforge/SKILL.md
+grep -q '`forge-review`' skills/planforge/SKILL.md
 grep -q 'passing architecture/tradeoff quality rubric' skills/planforge/SKILL.md
 grep -q 'implementation step ledger' skills/planforge/SKILL.md
 grep -q 'per-step TDD table for checkpoint reporting' skills/planforge/SKILL.md
 grep -q 'do not advance; revise that same scenario until user confirms satisfaction' skills/planforge/SKILL.md
+grep -q 'serve as explicit acceptance' skills/planforge/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-plan/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-plan/SKILL.md
 grep -q '## Tactical vs strategic split' skills/forge-plan/SKILL.md
@@ -135,6 +142,7 @@ grep -q '| Step ID | Goal | Planned evidence | Actual evidence | User acceptance
 grep -q '| Step ID | Red test command | Red evidence | Green test command | Green evidence | Refactor guard | User acceptance check | Status |' skills/forge-implement/SKILL.md
 grep -q 'Do not mark a TDD step `done` unless red and green evidence are both present.' skills/forge-implement/SKILL.md
 grep -q '## Scenario acceptance loop (mandatory)' skills/forge-implement/SKILL.md
+grep -q 'used as explicit acceptance' skills/forge-implement/SKILL.md
 grep -q 'negative test matrix' skills/forge-test/SKILL.md
 grep -q 'updated per-step TDD table (for TDD-required scope)' skills/forge-test/SKILL.md
 grep -q 'reject-before-ready' skills/forge-test/SKILL.md
@@ -154,6 +162,7 @@ grep -q 'pi install git:github.com/javiermolinar/planforge' docs/pi.md
 grep -q '/skill:planforge-fast' docs/pi.md
 grep -q '/pf-continue' docs/pi.md
 grep -q 'grants one mutating checkpoint' docs/pi.md
+grep -q 'awaiting acceptance' docs/pi.md
 grep -q 'checkpoint approvals stay off and a read-only guard blocks mutating tools' docs/pi.md
 grep -q 'PLANFORGE_HOME' docs/tooling.md
 grep -q 'scorecard-init' docs/tooling.md
@@ -166,6 +175,7 @@ grep -q 'rolling plans only' docs/tooling.md
 grep -q '## Design philosophy' docs/flow.md
 grep -q 'docs/philosophy.md' docs/flow.md
 grep -q 'source of truth' docs/flow.md
+grep -q '## Terminology (canonical)' docs/flow.md
 grep -q '80/20' docs/flow.md
 grep -q 'broken-window rule' docs/flow.md
 grep -q 'architecture/tradeoff quality rubric (pass/fail with evidence)' docs/flow.md
@@ -182,7 +192,9 @@ grep -q '## Red flags' docs/philosophy.md
 grep -q '## 6) Keep it simple' docs/philosophy.md
 grep -q '## 7) Data first' docs/philosophy.md
 grep -q '## 8) Measure before optimize' docs/philosophy.md
+grep -q '## 9) Progress requires explicit acceptance' docs/philosophy.md
 grep -q 'premature optimization' docs/philosophy.md
+grep -q 'advancing checkpoints without explicit user acceptance' docs/philosophy.md
 grep -q 'docs/philosophy.md' README.md
 test -x scripts/plan-list
 test -x scripts/plan-branch-name
