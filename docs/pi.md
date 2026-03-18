@@ -20,14 +20,13 @@ If you prefer a global install, drop `-l`.
 
 Once installed, Pi discovers the skills automatically.
 
-Typical starting points:
+Start with:
 
 ```text
 /skill:planforge
-/skill:forge-investigate
 ```
 
-Use `planforge` for normal implementation work. Use `forge-investigate` when the first job is understanding the code, tracing behavior, or deciding whether something is bloated.
+Use `forge-investigate` when the first job is discovery: understanding the code, tracing behavior, mapping dependencies, or reducing unknown unknowns before implementation.
 
 ## Package management
 
