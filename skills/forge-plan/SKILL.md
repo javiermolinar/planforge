@@ -14,6 +14,7 @@ Use this after the direction is clear and implementation is likely.
 - Include assumptions and constraints when they matter.
 - Include a compact test table.
 - When TDD is requested (or bug reproduction is practical), make the first executable task a failing test and call it out explicitly.
+- For write-path or ingestion changes, include mandatory write-path semantics and negative-path planning sections (see below).
 - Challenge unnecessary abstraction or scope.
 - Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
 - Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
@@ -52,9 +53,13 @@ If scope changes after approval, publish a revised plan summary + updated test t
 - metrics snapshot
 - mitigation suggestions (when both complexity and risk are high)
 - TDD gate status (required? failing test planned first?)
+- write-path semantics table (mandatory when write path is touched)
+- lifecycle-safety checklist (mandatory for new local callbacks/APIs)
+- negative test matrix (mandatory for write paths)
 - next-skill handoff (`Next skill: ...`, `Reason: ...`)
 
 Do not ask for plan approval until the Plan summary and Assumptions table are present.
+For write-path changes, also require write-path semantics + lifecycle-safety + negative matrix sections before approval.
 
 ## Pushback / revision loop
 
@@ -75,6 +80,40 @@ When TDD is required in this scope:
 - Define the first failing test case and the command expected to fail.
 - Route next skill to `forge-test` before implementation.
 - Do not route directly to implementation until failing-test evidence exists.
+
+## Write-path semantics (mandatory when applicable)
+
+If the change touches ingestion/write paths, include this table:
+
+| Dimension | Decision | Notes |
+|---|---|---|
+| Side effects order |  |  |
+| Fail policy (fail-open/fail-closed) |  |  |
+| Retry implications |  |  |
+| Idempotency expectations |  |  |
+
+Do not request implementation approval for write-path changes without this table.
+
+## Lifecycle-safety checklist (mandatory for new local callbacks/APIs)
+
+For new local callbacks/APIs, include checks for:
+
+- starting behavior
+- ready behavior
+- stopping behavior
+- explicit negative tests: `reject-before-ready`, `reject-during-stopping`
+
+Do not request implementation approval until these checks are planned in the test table.
+
+## Negative test matrix (mandatory for write paths)
+
+For write-path changes, include at least:
+
+- downstream callback fails
+- partial side effects
+- service lifecycle transitions
+
+Mark this matrix as a blocking completion criterion in the plan.
 
 ## Plan summary
 

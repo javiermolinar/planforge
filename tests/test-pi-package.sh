@@ -59,6 +59,15 @@ grep -q '## Complexity check' skills/forge-plan/SKILL.md
 grep -q '## Dependencies' skills/forge-plan/SKILL.md
 grep -q '## Obscurity and unknowns' skills/forge-plan/SKILL.md
 grep -q '## Broken-window check' skills/forge-plan/SKILL.md
+grep -q '## Write-path semantics (mandatory when applicable)' skills/forge-plan/SKILL.md
+grep -q '| Side effects order |' skills/forge-plan/SKILL.md
+grep -q '| Fail policy (fail-open/fail-closed) |' skills/forge-plan/SKILL.md
+grep -q '| Retry implications |' skills/forge-plan/SKILL.md
+grep -q '| Idempotency expectations |' skills/forge-plan/SKILL.md
+grep -q '## Lifecycle-safety checklist (mandatory for new local callbacks/APIs)' skills/forge-plan/SKILL.md
+grep -q 'reject-before-ready' skills/forge-plan/SKILL.md
+grep -q 'reject-during-stopping' skills/forge-plan/SKILL.md
+grep -q '## Negative test matrix (mandatory for write paths)' skills/forge-plan/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-review/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-review/SKILL.md
 grep -q 'tactical-to-strategic split' skills/forge-review/SKILL.md
@@ -80,9 +89,15 @@ grep -q 'Review from a clean packet containing only the task summary, approved p
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-investigate/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-investigate/SKILL.md
 grep -q 'hidden control flow' skills/forge-investigate/SKILL.md
+grep -q 'negative test matrix' skills/forge-test/SKILL.md
+grep -q 'reject-before-ready' skills/forge-test/SKILL.md
+grep -q 'reject-during-stopping' skills/forge-test/SKILL.md
 grep -q 'timeout handling' skills/forge-verify/SKILL.md
 grep -q 'malformed external payload handling' skills/forge-verify/SKILL.md
 grep -q 'automated failure-path test' skills/forge-verify/SKILL.md
+grep -q 'negative-matrix verification as a blocking completion criterion' skills/forge-verify/SKILL.md
+grep -q 'reject-before-ready' skills/forge-verify/SKILL.md
+grep -q 'reject-during-stopping' skills/forge-verify/SKILL.md
 grep -q 'Call out remaining complexity risk explicitly' skills/forge-verify/SKILL.md
 grep -q 'unresolved complexity risks' skills/forge-verify/SKILL.md
 grep -q 'Philosophy source of truth' README.md

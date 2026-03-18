@@ -14,6 +14,8 @@ Use this when code changes need stronger confidence.
 - Expand or refine the test table.
 - If strict TDD is not practical, say why and choose the lightest acceptable verification path.
 - When TDD is required, produce explicit failing-test evidence (command + failure summary) before any production code edits.
+- For write-path changes, build and run a negative test matrix before handoff (downstream failure, partial side effects, lifecycle transitions).
+- For new local callbacks/APIs, include lifecycle negatives: `reject-before-ready` and `reject-during-stopping`.
 
 ## Mutation boundaries
 
@@ -23,11 +25,17 @@ Use this when code changes need stronger confidence.
 - Keep changes scoped to testability and correctness; avoid unrelated refactors.
 - If test work reveals broader implementation scope, stop and request explicit re-approval.
 
+## Completion gate for write paths
+
+For write-path changes, do not hand off as "done" until the negative matrix is exercised (or explicitly marked as blocked with reason and mitigation).
+
 ## Output shape
 
 - testing approach
 - concrete cases
 - commands to run if known
 - red/green status for TDD-required scope
+- negative test matrix status for write paths (required rows: callback fail, partial side effects, lifecycle transitions)
+- lifecycle-safety status for new local callbacks/APIs (`reject-before-ready`, `reject-during-stopping`)
 - gaps that remain
 - suggested handoff (`Next skill: forge-verify`, `Reason: ...`) once testing is complete

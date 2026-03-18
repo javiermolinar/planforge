@@ -60,6 +60,13 @@ If the approved scope requires TDD:
 
 If TDD is not required, state why and proceed with the lightest acceptable verification path.
 
+For write-path changes, implementation must preserve and report semantics from the approved plan:
+
+- side effects order
+- fail-open/fail-closed policy
+- retry implications
+- idempotency expectations
+
 ## Scope drift and re-approval
 
 - If implementation discovers material scope drift (new behavior, extra modules, or changed acceptance criteria), stop and request re-approval before continuing.

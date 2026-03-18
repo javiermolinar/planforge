@@ -14,6 +14,7 @@ Use this skill for normal build/change/fix work when safety and operator control
 - Prefer the simpler path.
 - Do not silently widen scope.
 - If the user requests TDD (or the task is a bug fix with reproducible behavior), require failing-test-first evidence before production code edits.
+- For write-path/ingestion changes, require plan sections for write-path semantics, lifecycle safety, and a negative test matrix before implementation approval.
 - Single-agent by default.
 - Suggest multiagent or worktrees only when clearly justified.
 - Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
@@ -119,6 +120,7 @@ Flow guardrails:
 - If scope changes at any point, return to step 5 and re-approve.
 - If TDD is required, no production code edits until failing test evidence is shown.
 - If user pushes back on the plan, next response must include revised plan summary + updated test table.
+- For write-path changes, do not approve implementation start until plan includes: side-effect order, fail-open/fail-closed policy, retry implications, idempotency expectations, lifecycle checks, and negative matrix rows.
 
 ## Skill routing
 
