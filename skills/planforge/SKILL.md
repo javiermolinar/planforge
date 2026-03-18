@@ -17,6 +17,8 @@ Use this skill for normal build/change/fix work.
 - Suggest multiagent or worktrees only when clearly justified.
 - Treat complexity as the main enemy: explicitly reason about change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns.
 - Prefer plans that reduce the number of places a future change must touch and make hidden behavior more visible.
+- Keep an explicit 80/20 tactical-to-strategic split: most effort ships the requested change, while a strategic slice improves maintainability and reduces future complexity.
+- Apply the broken window rule: if you touch an area with obvious quality debt, either fix at least one small local issue now or log it explicitly in backlog/checkpoints.
 
 ## Flow
 

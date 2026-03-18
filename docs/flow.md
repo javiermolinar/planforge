@@ -19,12 +19,20 @@ Good changes:
 - reduce dependency surface
 - reduce obscurity
 - turn unknown unknowns into explicit risks, questions, or tests
+- reserve a small strategic slice to improve long-term design quality
 
 Bad changes:
 - spread one behavior across too many places
 - increase the amount a reader must keep in mind
 - add dependencies without enough leverage
 - hide behavior behind indirection, vague naming, or unclear ownership
+- ignore visible local quality debt in touched areas
+
+Planforge uses an explicit 80/20 tactical-to-strategic split for most changes:
+- ~80% deliver the requested behavior
+- ~20% reduce future complexity in the touched area
+
+It also applies a broken-window rule: if the touched area has obvious quality debt, fix a small high-leverage issue now or log it explicitly for follow-up.
 
 ## Branch policy
 

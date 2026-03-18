@@ -19,6 +19,7 @@ It favors:
 - fresh-context review for riskier work
 - lightweight rolling plans instead of heavyweight specs
 - explicit complexity checks: change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns
+- a pragmatic 80/20 tactical-to-strategic split and a broken-window mindset in touched areas
 
 ## Example
 

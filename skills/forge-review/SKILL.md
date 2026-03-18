@@ -33,6 +33,10 @@ Review whether the change increased:
 
 Call out when a change spreads one behavior across too many places, hides simple behavior behind indirection, or introduces dependencies without enough payoff.
 
+Also review:
+- whether the tactical-to-strategic split was reasonable for the task
+- whether broken window opportunities were handled (fixed or explicitly logged)
+
 ## Output
 
 - summary

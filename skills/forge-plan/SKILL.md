@@ -23,9 +23,20 @@ Use this after the direction is clear and implementation is likely.
 - tasks
 - test table
 - risks / assumptions
+- tactical vs strategic split
 - complexity check
 - dependencies
 - obscurity and unknowns
+- broken-window check
+
+## Tactical vs strategic split
+
+Use an explicit 80/20 tactical-to-strategic split:
+
+- Tactical (~80%): deliver the requested behavior now.
+- Strategic (~20%): make targeted improvements that reduce future complexity.
+
+Strategic work must stay local and justified. Avoid turning a focused task into a broad rewrite.
 
 ## Complexity check
 
@@ -56,6 +67,16 @@ Call out:
 - assumptions to validate
 - likely failure modes
 - anything that should move from unknown unknowns into explicit checks or tests
+
+## Broken-window check
+
+Before implementation starts, identify obvious local quality debt in the touched area.
+
+For each broken window:
+- fix one small, high-leverage item now when cheap and safe, or
+- explicitly record it in backlog/checkpoints with a concrete follow-up
+
+Do not ignore visible quality debt silently.
 
 ## Persistence
 
