@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+plan_path=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --path)
+      plan_path="$2"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+section="${1:-}"
+text="${2:-}"
+if [ -z "$section" ] || [ -z "$text" ]; then
+  echo "usage: plan-append-item [--path PATH] SECTION TEXT" >&2
+  exit 1
+fi
+
+if [ -z "$plan_path" ]; then
+  context="$($SCRIPT_DIR/plan-context)"
+  plan_path="$(printf '%s\n' "$context" | awk -F= '/^PLAN_PATH=/{print substr($0, index($0,$2))}')"
+fi
+
+if [ ! -f "$plan_path" ]; then
+  echo "plan-append-item: missing plan at $plan_path" >&2
+  exit 1
+fi
+
+case "$section" in
+  CHECKPOINTS)
+    item="- $(date '+%Y-%m-%d %H:%M') — $text"
+    ;;
+  BACKLOG)
+    item="- $text"
+    ;;
+  *)
+    echo "plan-append-item: unsupported section '$section'" >&2
+    exit 1
+    ;;
+esac
+
+output_file="$(mktemp)"
+trap 'rm -f "$output_file"' EXIT
+
+awk -v sec="$section" -v item="$item" '
+BEGIN {
+  end = "<!-- END:" sec " -->"
+}
+$0 == end {
+  print item
+  print
+  next
+}
+{ print }
+' "$plan_path" > "$output_file"
+
+mv "$output_file" "$plan_path"
+now="$(date -Iseconds)"
+sed -i.bak -E "s|^Updated: .*|Updated: $now|" "$plan_path"
+rm -f "$plan_path.bak"

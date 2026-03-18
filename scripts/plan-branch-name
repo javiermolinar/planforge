@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -lt 2 ]; then
+  echo "usage: plan-branch-name <feat|fix|refactor|docs|chore|test> <title...>" >&2
+  exit 1
+fi
+
+type="$1"
+shift
+
+case "$type" in
+  feat|fix|refactor|docs|chore|test) ;;
+  *)
+    echo "plan-branch-name: invalid type '$type'" >&2
+    exit 1
+    ;;
+esac
+
+slugify() {
+  printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//; s/-{2,}/-/g'
+}
+
+title="$*"
+slug="$(slugify "$title")"
+if [ -z "$slug" ]; then
+  echo "plan-branch-name: empty slug" >&2
+  exit 1
+fi
+
+printf '%s/%s\n' "$type" "$slug"

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+plan_path=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --path)
+      plan_path="$2"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+section="${1:-}"
+if [ -z "$section" ]; then
+  echo "usage: plan-set-section [--path PATH] SECTION < content.md" >&2
+  exit 1
+fi
+
+if [ -z "$plan_path" ]; then
+  context="$($SCRIPT_DIR/plan-context)"
+  plan_path="$(printf '%s\n' "$context" | awk -F= '/^PLAN_PATH=/{print substr($0, index($0,$2))}')"
+fi
+
+if [ ! -f "$plan_path" ]; then
+  echo "plan-set-section: missing plan at $plan_path" >&2
+  exit 1
+fi
+
+content_file="$(mktemp)"
+output_file="$(mktemp)"
+trap 'rm -f "$content_file" "$output_file"' EXIT
+cat > "$content_file"
+
+awk -v sec="$section" -v content_file="$content_file" '
+BEGIN {
+  begin = "<!-- BEGIN:" sec " -->"
+  end = "<!-- END:" sec " -->"
+  while ((getline line < content_file) > 0) {
+    content = content line ORS
+  }
+}
+$0 == begin {
+  print
+  printf "%s", content
+  in_block = 1
+  next
+}
+$0 == end {
+  in_block = 0
+  print
+  next
+}
+!in_block { print }
+' "$plan_path" > "$output_file"
+
+mv "$output_file" "$plan_path"
+now="$(date -Iseconds)"
+sed -i.bak -E "s|^Updated: .*|Updated: $now|" "$plan_path"
+rm -f "$plan_path.bak"

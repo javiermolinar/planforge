@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TEMPLATE="$SCRIPT_DIR/../templates/rolling-plan.md"
+
+plan_path=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --path)
+      plan_path="$2"
+      shift 2
+      ;;
+    *)
+      echo "usage: plan-init [--path PATH]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+context="$($SCRIPT_DIR/plan-context)"
+repo_slug="$(printf '%s\n' "$context" | awk -F= '/^REPO_SLUG=/{print $2}')"
+repo_path="$(printf '%s\n' "$context" | awk -F= '/^REPO_PATH=/{print substr($0, index($0,$2))}')"
+branch="$(printf '%s\n' "$context" | awk -F= '/^BRANCH=/{print substr($0, index($0,$2))}')"
+default_plan_path="$(printf '%s\n' "$context" | awk -F= '/^PLAN_PATH=/{print substr($0, index($0,$2))}')"
+
+if [ -z "$plan_path" ]; then
+  plan_path="$default_plan_path"
+fi
+
+mkdir -p "$(dirname "$plan_path")"
+if [ -f "$plan_path" ]; then
+  printf '%s\n' "$plan_path"
+  exit 0
+fi
+
+now="$(date -Iseconds)"
+sed \
+  -e "s|__REPO__|$repo_slug|g" \
+  -e "s|__REPO_PATH__|$repo_path|g" \
+  -e "s|__BRANCH__|$branch|g" \
+  -e "s|__CREATED__|$now|g" \
+  -e "s|__UPDATED__|$now|g" \
+  "$TEMPLATE" > "$plan_path"
+
+printf '%s\n' "$plan_path"

@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TEST_DIR="$(mktemp -d)"
+trap 'rm -rf "$TEST_DIR"' EXIT
+
+export HOME="$TEST_DIR/home"
+mkdir -p "$HOME"
+
+REPO_DIR="$TEST_DIR/sample-repo"
+mkdir -p "$REPO_DIR"
+cd "$REPO_DIR"
+
+git init -b main >/dev/null
+printf '# sample\n' > README.md
+git add README.md
+git -c user.name='Planforge Test' -c user.email='test@example.com' commit -m 'init' >/dev/null
+
+CONTEXT="$($ROOT/scripts/plan-context)"
+printf '%s\n' "$CONTEXT" | grep '^REPO_SLUG=sample-repo$'
+printf '%s\n' "$CONTEXT" | grep '^BRANCH=main$'
+PLAN_PATH="$(printf '%s\n' "$CONTEXT" | awk -F= '/^PLAN_PATH=/{print $2}')"
+
+"$ROOT/scripts/plan-init"
+test -f "$PLAN_PATH"
+grep -q '^Repo: sample-repo$' "$PLAN_PATH"
+grep -q '^Branch: main$' "$PLAN_PATH"
+grep -q '<!-- BEGIN:TASKS -->' "$PLAN_PATH"
+
+"$ROOT/scripts/plan-set-section" CURRENT_GOAL <<'EOF'
+## Current goal
+Validate the Planforge shell workflow.
+EOF
+
+grep -q 'Validate the Planforge shell workflow.' "$PLAN_PATH"
+
+"$ROOT/scripts/plan-set-section" TASKS <<'EOF'
+## Tasks
+- [ ] Define the rolling plan format
+- [ ] Implement the shell helpers
+EOF
+
+grep -q 'Define the rolling plan format' "$PLAN_PATH"
+grep -q 'Implement the shell helpers' "$PLAN_PATH"
+
+"$ROOT/scripts/plan-set-section" TEST_TABLE <<'EOF'
+## Test table
+| Case | Type | Expected | Status |
+|---|---|---|---|
+| create plan | integration | file exists | pending |
+EOF
+
+grep -q '| create plan | integration | file exists | pending |' "$PLAN_PATH"
+
+"$ROOT/scripts/plan-append-item" BACKLOG 'Consider adding plan-list later'
+"$ROOT/scripts/plan-append-item" CHECKPOINTS 'Initialized the rolling plan'
+
+LIST_OUTPUT="$($ROOT/scripts/plan-list)"
+printf '%s\n' "$LIST_OUTPUT" | grep '^REPO=sample-repo$'
+printf '%s\n' "$LIST_OUTPUT" | grep '^BRANCH=main$'
+printf '%s\n' "$LIST_OUTPUT" | grep "^PLAN_PATH=$PLAN_PATH$"
+
+BRANCH_NAME="$($ROOT/scripts/plan-branch-name feat 'HN top CLI')"
+test "$BRANCH_NAME" = 'feat/hn-top-cli'
+
+SCORECARD_PATH="$($ROOT/scripts/scorecard-init api-cli)"
+test -f "$SCORECARD_PATH"
+grep -q '^# Planforge scorecard' "$SCORECARD_PATH"
+
+grep -q 'Consider adding plan-list later' "$PLAN_PATH"
+grep -q 'Initialized the rolling plan' "$PLAN_PATH"
+
+echo 'plan script smoke test: PASS'

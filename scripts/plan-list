@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+plans_root="$HOME/.planforge/plans"
+if [ ! -d "$plans_root" ]; then
+  exit 0
+fi
+
+find "$plans_root" -type f -name '*.md' | sort | while IFS= read -r plan_path; do
+  repo="$(awk -F': ' '/^Repo: /{print $2; exit}' "$plan_path")"
+  branch="$(awk -F': ' '/^Branch: /{print $2; exit}' "$plan_path")"
+  status="$(awk -F': ' '/^Status: /{print $2; exit}' "$plan_path")"
+  printf 'REPO=%s\n' "$repo"
+  printf 'BRANCH=%s\n' "$branch"
+  printf 'STATUS=%s\n' "$status"
+  printf 'PLAN_PATH=%s\n' "$plan_path"
+  printf '\n'
+done
