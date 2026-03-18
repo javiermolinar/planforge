@@ -20,7 +20,7 @@ Use this after planning is approved and branch context is ready.
 
 - Inherit execution mode from orchestrator:
   - `planforge` → supervised implementation loop
-  - `planforge-yolo` → unsupervised implementation loop
+  - `planforge-fast` → unsupervised implementation loop
 - Do not silently downgrade from supervised to unsupervised.
 - If mode is unclear, ask before proceeding.
 

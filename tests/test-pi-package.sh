@@ -13,12 +13,12 @@ test -f extensions/planforge-approval-gate.ts
 grep -q 'registerCommand("pf-gate"' extensions/planforge-approval-gate.ts
 grep -q 'registerCommand("continue"' extensions/planforge-approval-gate.ts
 grep -q 'CONTINUE_APPROVAL' extensions/planforge-approval-gate.ts
-grep -q 'PLANFORGE_YOLO_SKILL_CMD' extensions/planforge-approval-gate.ts
+grep -q 'PLANFORGE_FAST_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'Planforge gate blocked mutating bash command before approval' extensions/planforge-approval-gate.ts
 grep -q 'pi install /absolute/path/to/planforge' README.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' README.md
 grep -q '/skill:planforge' README.md
-grep -q '/skill:planforge-yolo' README.md
+grep -q '/skill:planforge-fast' README.md
 grep -q '/continue' README.md
 grep -q '/pf-gate status' README.md
 grep -q '/pf-gate policy strict' README.md
@@ -32,7 +32,7 @@ grep -q '../../scripts/plan-append-item' skills/forge-implement/SKILL.md
 grep -q '../../scripts/plan-next-init' skills/forge-plan/SKILL.md
 grep -q '../../scripts/plan-next-init' skills/forge-review/SKILL.md
 test -f skills/forge-resume/SKILL.md
-test -f skills/planforge-yolo/SKILL.md
+test -f skills/planforge-fast/SKILL.md
 grep -q '../../scripts/plan-next-list' skills/forge-resume/SKILL.md
 grep -q '../../scripts/plan-init' skills/forge-resume/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/planforge/SKILL.md
@@ -106,7 +106,7 @@ grep -q 'Philosophy source of truth' README.md
 test -f docs/pi.md
 grep -q 'pi config' docs/pi.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' docs/pi.md
-grep -q '/skill:planforge-yolo' docs/pi.md
+grep -q '/skill:planforge-fast' docs/pi.md
 grep -q '/pf-gate status | on | off | approve | revoke | scope-changed | policy' docs/pi.md
 grep -q 'PLANFORGE_GATE_BASH_POLICY' docs/pi.md
 grep -q 'PLANFORGE_HOME' docs/tooling.md
@@ -123,7 +123,7 @@ grep -q 'source of truth' docs/flow.md
 grep -q '80/20' docs/flow.md
 grep -q 'broken-window rule' docs/flow.md
 grep -q '## Execution modes' docs/flow.md
-grep -q 'planforge-yolo' docs/flow.md
+grep -q 'planforge-fast' docs/flow.md
 test -f docs/philosophy.md
 grep -q 'deep modules' docs/philosophy.md
 grep -q 'shallow module' docs/philosophy.md

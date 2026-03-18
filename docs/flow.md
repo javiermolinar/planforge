@@ -29,7 +29,7 @@ Use `docs/philosophy.md` as the source of truth for:
   - one action proposal at a time
   - explicit approval (`/continue`) before execution
   - scope changes trigger re-planning and re-approval
-- `planforge-yolo`: unsupervised mode when speed is prioritized.
+- `planforge-fast`: unsupervised mode when speed is prioritized.
   - still requires scope approval before non-trivial mutation
   - no per-action approval loop after scope approval
   - recommend switching back to supervised mode if risk grows
@@ -72,7 +72,7 @@ Plan files use managed section markers so shell helpers can update them cheaply 
 ## Pi package notes
 
 - Planforge can be installed with `pi install /absolute/path/to/planforge`.
-- After installation, use `/skill:planforge` (supervised), `/skill:planforge-yolo` (unsupervised), or `/skill:forge-investigate`.
+- After installation, use `/skill:planforge` (supervised), `/skill:planforge-fast` (unsupervised), or `/skill:forge-investigate`.
 - `pi config` can enable or disable resources from the package.
 - On Pi, the packaged approval-gate extension enforces read-only behavior before approval by blocking `edit`, `write`, and mutating `bash` tool calls.
 - The gate supports `strict` or `balanced` pre-approval bash policies via `/pf-gate policy ...` (default: `balanced`).

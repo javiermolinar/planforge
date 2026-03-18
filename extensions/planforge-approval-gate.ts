@@ -14,7 +14,7 @@ function normalizeBashPolicy(value) {
 
 const DEFAULT_BASH_POLICY = normalizeBashPolicy(process.env.PLANFORGE_GATE_BASH_POLICY || "balanced");
 
-const EXECUTION_MODES = new Set(["auto", "supervised", "yolo"]);
+const EXECUTION_MODES = new Set(["auto", "supervised", "fast"]);
 
 function normalizeExecutionMode(value) {
   const normalized = String(value || "").trim().toLowerCase();
@@ -36,7 +36,7 @@ const CONTINUE_APPROVAL = /^\s*(\/?continue)\s*[.!]*\s*$/i;
 const ACTION_REJECTION = /^\s*reject\s+[A-Za-z0-9._:-]+\s*$/i;
 const TRIVIAL_ACK = /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|continue)\s*[.!]*\s*$/i;
 const PLANFORGE_SUPERVISED_SKILL_CMD = /^\s*\/skill:planforge\b/i;
-const PLANFORGE_YOLO_SKILL_CMD = /^\s*\/skill:planforge-yolo\b/i;
+const PLANFORGE_FAST_SKILL_CMD = /^\s*\/skill:planforge-fast\b/i;
 const FORGE_SKILL_CMD = /^\s*\/skill:forge-[a-z0-9-]+\b/i;
 const CONTROL_COMMAND = /^\s*\/[a-z0-9:-]+\b/i;
 
@@ -340,9 +340,9 @@ export default function (pi) {
     description: "Approve current Planforge scope and continue supervised execution",
     handler: async (_args, ctx) => {
       if (!state.enabled) {
-        if (normalizeExecutionMode(state.executionMode) === "yolo") {
+        if (normalizeExecutionMode(state.executionMode) === "fast") {
           ctx.ui.notify(
-            "Planforge is in YOLO mode with gate off. Use /pf-gate on first if you want runtime mutation blocking.",
+            "Planforge is in fast mode with gate off. Use /pf-gate on first if you want runtime mutation blocking.",
             "info"
           );
           return;
@@ -379,19 +379,19 @@ export default function (pi) {
       return { action: "continue" };
     }
 
-    if (PLANFORGE_YOLO_SKILL_CMD.test(text)) {
+    if (PLANFORGE_FAST_SKILL_CMD.test(text)) {
       setState(
         {
           enabled: false,
           approved: false,
           scopeVersion: 0,
           approvedScopeVersion: 0,
-          executionMode: "yolo",
+          executionMode: "fast",
         },
-        "switch-planforge-yolo",
+        "switch-planforge-fast",
         ctx,
         "info",
-        "Planforge YOLO mode detected. Approval gate left off unless manually enabled with /pf-gate on."
+        "Planforge fast mode detected. Approval gate left off unless manually enabled with /pf-gate on."
       );
       return { action: "continue" };
     }
@@ -413,7 +413,7 @@ export default function (pi) {
       return { action: "continue" };
     }
 
-    if (!state.enabled && FORGE_SKILL_CMD.test(text) && normalizeExecutionMode(state.executionMode) !== "yolo") {
+    if (!state.enabled && FORGE_SKILL_CMD.test(text) && normalizeExecutionMode(state.executionMode) !== "fast") {
       setState(
         {
           enabled: true,

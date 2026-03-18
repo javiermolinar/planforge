@@ -80,19 +80,20 @@ Use `-l` only if you want a project-local install for the current repo.
 | Mode | Start command | Best for | Behavior |
 |---|---|---|---|
 | Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one action at a time and wait for explicit `/continue` before execution |
-| Unsupervised (fast) | `/skill:planforge-yolo` | faster iteration with less oversight | Executes without per-action approvals after scope approval |
+| Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without per-action approvals after scope approval |
 
 ### Approval gate controls (Pi)
 
-Planforge ships a stateful approval-gate extension that blocks mutating tool calls until explicit approval is active for the current scope.
+Planforge ships a stateful approval-gate extension that blocks mutating tool calls until approval is active for the current scope.
 
 | Command | Purpose |
 |---|---|
+| `/continue` | Normal supervised approval: approve the currently proposed next action |
 | `/pf-gate status` | Show current gate state |
 | `/pf-gate on` / `/pf-gate off` | Enable or disable gate for this session |
-| `/pf-gate approve` / `/pf-gate revoke` | Manually approve or revoke current scope |
 | `/pf-gate scope-changed` | Force re-approval requirement |
 | `/pf-gate policy strict` / `balanced` | Set pre-approval bash policy |
+| `/pf-gate approve` / `/pf-gate revoke` | Advanced manual override (usually unnecessary if using `/continue`) |
 
 Optional default for pre-approval bash policy:
 
@@ -116,7 +117,7 @@ Example:
 git clone https://github.com/javiermolinar/planforge ~/src/planforge
 export PATH="$HOME/src/planforge/scripts:$PATH"
 ln -s ~/src/planforge/skills/planforge ~/.config/your-harness/skills/planforge
-ln -s ~/src/planforge/skills/planforge-yolo ~/.config/your-harness/skills/planforge-yolo
+ln -s ~/src/planforge/skills/planforge-fast ~/.config/your-harness/skills/planforge-fast
 ln -s ~/src/planforge/skills/forge-investigate ~/.config/your-harness/skills/forge-investigate
 ```
 

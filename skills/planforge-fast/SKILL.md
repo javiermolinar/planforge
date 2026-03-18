@@ -1,9 +1,9 @@
 ---
-name: planforge-yolo
+name: planforge-fast
 description: Fast front door for implementation work. Keeps planning discipline but runs unsupervised after scope approval.
 ---
 
-# Orchestrator (YOLO / Unsupervised)
+# Orchestrator (Fast / Unsupervised)
 
 Use this skill when speed is prioritized and the user accepts reduced per-action oversight.
 

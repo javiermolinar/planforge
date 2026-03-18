@@ -132,7 +132,7 @@ Flow guardrails:
 - If code changes need stronger confidence, suggest/invoke `forge-test`.
 - After implementation, invoke `forge-verify` before claiming confidence.
 - For external API or networked tasks, auto-suggest a lightweight fresh-context `forge-review` pass before completion.
-- If the user explicitly wants speed over supervision, switch to `planforge-yolo`.
+- If the user explicitly wants speed over supervision, switch to `planforge-fast`.
 
 ## Branch policy
 
