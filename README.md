@@ -21,6 +21,14 @@ It favors:
 
 Philosophy source of truth: [`docs/philosophy.md`](docs/philosophy.md)
 
+## Zen of Planforge
+
+1. Compose small interfaces, keep modules deep.
+2. Be explicit: surface contracts, dependencies, and unknowns.
+3. Prefer one obvious path over clever alternatives.
+4. Fail loudly, verify claims, and never hide ambiguity.
+5. Ship tactically, improve strategically.
+
 ## Why it feels different
 
 Most agent workflows optimize for momentum. Planforge optimizes for judgment.
