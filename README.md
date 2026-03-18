@@ -117,12 +117,20 @@ When work ships, `plan-ship` can mark the plan as `shipped` and append a compact
 
 By default, Planforge stores state under `~/.planforge/`. To override that location, set `PLANFORGE_HOME`.
 
+## CI and releases
+
+- CI runs in GitHub Actions on push/PR and executes:
+  - `tests/test-plan-scripts.sh`
+  - `tests/test-pi-package.sh`
+- Releases are tag-driven (`v*`) and automatically published via GitHub Actions.
+
 ## Learn more
 
 - `docs/pi.md` — Pi-specific install and usage notes
 - `docs/flow.md` — workflow, branch policy, semantic conventions, and review handoff
 - `docs/philosophy.md` — design philosophy, deep modules, and red flags
 - `docs/tooling.md` — helper scripts, rolling-plan commands, and smoke checks
+- `docs/releases.md` — version tags, release process, and CI/release automation
 - `docs/evaluation.md` — benchmarks and scoring model
 - `benchmarks/README.md` — repeatable benchmark tasks
 

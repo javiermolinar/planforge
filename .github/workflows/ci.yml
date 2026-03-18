@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run plan script smoke tests
+        run: bash tests/test-plan-scripts.sh
+
+      - name: Run Pi package smoke tests
+        run: bash tests/test-pi-package.sh

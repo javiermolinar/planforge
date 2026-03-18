@@ -26,6 +26,17 @@ grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README
 grep -q 'PLANFORGE_HOME' README.md
 grep -q 'PLANFORGE_GATE_BASH_POLICY' README.md
 grep -q 'docs/tooling.md' README.md
+grep -q 'docs/releases.md' README.md
+test -f docs/releases.md
+grep -q 'git tag -a v' docs/releases.md
+grep -q 'git push origin v' docs/releases.md
+test -f .github/workflows/ci.yml
+grep -q 'test-plan-scripts.sh' .github/workflows/ci.yml
+grep -q 'test-pi-package.sh' .github/workflows/ci.yml
+test -f .github/workflows/release.yml
+grep -q 'tags:' .github/workflows/release.yml
+grep -q 'v\*' .github/workflows/release.yml
+grep -q 'softprops/action-gh-release' .github/workflows/release.yml
 grep -q '../../scripts/plan-init' skills/planforge/SKILL.md
 grep -q '../../scripts/plan-set-section' skills/forge-plan/SKILL.md
 grep -q '../../scripts/plan-append-item' skills/forge-implement/SKILL.md
