@@ -94,6 +94,9 @@ Planforge ships a lightweight approval gate extension:
 - In `/skill:planforge`, mutating tool calls are blocked until you send `/continue`.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
 - If scope changes after approval, the gate revokes approval and requires `/continue` again.
+- A lightweight dashboard widget is always visible with gate status + top TODOs.
+- Use `/pf-todo` to manage checklist items (`add`, `done`, `undone`, `rm`, `clear`, `list`).
+- Use `/pf-overlay` to open a right-side overlay with full state + todo details.
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
 

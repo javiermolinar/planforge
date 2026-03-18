@@ -1,5 +1,8 @@
 const STATE_ENTRY_TYPE = "planforge-approval-gate-state";
+const DASHBOARD_ENTRY_TYPE = "planforge-dashboard-state";
+
 const STATUS_KEY = "planforge-gate";
+const WIDGET_KEY = "planforge-dashboard";
 
 const EXECUTION_MODES = new Set(["auto", "supervised", "fast"]);
 
@@ -14,6 +17,13 @@ const DEFAULT_STATE = {
   scopeVersion: 0,
   approvedScopeVersion: 0,
   executionMode: "auto",
+  updatedAt: 0,
+  lastReason: "init",
+};
+
+const DEFAULT_DASHBOARD_STATE = {
+  todos: [],
+  nextTodoId: 1,
   updatedAt: 0,
   lastReason: "init",
 };
@@ -72,6 +82,37 @@ function normalizeState(raw) {
   };
 }
 
+function normalizeDashboardState(raw) {
+  if (!raw || typeof raw !== "object") return { ...DEFAULT_DASHBOARD_STATE };
+
+  const todos = Array.isArray(raw.todos)
+    ? raw.todos
+        .map((todo) => {
+          if (!todo || typeof todo !== "object") return null;
+          const id = Number.isFinite(todo.id) ? Number(todo.id) : NaN;
+          const text = typeof todo.text === "string" ? todo.text.trim() : "";
+          if (!Number.isInteger(id) || id <= 0 || !text) return null;
+          return {
+            id,
+            text,
+            done: Boolean(todo.done),
+            createdAt: Number.isFinite(todo.createdAt) ? Number(todo.createdAt) : 0,
+          };
+        })
+        .filter(Boolean)
+    : [];
+
+  const maxId = todos.reduce((max, todo) => Math.max(max, todo.id), 0);
+  const nextTodoId = Number.isFinite(raw.nextTodoId) ? Number(raw.nextTodoId) : maxId + 1;
+
+  return {
+    todos,
+    nextTodoId: Math.max(maxId + 1, Math.floor(nextTodoId) || 1),
+    updatedAt: Number.isFinite(raw.updatedAt) ? Number(raw.updatedAt) : 0,
+    lastReason: typeof raw.lastReason === "string" ? raw.lastReason : "restored",
+  };
+}
+
 function statusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
@@ -80,8 +121,148 @@ function statusLine(state) {
   return `PF gate: waiting approval (scope v${state.scopeVersion}${modeLabel})`;
 }
 
+function summarizeTodos(dashboardState) {
+  const total = dashboardState.todos.length;
+  const done = dashboardState.todos.filter((todo) => todo.done).length;
+  const pending = total - done;
+  return { total, done, pending };
+}
+
+function getWidgetLines(state, dashboardState) {
+  const summary = summarizeTodos(dashboardState);
+  const lines = [`${statusLine(state)} · todos ${summary.done}/${summary.total}`];
+
+  if (dashboardState.todos.length === 0) {
+    lines.push("TODO: none yet · /pf-todo add <task>");
+    lines.push("Open full panel: /pf-overlay");
+    return lines;
+  }
+
+  const pending = dashboardState.todos.filter((todo) => !todo.done);
+  const done = dashboardState.todos.filter((todo) => todo.done);
+  const ordered = [...pending, ...done].slice(0, 4);
+
+  for (const todo of ordered) {
+    lines.push(`${todo.done ? "[x]" : "[ ]"} ${todo.id}. ${todo.text}`);
+  }
+
+  if (dashboardState.todos.length > ordered.length) {
+    lines.push(`… ${dashboardState.todos.length - ordered.length} more item(s)`);
+  }
+
+  lines.push("Open full panel: /pf-overlay");
+  return lines;
+}
+
+function buildDashboardLines(state, dashboardState) {
+  const summary = summarizeTodos(dashboardState);
+  const now = new Date().toISOString();
+
+  const lines = [
+    "Planforge dashboard",
+    "",
+    `State: ${statusLine(state)}`,
+    `Execution mode: ${normalizeExecutionMode(state.executionMode)}`,
+    `Scope version: v${Math.max(1, state.scopeVersion || 1)}`,
+    `Updated: ${now}`,
+    "",
+    `Todos: ${summary.done}/${summary.total} done (${summary.pending} pending)`,
+  ];
+
+  if (dashboardState.todos.length === 0) {
+    lines.push("- No tasks yet. Add one with: /pf-todo add <task>");
+  } else {
+    const ordered = [...dashboardState.todos].sort((a, b) => a.id - b.id);
+    for (const todo of ordered) {
+      lines.push(`${todo.done ? "[x]" : "[ ]"} ${todo.id}. ${todo.text}`);
+    }
+  }
+
+  lines.push("");
+  lines.push("Commands:");
+  lines.push("- /pf-todo add <task>");
+  lines.push("- /pf-todo done <id> | /pf-todo undone <id>");
+  lines.push("- /pf-todo rm <id> | /pf-todo clear");
+  lines.push("- Esc / Enter / q to close this panel");
+
+  return lines;
+}
+
+function clamp(line, width) {
+  const w = Math.max(0, Number(width) || 0);
+  if (w <= 0) return "";
+  const text = String(line || "");
+  if (text.length <= w) return text;
+  if (w === 1) return "…";
+  return `${text.slice(0, w - 1)}…`;
+}
+
+function parseTodoCommand(args) {
+  const raw = String(args || "").trim();
+  if (!raw) return { action: "list" };
+
+  const parts = raw.split(/\s+/);
+  const action = String(parts.shift() || "").toLowerCase();
+  const rest = parts.join(" ").trim();
+
+  return { action, rest, raw };
+}
+
+function parseTodoId(text) {
+  const id = Number.parseInt(String(text || "").trim(), 10);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function buildOverlayComponent(tui, linesBuilder, done) {
+  let cachedWidth;
+  let cachedLines;
+
+  function renderFrame(width) {
+    const panelWidth = Math.max(24, width || 24);
+    const inner = Math.max(20, panelWidth - 2);
+    const body = linesBuilder();
+
+    const lines = [];
+    lines.push(`┌${"─".repeat(inner)}┐`);
+    for (const line of body) {
+      const trimmed = clamp(line, inner);
+      const padding = inner - trimmed.length;
+      lines.push(`│${trimmed}${" ".repeat(Math.max(0, padding))}│`);
+    }
+    lines.push(`└${"─".repeat(inner)}┘`);
+    return lines;
+  }
+
+  return {
+    render(width) {
+      if (cachedLines && cachedWidth === width) return cachedLines;
+      cachedLines = renderFrame(width);
+      cachedWidth = width;
+      return cachedLines;
+    },
+    invalidate() {
+      cachedWidth = undefined;
+      cachedLines = undefined;
+    },
+    handleInput(data) {
+      const key = String(data || "");
+      if (key === "q" || key === "Q" || key === "\u001b" || key === "\r" || key === "\n" || key === "\u0003") {
+        done(null);
+        return;
+      }
+
+      if (key === "r" || key === "R") {
+        cachedWidth = undefined;
+        cachedLines = undefined;
+        tui.requestRender();
+      }
+    },
+  };
+}
+
 export default function (pi) {
   let state = { ...DEFAULT_STATE };
+  let dashboardState = { ...DEFAULT_DASHBOARD_STATE };
 
   function persist(reason) {
     state = {
@@ -92,14 +273,33 @@ export default function (pi) {
     pi.appendEntry(STATE_ENTRY_TYPE, { ...state });
   }
 
+  function persistDashboard(reason) {
+    dashboardState = {
+      ...dashboardState,
+      updatedAt: Date.now(),
+      lastReason: reason,
+    };
+    pi.appendEntry(DASHBOARD_ENTRY_TYPE, { ...dashboardState });
+  }
+
   function render(ctx) {
     if (!ctx?.hasUI) return;
     ctx.ui.setStatus(STATUS_KEY, statusLine(state));
+    ctx.ui.setWidget(WIDGET_KEY, getWidgetLines(state, dashboardState));
   }
 
   function setState(next, reason, ctx, notifyLevel, notifyMessage) {
     state = normalizeState({ ...state, ...next });
     persist(reason);
+    render(ctx);
+    if (notifyMessage && ctx?.hasUI) {
+      ctx.ui.notify(notifyMessage, notifyLevel || "info");
+    }
+  }
+
+  function setDashboard(next, reason, ctx, notifyLevel, notifyMessage) {
+    dashboardState = normalizeDashboardState({ ...dashboardState, ...next });
+    persistDashboard(reason);
     render(ctx);
     if (notifyMessage && ctx?.hasUI) {
       ctx.ui.notify(notifyMessage, notifyLevel || "info");
@@ -124,15 +324,17 @@ export default function (pi) {
 
   function restore(ctx) {
     const branch = ctx?.sessionManager?.getBranch?.() || [];
-    let restored = null;
+    let restoredGate = null;
+    let restoredDashboard = null;
 
     for (const entry of branch) {
-      if (entry?.type === "custom" && entry?.customType === STATE_ENTRY_TYPE) {
-        restored = entry?.data;
-      }
+      if (entry?.type !== "custom") continue;
+      if (entry?.customType === STATE_ENTRY_TYPE) restoredGate = entry?.data;
+      if (entry?.customType === DASHBOARD_ENTRY_TYPE) restoredDashboard = entry?.data;
     }
 
-    state = restored ? normalizeState(restored) : { ...DEFAULT_STATE };
+    state = restoredGate ? normalizeState(restoredGate) : { ...DEFAULT_STATE };
+    dashboardState = restoredDashboard ? normalizeDashboardState(restoredDashboard) : { ...DEFAULT_DASHBOARD_STATE };
     render(ctx);
   }
 
@@ -193,6 +395,151 @@ export default function (pi) {
       }
 
       approveCurrentScope(ctx, "continue-command", true);
+    },
+  });
+
+  pi.registerCommand("pf-todo", {
+    description: "Manage Planforge todo widget: add/done/undone/rm/clear/list",
+    handler: async (args, ctx) => {
+      const parsed = parseTodoCommand(args);
+      const action = parsed.action;
+
+      if (action === "help") {
+        ctx.ui.notify("Usage: /pf-todo add <task> | done <id> | undone <id> | rm <id> | clear | list", "info");
+        return;
+      }
+
+      if (action === "list" || action === "ls") {
+        const summary = summarizeTodos(dashboardState);
+        ctx.ui.notify(`Planforge todos: ${summary.done}/${summary.total} done. Open /pf-overlay for full panel.`, "info");
+        render(ctx);
+        return;
+      }
+
+      if (action === "clear") {
+        setDashboard(
+          {
+            todos: [],
+            nextTodoId: 1,
+          },
+          "todo-clear",
+          ctx,
+          "info",
+          "Planforge todos cleared."
+        );
+        return;
+      }
+
+      if (action === "add" || action === "a" || (!action && parsed.rest)) {
+        const text = (action === "add" || action === "a") ? parsed.rest : parsed.raw;
+        const task = String(text || "").trim();
+        if (!task) {
+          ctx.ui.notify("Usage: /pf-todo add <task>", "warning");
+          return;
+        }
+
+        const id = dashboardState.nextTodoId;
+        const todos = [...dashboardState.todos, { id, text: task, done: false, createdAt: Date.now() }];
+        setDashboard(
+          {
+            todos,
+            nextTodoId: id + 1,
+          },
+          "todo-add",
+          ctx,
+          "success",
+          `Added todo #${id}.`
+        );
+        return;
+      }
+
+      if (action === "done" || action === "check" || action === "undone" || action === "uncheck") {
+        const id = parseTodoId(parsed.rest);
+        if (!id) {
+          ctx.ui.notify(`Usage: /pf-todo ${action === "done" || action === "check" ? "done" : "undone"} <id>`, "warning");
+          return;
+        }
+
+        const idx = dashboardState.todos.findIndex((todo) => todo.id === id);
+        if (idx < 0) {
+          ctx.ui.notify(`Todo #${id} not found.`, "warning");
+          return;
+        }
+
+        const todos = dashboardState.todos.map((todo) =>
+          todo.id === id ? { ...todo, done: action === "done" || action === "check" } : todo
+        );
+
+        const isDone = action === "done" || action === "check";
+        setDashboard(
+          { todos },
+          isDone ? "todo-done" : "todo-undone",
+          ctx,
+          "success",
+          `Todo #${id} marked ${isDone ? "done" : "pending"}.`
+        );
+        return;
+      }
+
+      if (action === "rm" || action === "remove" || action === "del" || action === "delete") {
+        const id = parseTodoId(parsed.rest);
+        if (!id) {
+          ctx.ui.notify("Usage: /pf-todo rm <id>", "warning");
+          return;
+        }
+
+        const before = dashboardState.todos.length;
+        const todos = dashboardState.todos.filter((todo) => todo.id !== id);
+        if (todos.length === before) {
+          ctx.ui.notify(`Todo #${id} not found.`, "warning");
+          return;
+        }
+
+        setDashboard({ todos }, "todo-remove", ctx, "success", `Removed todo #${id}.`);
+        return;
+      }
+
+      if (parsed.raw) {
+        const id = dashboardState.nextTodoId;
+        const todos = [...dashboardState.todos, { id, text: parsed.raw, done: false, createdAt: Date.now() }];
+        setDashboard(
+          {
+            todos,
+            nextTodoId: id + 1,
+          },
+          "todo-add-implicit",
+          ctx,
+          "success",
+          `Added todo #${id}.`
+        );
+        return;
+      }
+
+      ctx.ui.notify("Usage: /pf-todo add <task> | done <id> | undone <id> | rm <id> | clear | list", "info");
+    },
+  });
+
+  pi.registerCommand("pf-overlay", {
+    description: "Show the Planforge state + todo overlay panel",
+    handler: async (_args, ctx) => {
+      if (!ctx?.hasUI) return;
+
+      await ctx.ui.custom(
+        (tui, _theme, _keybindings, done) =>
+          buildOverlayComponent(tui, () => buildDashboardLines(state, dashboardState), done),
+        {
+          overlay: true,
+          overlayOptions: {
+            anchor: "right-center",
+            width: "46%",
+            minWidth: 44,
+            maxWidth: 84,
+            maxHeight: "85%",
+            margin: 1,
+          },
+        }
+      );
+      render(ctx);
     },
   });
 

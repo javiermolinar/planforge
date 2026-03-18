@@ -64,6 +64,9 @@ Planforge includes a lightweight stateful approval gate for Pi:
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
 - Before `/continue`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).
 - Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval.
+- A persistent dashboard widget shows current gate state plus the top TODOs.
+- Use `/pf-todo` to manage TODOs (`add`, `done`, `undone`, `rm`, `clear`, `list`).
+- Use `/pf-overlay` for a larger right-side overlay panel with full state + checklist.
 
 ## Publishing later
 
