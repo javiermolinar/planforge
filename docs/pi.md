@@ -28,6 +28,14 @@ Start with:
 /skill:planforge
 ```
 
+`/skill:planforge` is supervised by default (propose one action, approve one action, execute one action).
+
+If you prefer faster unsupervised execution, use:
+
+```text
+/skill:planforge-yolo
+```
+
 Use `forge-investigate` when the first job is discovery: understanding the code, tracing behavior, mapping dependencies, or reducing unknown unknowns before implementation.
 
 ## Package management
@@ -52,6 +60,7 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 Planforge includes a stateful approval gate for Pi:
 
 - Auto-enables when you start with `/skill:planforge` or `/skill:forge-*`.
+- If you start with `/skill:planforge-yolo`, enable it manually with `/pf-gate on` when you still want runtime mutation blocking.
 - Blocks `edit`, `write`, and mutating `bash` commands until explicit approval is active.
 - Treats additional non-trivial follow-up prompts after approval as scope changes and revokes approval.
 

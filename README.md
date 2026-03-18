@@ -39,7 +39,7 @@ This is not a temple for vibecoding. It is a forge.
 
 ## Example
 
-In Pi:
+In Pi (supervised default):
 
 ```text
 /skill:planforge Build a small read-only Hacker News CLI. Keep it minimal, plan first, and challenge unnecessary complexity.
@@ -48,10 +48,10 @@ In Pi:
 Planforge should then:
 1. clarify the scope
 2. produce a short plan and test table
-3. get explicit approval
+3. get explicit scope approval
 4. create a semantic branch if needed
 5. create a rolling plan
-6. implement in small tasks
+6. propose one action at a time and wait for approval (`approve <id>`)
 7. verify each meaningful step
 8. suggest a fresh-context review before completion
 
@@ -79,6 +79,14 @@ Then start with:
 
 ```text
 /skill:planforge
+```
+
+`/skill:planforge` is supervised by default (one proposed action at a time, explicit approval before each action).
+
+If you want a faster unsupervised run, use:
+
+```text
+/skill:planforge-yolo
 ```
 
 On Pi, Planforge also ships a stateful approval-gate extension that blocks mutating tool calls until explicit approval is active for the current scope. You can inspect or override it with:
@@ -109,6 +117,7 @@ Example:
 git clone https://github.com/javiermolinar/planforge ~/src/planforge
 export PATH="$HOME/src/planforge/scripts:$PATH"
 ln -s ~/src/planforge/skills/planforge ~/.config/your-harness/skills/planforge
+ln -s ~/src/planforge/skills/planforge-yolo ~/.config/your-harness/skills/planforge-yolo
 ln -s ~/src/planforge/skills/forge-investigate ~/.config/your-harness/skills/forge-investigate
 ```
 

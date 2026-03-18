@@ -8,6 +8,7 @@ Planforge is opinionated:
 - prefer the simpler path
 - stay single-agent by default
 - suggest multiagent or worktrees only when worth the overhead
+- use supervised execution by default via `/skill:planforge` (propose one action, wait approval, execute one action)
 
 ## Design philosophy
 
@@ -21,6 +22,17 @@ Use `docs/philosophy.md` as the source of truth for:
 - canonical red flags
 
 `docs/flow.md` focuses on operational workflow and policy; `docs/philosophy.md` defines the principles.
+
+## Execution modes
+
+- `planforge` (default): supervised mode for serious development workflows.
+  - one action proposal at a time
+  - explicit approval (`approve <id>`) before execution
+  - scope changes trigger re-planning and re-approval
+- `planforge-yolo`: unsupervised mode when speed is prioritized.
+  - still requires scope approval before non-trivial mutation
+  - no per-action approval loop after scope approval
+  - recommend switching back to supervised mode if risk grows
 
 ## Branch policy
 
@@ -60,7 +72,7 @@ Plan files use managed section markers so shell helpers can update them cheaply 
 ## Pi package notes
 
 - Planforge can be installed with `pi install /absolute/path/to/planforge`.
-- After installation, use `/skill:planforge` or `/skill:forge-investigate` to start explicitly.
+- After installation, use `/skill:planforge` (supervised), `/skill:planforge-yolo` (unsupervised), or `/skill:forge-investigate`.
 - `pi config` can enable or disable resources from the package.
 - On Pi, the packaged approval-gate extension enforces read-only behavior before approval by blocking `edit`, `write`, and mutating `bash` tool calls.
 - The gate supports `strict` or `balanced` pre-approval bash policies via `/pf-gate policy ...` (default: `balanced`).
