@@ -87,24 +87,13 @@ Use `-l` only if you want a project-local install for the current repo.
 | Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one action at a time and wait for explicit `/continue` before execution |
 | Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without per-action approvals after scope approval |
 
-### Approval gate controls (Pi)
+### Supervised approvals (Pi)
 
-Planforge ships a stateful approval-gate extension that blocks mutating tool calls until approval is active for the current scope.
+Planforge ships a lightweight approval gate extension:
 
-| Command | Purpose |
-|---|---|
-| `/continue` | Normal supervised approval: approve the currently proposed next action |
-| `/pf-gate status` | Show current gate state |
-| `/pf-gate on` / `/pf-gate off` | Enable or disable gate for this session |
-| `/pf-gate scope-changed` | Force re-approval requirement |
-| `/pf-gate policy strict` / `balanced` | Set pre-approval bash policy |
-| `/pf-gate approve` / `/pf-gate revoke` | Advanced manual override (usually unnecessary if using `/continue`) |
-
-Optional default for pre-approval bash policy:
-
-```bash
-export PLANFORGE_GATE_BASH_POLICY=strict   # or balanced (default)
-```
+- In `/skill:planforge`, mutating tool calls are blocked until you send `/continue`.
+- In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
+- If scope changes after approval, the gate revokes approval and requires `/continue` again.
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
 

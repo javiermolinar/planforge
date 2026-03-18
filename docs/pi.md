@@ -57,31 +57,13 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 
 ## Approval gate extension
 
-Planforge includes a stateful approval gate for Pi:
+Planforge includes a lightweight stateful approval gate for Pi:
 
 - Auto-enables when you start with `/skill:planforge` or `/skill:forge-*`.
 - In supervised mode, use `/continue` to approve and execute the currently proposed action.
-- If you start with `/skill:planforge-fast`, enable it manually with `/pf-gate on` when you still want runtime mutation blocking.
-- Blocks `edit`, `write`, and mutating `bash` commands until explicit approval is active.
-- Treats additional non-trivial follow-up prompts after approval as scope changes and revokes approval.
-
-Manual control command:
-
-```text
-/pf-gate status | on | off | approve | revoke | scope-changed | policy [strict|balanced]
-```
-
-Use this when you need to override or inspect the gate state explicitly.
-
-Bash policy modes before approval:
-- `strict` — only allows: `ls`, `rg`, `find`, `git status`, `git branch --show-current`
-- `balanced` — allows a broader read-only inspection set (default)
-
-Set the default mode for new sessions with:
-
-```bash
-export PLANFORGE_GATE_BASH_POLICY=strict   # or balanced
-```
+- In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
+- Before `/continue`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).
+- Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval.
 
 ## Publishing later
 
