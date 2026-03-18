@@ -28,7 +28,7 @@ Start with:
 /skill:planforge
 ```
 
-`/skill:planforge` is supervised by default (propose one action, then use `/pf-continue` to approve and execute it; `/continue` remains as an alias).
+`/skill:planforge` is supervised by default (propose one action, then use `/pf-continue` to approve and execute it).
 
 If you prefer faster unsupervised execution, use:
 
@@ -60,11 +60,11 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 Planforge includes a lightweight stateful approval gate for Pi:
 
 - Auto-enables when you start with `/skill:planforge` or `/skill:forge-*`.
-- In supervised mode, use `/pf-continue` to approve and execute the currently proposed action (`/continue` is a legacy alias).
+- In supervised mode, use `/pf-continue` to approve and execute the currently proposed action.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
 - Before `/pf-continue`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).
 - Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval.
-- Use `/pf-status` for a right-side overlay panel with current state on demand (`/pf-overlay` is an alias).
+- Use `/pf-status` for a right-side overlay panel with current state on demand.
 
 ## Publishing later
 

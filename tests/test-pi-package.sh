@@ -10,7 +10,9 @@ grep -q '"keywords"[[:space:]]*:[[:space:]]*\[[^]]*"pi-package"' package.json
 grep -q '"skills"[[:space:]]*:[[:space:]]*\[[^]]*"\./skills"' package.json
 grep -q '"extensions"[[:space:]]*:[[:space:]]*\[[^]]*"\./extensions"' package.json
 test -f extensions/planforge-approval-gate.ts
-grep -q 'registerCommand("continue"' extensions/planforge-approval-gate.ts
+test -f extensions/pf-status.ts
+grep -q 'registerCommand("pf-continue"' extensions/planforge-approval-gate.ts
+grep -q 'registerCommand("pf-status"' extensions/pf-status.ts
 grep -q 'CONTINUE_APPROVAL' extensions/planforge-approval-gate.ts
 grep -q 'PLANFORGE_FAST_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd.' extensions/planforge-approval-gate.ts
@@ -18,8 +20,7 @@ grep -q 'pi install /absolute/path/to/planforge' README.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' README.md
 grep -q '/skill:planforge' README.md
 grep -q '/skill:planforge-fast' README.md
-grep -q '/continue' README.md
-grep -q '/continue' README.md
+grep -q '/pf-continue' README.md
 grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
 grep -q 'PLANFORGE_HOME' README.md
 grep -q 'docs/tooling.md' README.md
@@ -115,7 +116,7 @@ test -f docs/pi.md
 grep -q 'pi config' docs/pi.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' docs/pi.md
 grep -q '/skill:planforge-fast' docs/pi.md
-grep -q '/continue' docs/pi.md
+grep -q '/pf-continue' docs/pi.md
 grep -q 'PLANFORGE_HOME' docs/tooling.md
 grep -q 'scorecard-init' docs/tooling.md
 grep -q 'plan-next-init' docs/tooling.md

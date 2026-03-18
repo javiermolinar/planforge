@@ -19,9 +19,9 @@ const DEFAULT_STATE = {
   lastReason: "init",
 };
 
-const CONTINUE_APPROVAL = /^\s*(\/?(?:pf-continue|continue))\s*[.!]*\s*$/i;
+const CONTINUE_APPROVAL = /^\s*(\/?pf-continue)\s*[.!]*\s*$/i;
 const TRIVIAL_ACK =
-  /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|continue|pf-continue)\s*[.!]*\s*$/i;
+  /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|pf-continue)\s*[.!]*\s*$/i;
 
 const PLANFORGE_SUPERVISED_SKILL_CMD = /^\s*\/skill:planforge\b/i;
 const PLANFORGE_FAST_SKILL_CMD = /^\s*\/skill:planforge-fast\b/i;
@@ -196,14 +196,6 @@ export default function (pi) {
 
   pi.registerCommand("pf-continue", {
     description: "Approve current Planforge scope and continue supervised execution",
-    handler: async (_args, ctx) => {
-      handleContinue(ctx);
-    },
-  });
-
-  // Backward-compatible alias.
-  pi.registerCommand("continue", {
-    description: "Alias for /pf-continue",
     handler: async (_args, ctx) => {
       handleContinue(ctx);
     },

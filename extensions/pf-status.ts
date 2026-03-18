@@ -171,11 +171,4 @@ export default function (pi) {
     },
   });
 
-  // Backward-compatible alias.
-  pi.registerCommand("pf-overlay", {
-    description: "Alias for /pf-status",
-    handler: async (_args, ctx) => {
-      await openOverlay(ctx);
-    },
-  });
 }

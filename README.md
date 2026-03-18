@@ -91,10 +91,10 @@ Use `-l` only if you want a project-local install for the current repo.
 
 Planforge ships a lightweight approval gate extension:
 
-- In `/skill:planforge`, mutating tool calls are blocked until you send `/pf-continue` (legacy `/continue` alias still works).
+- In `/skill:planforge`, mutating tool calls are blocked until you send `/pf-continue`.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
 - If scope changes after approval, the gate revokes approval and requires `/pf-continue` again.
-- Use `/pf-status` to open the right-side status overlay on demand (`/pf-overlay` is an alias).
+- Use `/pf-status` to open the right-side status overlay on demand.
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
 

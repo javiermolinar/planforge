@@ -38,7 +38,7 @@ Prohibited before scope approval:
 - mutating `bash` commands (for example redirection `>` / `>>`, `tee`, `sed -i`, write-mode formatters/fixers)
 - any command that changes files, git state, or environment
 
-Approval must be explicit from the user (use `/pf-continue` in supervised mode; `/continue` remains as a legacy alias).
+Approval must be explicit from the user (use `/pf-continue` in supervised mode).
 
 If requirements/constraints change after approval, approval is invalidated. Re-post plan + test table and re-request approval.
 
@@ -64,7 +64,7 @@ If any answer blocks mutation, stop and request approval.
 After scope approval, run one-step-at-a-time:
 
 1. Propose exactly one next action with an id.
-2. Wait for explicit approval (`/pf-continue`; `/continue` alias allowed).
+2. Wait for explicit approval (`/pf-continue`).
 3. Execute only that approved action.
 4. Report result succinctly.
 5. Propose the next single action.
@@ -150,3 +150,4 @@ Flow guardrails:
 - Suggest commit points and messages.
 - Suggest semantic messages such as `feat: ...` / `fix: ...`.
 - After verification, suggest semantic commit message and whether to squash noisy history.
+sy history.
