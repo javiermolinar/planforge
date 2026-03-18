@@ -28,7 +28,7 @@ Start with:
 /skill:planforge
 ```
 
-`/skill:planforge` is supervised by default (propose one action, approve one action, execute one action).
+`/skill:planforge` is supervised by default (propose one action, then use `/continue` to approve and execute it).
 
 If you prefer faster unsupervised execution, use:
 

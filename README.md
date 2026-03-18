@@ -51,7 +51,7 @@ Planforge should then:
 3. get explicit scope approval
 4. create a semantic branch if needed
 5. create a rolling plan
-6. propose one action at a time and wait for approval (`approve <id>`)
+6. propose one action at a time and wait for `/continue`
 7. verify each meaningful step
 8. suggest a fresh-context review before completion
 
@@ -75,25 +75,24 @@ Use `-l` only if you want a project-local install for the current repo.
 
 `git:` sources are managed clones under `~/.pi/agent/git/` (or `.pi/git/` with `-l`), so Pi may run `git pull` on later installs/updates. If you want Pi to use your current working tree directly, install by local path.
 
-Then start with:
+### Modes
 
-```text
-/skill:planforge
-```
+| Mode | Start command | Best for | Behavior |
+|---|---|---|---|
+| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one action at a time and wait for explicit `/continue` before execution |
+| Unsupervised (fast) | `/skill:planforge-yolo` | faster iteration with less oversight | Executes without per-action approvals after scope approval |
 
-`/skill:planforge` is supervised by default (one proposed action at a time, explicit approval before each action).
+### Approval gate controls (Pi)
 
-If you want a faster unsupervised run, use:
+Planforge ships a stateful approval-gate extension that blocks mutating tool calls until explicit approval is active for the current scope.
 
-```text
-/skill:planforge-yolo
-```
-
-On Pi, Planforge also ships a stateful approval-gate extension that blocks mutating tool calls until explicit approval is active for the current scope. You can inspect or override it with:
-
-```text
-/pf-gate status | on | off | approve | revoke | scope-changed | policy [strict|balanced]
-```
+| Command | Purpose |
+|---|---|
+| `/pf-gate status` | Show current gate state |
+| `/pf-gate on` / `/pf-gate off` | Enable or disable gate for this session |
+| `/pf-gate approve` / `/pf-gate revoke` | Manually approve or revoke current scope |
+| `/pf-gate scope-changed` | Force re-approval requirement |
+| `/pf-gate policy strict` / `balanced` | Set pre-approval bash policy |
 
 Optional default for pre-approval bash policy:
 

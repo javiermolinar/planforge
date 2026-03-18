@@ -29,7 +29,7 @@ Use this after planning is approved and branch context is ready.
 When running under supervised mode:
 
 1. Propose exactly one action with an id.
-2. Wait for explicit approval (`approve <id>`) or rejection (`reject <id>`).
+2. Wait for explicit approval (`/continue`).
 3. Execute only that approved action.
 4. Report result and propose the next single action.
 

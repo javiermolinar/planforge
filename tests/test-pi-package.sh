@@ -11,15 +11,17 @@ grep -q '"skills"[[:space:]]*:[[:space:]]*\[[^]]*"\./skills"' package.json
 grep -q '"extensions"[[:space:]]*:[[:space:]]*\[[^]]*"\./extensions"' package.json
 test -f extensions/planforge-approval-gate.ts
 grep -q 'registerCommand("pf-gate"' extensions/planforge-approval-gate.ts
-grep -q 'ACTION_APPROVAL' extensions/planforge-approval-gate.ts
+grep -q 'registerCommand("continue"' extensions/planforge-approval-gate.ts
+grep -q 'CONTINUE_APPROVAL' extensions/planforge-approval-gate.ts
 grep -q 'PLANFORGE_YOLO_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'Planforge gate blocked mutating bash command before approval' extensions/planforge-approval-gate.ts
 grep -q 'pi install /absolute/path/to/planforge' README.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' README.md
 grep -q '/skill:planforge' README.md
 grep -q '/skill:planforge-yolo' README.md
-grep -q 'approve <id>' README.md
-grep -q '/pf-gate status | on | off | approve | revoke | scope-changed | policy' README.md
+grep -q '/continue' README.md
+grep -q '/pf-gate status' README.md
+grep -q '/pf-gate policy strict' README.md
 grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
 grep -q 'PLANFORGE_HOME' README.md
 grep -q 'PLANFORGE_GATE_BASH_POLICY' README.md

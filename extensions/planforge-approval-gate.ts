@@ -32,14 +32,13 @@ const DEFAULT_STATE = {
   lastReason: "init",
 };
 
-const APPROVAL_PHRASE = /\b(approved|go ahead|proceed)\b/i;
-const ACTION_APPROVAL = /^\s*(approve|approved)\s+[A-Za-z0-9._:-]+\s*$/i;
+const CONTINUE_APPROVAL = /^\s*(\/?continue)\s*[.!]*\s*$/i;
 const ACTION_REJECTION = /^\s*reject\s+[A-Za-z0-9._:-]+\s*$/i;
-const TRIVIAL_ACK = /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice)\s*[.!]*\s*$/i;
+const TRIVIAL_ACK = /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|continue)\s*[.!]*\s*$/i;
 const PLANFORGE_SUPERVISED_SKILL_CMD = /^\s*\/skill:planforge\b/i;
 const PLANFORGE_YOLO_SKILL_CMD = /^\s*\/skill:planforge-yolo\b/i;
 const FORGE_SKILL_CMD = /^\s*\/skill:forge-[a-z0-9-]+\b/i;
-const CONTROL_COMMAND = /^\s*\/(pf-gate|skill:)\b/i;
+const CONTROL_COMMAND = /^\s*\/[a-z0-9:-]+\b/i;
 
 const MUTATING_BASH_TOKENS = [
   /(^|[^<])>>?/, // redirection
@@ -82,52 +81,6 @@ function policyReadOnlyHint(policy) {
     return "Strict mode allows only: ls, rg, find, git status, git branch --show-current.";
   }
   return "Balanced mode allows a broader set of read-only inspection commands.";
-}
-
-function safeLower(text) {
-  return (text || "").toLowerCase();
-}
-
-function normalizeWords(text) {
-  return safeLower(text)
-    .replace(/[^a-z0-9\s']/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-}
-
-function isPureApproval(text) {
-  if (!APPROVAL_PHRASE.test(text || "")) return false;
-  const words = normalizeWords(text);
-  if (words.length === 0) return false;
-
-  const allowed = new Set([
-    "approved",
-    "go",
-    "ahead",
-    "proceed",
-    "please",
-    "yes",
-    "y",
-    "ok",
-    "okay",
-    "looks",
-    "look",
-    "good",
-    "sounds",
-    "great",
-    "fine",
-    "all",
-    "right",
-    "lets",
-    "let's",
-    "do",
-    "it",
-    "thanks",
-    "thank",
-    "you",
-  ]);
-
-  return words.every((w) => allowed.has(w));
 }
 
 function splitCommandSegments(command) {
@@ -212,6 +165,22 @@ export default function (pi) {
     if (notifyMessage && ctx?.hasUI) {
       ctx.ui.notify(notifyMessage, notifyLevel || "info");
     }
+  }
+
+  function approveCurrentScope(ctx, reason, notify = true) {
+    const scope = Math.max(1, state.scopeVersion || 1);
+    setState(
+      {
+        enabled: true,
+        approved: true,
+        scopeVersion: scope,
+        approvedScopeVersion: scope,
+      },
+      reason,
+      ctx,
+      notify ? "success" : undefined,
+      notify ? `Planforge gate approved for scope v${scope}.` : undefined
+    );
   }
 
   function restore(ctx) {
@@ -302,18 +271,7 @@ export default function (pi) {
       }
 
       if (action === "approve") {
-        setState(
-          {
-            enabled: true,
-            approved: true,
-            scopeVersion: Math.max(1, state.scopeVersion || 1),
-            approvedScopeVersion: Math.max(1, state.scopeVersion || 1),
-          },
-          "manual-approve",
-          ctx,
-          "success",
-          `Planforge gate approved for scope v${Math.max(1, state.scopeVersion || 1)}.`
-        );
+        approveCurrentScope(ctx, "manual-approve", true);
         return;
       }
 
@@ -378,6 +336,42 @@ export default function (pi) {
     },
   });
 
+  pi.registerCommand("continue", {
+    description: "Approve current Planforge scope and continue supervised execution",
+    handler: async (_args, ctx) => {
+      if (!state.enabled) {
+        if (normalizeExecutionMode(state.executionMode) === "yolo") {
+          ctx.ui.notify(
+            "Planforge is in YOLO mode with gate off. Use /pf-gate on first if you want runtime mutation blocking.",
+            "info"
+          );
+          return;
+        }
+
+        setState(
+          {
+            enabled: true,
+            approved: false,
+            scopeVersion: Math.max(1, state.scopeVersion || 1),
+            approvedScopeVersion: 0,
+            executionMode: normalizeExecutionMode(state.executionMode) === "auto" ? "supervised" : state.executionMode,
+          },
+          "continue-auto-enable",
+          ctx,
+          "info",
+          "Planforge gate enabled. Approving current scope."
+        );
+      }
+
+      if (state.approved) {
+        ctx.ui.notify(`Continue acknowledged (scope v${Math.max(1, state.scopeVersion || 1)}).`, "info");
+        return;
+      }
+
+      approveCurrentScope(ctx, "continue-command", true);
+    },
+  });
+
   pi.on("input", async (event, ctx) => {
     const text = String(event?.text || "").trim();
 
@@ -439,50 +433,14 @@ export default function (pi) {
       return { action: "continue" };
     }
 
-    if (ACTION_APPROVAL.test(text)) {
-      const scope = Math.max(1, state.scopeVersion || 1);
-      setState(
-        {
-          enabled: true,
-          approved: true,
-          scopeVersion: scope,
-          approvedScopeVersion: scope,
-        },
-        "action-approval-token",
-        ctx,
-        state.approved ? undefined : "success",
-        state.approved ? undefined : `Planforge gate approved for scope v${scope}.`
-      );
+    if (CONTINUE_APPROVAL.test(text)) {
+      if (!state.approved) {
+        approveCurrentScope(ctx, "continue-input", true);
+      }
       return { action: "continue" };
     }
 
     if (ACTION_REJECTION.test(text) || CONTROL_COMMAND.test(text)) {
-      return { action: "continue" };
-    }
-
-    if (isPureApproval(text)) {
-      const scope = Math.max(1, state.scopeVersion || 1);
-      setState(
-        {
-          enabled: true,
-          approved: true,
-          scopeVersion: scope,
-          approvedScopeVersion: scope,
-        },
-        "explicit-approval-from-input",
-        ctx,
-        "success",
-        `Planforge gate approved for scope v${scope}.`
-      );
-      return { action: "continue" };
-    }
-
-    if (APPROVAL_PHRASE.test(text) && !isPureApproval(text)) {
-      invalidateForScopeChange(
-        ctx,
-        "approval-mixed-with-new-requirements",
-        "Planforge gate: approval phrase included extra scope text. Treating as scope change; re-plan and request clean re-approval."
-      );
       return { action: "continue" };
     }
 
