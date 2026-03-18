@@ -48,32 +48,49 @@ In Pi:
 Planforge should then:
 1. clarify the scope
 2. produce a short plan and test table
-3. create a semantic branch if needed
-4. create a rolling plan
-5. implement in small tasks
-6. verify each meaningful step
-7. suggest a fresh-context review before completion
+3. get explicit approval
+4. create a semantic branch if needed
+5. create a rolling plan
+6. implement in small tasks
+7. verify each meaningful step
+8. suggest a fresh-context review before completion
 
 ## Quickstart
 
 ### Pi
 
-Project-local install:
+Global install from git (available in all repos):
 
 ```bash
-pi install git:github.com/javiermolinar/planforge -l
+pi install git:github.com/javiermolinar/planforge
 ```
 
-Or from a local checkout:
+Or install from a local checkout (recommended while developing Planforge itself):
 
 ```bash
-pi install /absolute/path/to/planforge -l
+pi install /absolute/path/to/planforge
 ```
+
+Use `-l` only if you want a project-local install for the current repo.
+
+`git:` sources are managed clones under `~/.pi/agent/git/` (or `.pi/git/` with `-l`), so Pi may run `git pull` on later installs/updates. If you want Pi to use your current working tree directly, install by local path.
 
 Then start with:
 
 ```text
 /skill:planforge
+```
+
+On Pi, Planforge also ships a stateful approval-gate extension that blocks mutating tool calls until explicit approval is active for the current scope. You can inspect or override it with:
+
+```text
+/pf-gate status | on | off | approve | revoke | scope-changed | policy [strict|balanced]
+```
+
+Optional default for pre-approval bash policy:
+
+```bash
+export PLANFORGE_GATE_BASH_POLICY=strict   # or balanced (default)
 ```
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.

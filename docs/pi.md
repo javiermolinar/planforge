@@ -2,19 +2,21 @@
 
 ## Install
 
-For a project-local install:
+For a global install from git (available in all repos):
 
 ```bash
-pi install git:github.com/javiermolinar/planforge -l
+pi install git:github.com/javiermolinar/planforge
 ```
 
-Or from a local checkout:
+Or from a local checkout (recommended while developing Planforge itself):
 
 ```bash
-pi install /absolute/path/to/planforge -l
+pi install /absolute/path/to/planforge
 ```
 
-If you prefer a global install, drop `-l`.
+`git:` sources are cached clones managed by Pi, so a later `pi install`/`pi update` may run `git pull` inside that cache directory. If you want Pi to use your existing checkout directly, install by local path.
+
+Use `-l` only if you want a project-local install for the current repository.
 
 ## Use
 
@@ -39,11 +41,37 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 
 ## Notes
 
-- Planforge ships as a Pi package with skills under `skills/`.
+- Planforge ships as a Pi package with skills under `skills/` and a policy extension under `extensions/`.
 - The package keeps helper scripts in `scripts/` and skills can reference them relatively.
 - Rolling plans are written under `${PLANFORGE_HOME:-~/.planforge}/plans/`.
 - Semantic branch and commit conventions also apply on Pi.
 - For external API and benchmark work, Planforge should prefer a fresh-context review handoff before final completion claims.
+
+## Approval gate extension
+
+Planforge includes a stateful approval gate for Pi:
+
+- Auto-enables when you start with `/skill:planforge` or `/skill:forge-*`.
+- Blocks `edit`, `write`, and mutating `bash` commands until explicit approval is active.
+- Treats additional non-trivial follow-up prompts after approval as scope changes and revokes approval.
+
+Manual control command:
+
+```text
+/pf-gate status | on | off | approve | revoke | scope-changed | policy [strict|balanced]
+```
+
+Use this when you need to override or inspect the gate state explicitly.
+
+Bash policy modes before approval:
+- `strict` — only allows: `ls`, `rg`, `find`, `git status`, `git branch --show-current`
+- `balanced` — allows a broader read-only inspection set (default)
+
+Set the default mode for new sessions with:
+
+```bash
+export PLANFORGE_GATE_BASH_POLICY=strict   # or balanced
+```
 
 ## Publishing later
 

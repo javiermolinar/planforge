@@ -8,11 +8,17 @@ test -f package.json
 
 grep -q '"keywords"[[:space:]]*:[[:space:]]*\[[^]]*"pi-package"' package.json
 grep -q '"skills"[[:space:]]*:[[:space:]]*\[[^]]*"\./skills"' package.json
-grep -q 'pi install /absolute/path/to/planforge -l' README.md
-grep -q 'pi install git:github.com/javiermolinar/planforge -l' README.md
+grep -q '"extensions"[[:space:]]*:[[:space:]]*\[[^]]*"\./extensions"' package.json
+test -f extensions/planforge-approval-gate.ts
+grep -q 'registerCommand("pf-gate"' extensions/planforge-approval-gate.ts
+grep -q 'Planforge gate blocked mutating bash command before approval' extensions/planforge-approval-gate.ts
+grep -q 'pi install /absolute/path/to/planforge' README.md
+grep -q 'pi install git:github.com/javiermolinar/planforge' README.md
 grep -q '/skill:planforge' README.md
+grep -q '/pf-gate status | on | off | approve | revoke | scope-changed | policy' README.md
 grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
 grep -q 'PLANFORGE_HOME' README.md
+grep -q 'PLANFORGE_GATE_BASH_POLICY' README.md
 grep -q 'docs/tooling.md' README.md
 grep -q '../../scripts/plan-init' skills/planforge/SKILL.md
 grep -q '../../scripts/plan-set-section' skills/forge-plan/SKILL.md
@@ -77,7 +83,9 @@ grep -q 'unresolved complexity risks' skills/forge-verify/SKILL.md
 grep -q 'Philosophy source of truth' README.md
 test -f docs/pi.md
 grep -q 'pi config' docs/pi.md
-grep -q 'pi install git:github.com/javiermolinar/planforge -l' docs/pi.md
+grep -q 'pi install git:github.com/javiermolinar/planforge' docs/pi.md
+grep -q '/pf-gate status | on | off | approve | revoke | scope-changed | policy' docs/pi.md
+grep -q 'PLANFORGE_GATE_BASH_POLICY' docs/pi.md
 grep -q 'PLANFORGE_HOME' docs/tooling.md
 grep -q 'scorecard-init' docs/tooling.md
 grep -q 'plan-next-init' docs/tooling.md
