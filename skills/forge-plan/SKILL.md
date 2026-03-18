@@ -19,6 +19,28 @@ Use this after the direction is clear and implementation is likely.
 - Make complexity explicit instead of hand-waving it away.
 - Call out dependencies and obscurity before implementation starts.
 
+## Approval and mutation boundaries
+
+This skill is planning-only by default.
+
+- Do not edit implementation code while running `forge-plan`.
+- Before explicit approval, allow only read-only actions:
+  - `read`
+  - non-mutating `bash` (`ls`, `rg`, `find`, `git status`, `git branch --show-current`)
+- Prohibited before approval:
+  - `edit`, `write`
+  - branch changes (`git checkout`, `git switch`, branch creation)
+  - mutating scripts (`../../scripts/plan-init`, `../../scripts/plan-set-section`, or equivalents)
+  - mutating shell operations (`>`, `>>`, `tee`, `sed -i`, write-mode formatters/fixers)
+
+If scope changes after approval, publish a revised plan summary + updated test table and request re-approval before any mutation.
+
+## Tool discipline (Pi)
+
+- Use `read` for file contents.
+- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source file contents.
+- Use `bash` for discovery/status commands, not file content rendering.
+
 ## Output shape
 
 - plan summary
@@ -34,6 +56,7 @@ Use this after the direction is clear and implementation is likely.
 - broken windows table
 - metrics snapshot
 - mitigation suggestions (when both complexity and risk are high)
+- next-skill handoff (`Next skill: ...`, `Reason: ...`)
 
 Do not ask for plan approval until the Plan summary and Assumptions table are present.
 
@@ -178,6 +201,8 @@ If you hit one, either:
 - document the risk and mitigation explicitly before implementation.
 
 ## Persistence
+
+These helper scripts mutate files. Run them only after explicit user approval of the current plan and once target branch context is known.
 
 When the plan is approved and the target branch is known, persist the rolling plan sections with relative helper scripts such as:
 

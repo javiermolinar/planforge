@@ -14,6 +14,20 @@ Use this in a fresh context window when work is large enough or risky enough to 
 - Review from a clean packet containing only the task summary, approved plan, changed files or diff, and verification evidence.
 - Do not trust implementation claims without checking the code and evidence yourself.
 
+## Mutation safety (strict)
+
+`forge-review` is non-mutating.
+
+- Allowed: `read`, and non-mutating `bash` for inspection (`ls`, `rg`, `find`, `git status`, `git diff`, etc.).
+- Prohibited: `edit`, `write`, branch changes, mutating scripts, or mutating shell operations.
+- If a fix is obvious, report it as a recommendation; do not implement it in this skill.
+
+## Tool discipline (Pi)
+
+- Use `read` for source file contents.
+- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source files.
+- Use `bash` for discovery/diff/status only.
+
 ## Priorities
 
 - correctness
@@ -107,6 +121,7 @@ When both metrics are high, recommend concrete mitigations such as:
 - findings with severity, location, issue, impact, and fix
 - test gaps
 - final recommendation: approve or revise
+- suggested next skill (`forge-verify`, `forge-test`, or `forge-implement`) with one-line rationale
 
 ## Guardrails
 

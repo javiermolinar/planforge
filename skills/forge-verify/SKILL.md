@@ -18,6 +18,20 @@ Use this before claiming something is fixed, done, or ready.
 - Call out remaining complexity risk explicitly: unresolved change amplification, cognitive load, dependency surface, obscurity, or unknown unknowns.
 - After successful verification and user confirmation, suggest `../../scripts/plan-ship --token-usage "..."` so the rolling plan is marked shipped with an explicit end line.
 
+## Mutation safety
+
+`forge-verify` is non-mutating by default.
+
+- Allowed: `read`, non-mutating `bash` checks, and test/build commands.
+- Prohibited: `edit`, `write`, branch changes, mutating scripts, or mutating shell operations.
+- If verification fails and a fix is needed, emit explicit handoff to `forge-debug` or `forge-test` instead of patching inline.
+
+## Tool discipline (Pi)
+
+- Use `read` for source file contents.
+- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source files.
+- Use `bash` for verification commands and status.
+
 ## Output
 
 - commands run
@@ -25,3 +39,4 @@ Use this before claiming something is fixed, done, or ready.
 - remaining uncertainty
 - missing network-hardening checks, if any
 - unresolved complexity risks, if any
+- suggested next skill when blocked (`forge-debug` or `forge-test`) with one-line rationale

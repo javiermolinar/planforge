@@ -28,7 +28,8 @@ Use this skill for normal build/change/fix work.
 - Prohibited before approval:
   - `edit`, `write`
   - `git checkout`, `git switch`, branch creation
-  - running scripts that create files (for example `../../scripts/plan-init`)
+  - running scripts that create or mutate files (for example `../../scripts/plan-init`, `../../scripts/plan-set-section`)
+  - mutating `bash` commands (for example redirection `>` / `>>`, `tee`, `sed -i`, `gofmt -w`, `go test -run ... -update`, any formatter/fixer in write mode)
   - any command that changes files, git state, or environment
 - Approval must be explicit from the user (for example: "approved", "go ahead", "proceed").
 - Any new requirement or constraint after approval invalidates approval.
@@ -44,10 +45,29 @@ Pre-mutation gate:
 - Scope changed since last approval? [yes/no]
 - Plan updated after latest scope change? [yes/no]
 - Explicit approval received for current plan? [yes/no]
+- Runtime gate allows mutation now? [yes/no]
 - Next action mutates repo? [yes/no]
 ```
 
 If any answer blocks mutation, stop and request approval.
+
+## Tool discipline (Pi)
+
+- Use `read` for file contents.
+- Do **not** use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source file contents.
+- Use `bash` for discovery/status only (for example `ls`, `rg`, `find`, `git status`, `git branch --show-current`).
+- Treat command pipelines that render file bodies as policy violations unless there is no `read`-tool equivalent.
+
+## Skill handoff checkpoint
+
+Before implementation starts, the assistant must explicitly emit a handoff line:
+
+```md
+Next skill: <forge-plan|forge-investigate|forge-debug|...>
+Reason: <one sentence>
+```
+
+Then it must load that skill file and follow it. Do not silently skip skill handoff.
 
 ## Flow
 
@@ -62,10 +82,11 @@ If any answer blocks mutation, stop and request approval.
 9. Check git branch context.
 10. If needed, create/switch to a new branch.
 11. Create the rolling branch plan with `../../scripts/plan-init`.
-12. Invoke the next skill.
+12. Emit explicit skill handoff line (`Next skill: ...`, `Reason: ...`).
+13. Invoke the next skill.
 
 Flow guardrails:
-- Steps 9-12 are forbidden until step 7 is completed for the current scope.
+- Steps 9-13 are forbidden until step 7 is completed for the current scope.
 - If scope changes at any point, return to step 5, update plan + test table, and request re-approval.
 - If the user pushes back on the plan, the next assistant response must re-show a revised plan summary + updated test table before any further discussion.
 
