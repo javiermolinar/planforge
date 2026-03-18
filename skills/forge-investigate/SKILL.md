@@ -24,6 +24,9 @@ Use this skill when the first job is understanding reality.
 
 ## Complexity mapping
 
+Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
+Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
+
 When relevant, map:
 
 - dependency surface

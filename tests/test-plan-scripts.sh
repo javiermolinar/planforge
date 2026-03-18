@@ -70,6 +70,21 @@ SCORECARD_PATH="$($ROOT/scripts/scorecard-init api-cli)"
 test -f "$SCORECARD_PATH"
 grep -q '^# Planforge scorecard' "$SCORECARD_PATH"
 
+NEXT_PATH="$($ROOT/scripts/plan-next-init deferred-window-cleanup)"
+test -f "$NEXT_PATH"
+case "$NEXT_PATH" in
+  "$PLANFORGE_HOME"/plans/sample-repo/next/*) ;;
+  *)
+    echo "unexpected next path: $NEXT_PATH" >&2
+    exit 1
+    ;;
+esac
+
+NEXT_LIST_OUTPUT="$($ROOT/scripts/plan-next-list)"
+printf '%s\n' "$NEXT_LIST_OUTPUT" | grep '^REPO=sample-repo$'
+printf '%s\n' "$NEXT_LIST_OUTPUT" | grep '^STATUS=deferred$'
+printf '%s\n' "$NEXT_LIST_OUTPUT" | grep "^NEXT_PLAN_PATH=$NEXT_PATH$"
+
 grep -q 'Consider adding plan-list later' "$PLAN_PATH"
 grep -q 'Initialized the rolling plan' "$PLAN_PATH"
 

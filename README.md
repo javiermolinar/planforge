@@ -18,8 +18,8 @@ It favors:
 - best-effort verification with honest reporting
 - fresh-context review for riskier work
 - lightweight rolling plans instead of heavyweight specs
-- explicit complexity checks: change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns
-- a pragmatic 80/20 tactical-to-strategic split and a broken-window mindset in touched areas
+
+Philosophy source of truth: [`docs/philosophy.md`](docs/philosophy.md)
 
 ## Why it feels different
 
@@ -69,6 +69,8 @@ Then start with:
 ```
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
+
+Use `/skill:forge-resume` to continue deferred follow-up plans from the shared next queue.
 
 ### Other harnesses
 

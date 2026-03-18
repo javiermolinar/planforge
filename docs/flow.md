@@ -11,30 +11,16 @@ Planforge is opinionated:
 
 ## Design philosophy
 
-Planforge treats complexity as the main enemy.
+Planforge keeps philosophy canonical in `docs/philosophy.md`.
 
-Good changes:
-- reduce change amplification
-- reduce cognitive load
-- reduce dependency surface
-- reduce obscurity
-- turn unknown unknowns into explicit risks, questions, or tests
-- reserve a small strategic slice to improve long-term design quality
-- prefer deep modules over shallow modules
+Use `docs/philosophy.md` as the source of truth for:
+- complexity dimensions (change amplification, cognitive load, dependency surface, obscurity, unknown unknowns)
+- deep-vs-shallow module guidance
+- tactical/strategic split (80/20)
+- broken-window rule
+- canonical red flags
 
-Bad changes:
-- spread one behavior across too many places
-- increase the amount a reader must keep in mind
-- add dependencies without enough leverage
-- hide behavior behind indirection, vague naming, or unclear ownership
-- ignore visible local quality debt in touched areas
-- create shallow modules with complex interfaces and little payoff (red flag)
-
-Planforge uses an explicit 80/20 tactical-to-strategic split for most changes:
-- ~80% deliver the requested behavior
-- ~20% reduce future complexity in the touched area
-
-It also applies a broken-window rule: if the touched area has obvious quality debt, fix a small high-leverage issue now or log it explicitly for follow-up.
+`docs/flow.md` focuses on operational workflow and policy; `docs/philosophy.md` defines the principles.
 
 ## Branch policy
 

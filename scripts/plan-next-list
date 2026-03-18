@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+context="$($SCRIPT_DIR/plan-context)"
+repo_slug="$(printf '%s\n' "$context" | awk -F= '/^REPO_SLUG=/{print $2}')"
+
+planforge_home="${PLANFORGE_HOME:-$HOME/.planforge}"
+next_root="$planforge_home/plans/$repo_slug/next"
+
+if [ ! -d "$next_root" ]; then
+  exit 0
+fi
+
+find "$next_root" -maxdepth 1 -type f -name '*.md' | sort -r | while IFS= read -r next_plan_path; do
+  status="$(awk -F': ' '/^Status: /{print $2; exit}' "$next_plan_path")"
+  source_branch="$(awk -F': ' '/^Source Branch: /{print $2; exit}' "$next_plan_path")"
+  created="$(awk -F': ' '/^Created: /{print $2; exit}' "$next_plan_path")"
+
+  if [ -z "$status" ]; then
+    status="unknown"
+  fi
+
+  printf 'REPO=%s\n' "$repo_slug"
+  printf 'STATUS=%s\n' "$status"
+  printf 'SOURCE_BRANCH=%s\n' "$source_branch"
+  printf 'CREATED=%s\n' "$created"
+  printf 'NEXT_PLAN_PATH=%s\n' "$next_plan_path"
+  printf '\n'
+done

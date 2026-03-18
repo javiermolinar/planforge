@@ -15,8 +15,8 @@ Use this skill for normal build/change/fix work.
 - Do not silently widen scope.
 - Single-agent by default.
 - Suggest multiagent or worktrees only when clearly justified.
-- Treat complexity as the main enemy: explicitly reason about change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns.
-- Prefer plans that reduce the number of places a future change must touch and make hidden behavior more visible.
+- Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
+- Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
 - Keep an explicit 80/20 tactical-to-strategic split: most effort ships the requested change, while a strategic slice improves maintainability and reduces future complexity.
 - Apply the broken window rule: if you touch an area with obvious quality debt, either fix at least one small local issue now or log it explicitly in backlog/checkpoints.
 
@@ -38,6 +38,7 @@ Use this skill for normal build/change/fix work.
 
 - If the first task is understanding the codebase or deciding whether something is bloated, invoke `forge-investigate` first.
 - If the direction is clear and implementation is likely, invoke `forge-plan` next.
+- If deferred follow-up plans exist in the next queue, invoke `forge-resume` to continue them.
 - If there is a concrete failure, regression, or unexpected behavior, invoke `forge-debug`.
 - If code changes need stronger confidence, suggest or invoke `forge-test`.
 - After implementation, invoke `forge-verify` before claiming confidence.

@@ -24,6 +24,9 @@ Use this in a fresh context window when work is large enough or risky enough to 
 
 ## Complexity review
 
+Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
+Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
+
 Review whether the change increased:
 
 - change amplification
@@ -31,15 +34,37 @@ Review whether the change increased:
 - dependency surface
 - obscurity
 
-Call out when a change spreads one behavior across too many places, hides simple behavior behind indirection, or introduces dependencies without enough payoff.
-
-Assess deep-vs-shallow module quality:
-- deep modules are preferred (simple interface, substantial hidden implementation).
-- A shallow module is a red flag when its interface is complicated relative to what it actually provides.
+Assess deep-vs-shallow module quality using the canonical criteria.
 
 Also review:
 - whether the tactical-to-strategic split was reasonable for the task
 - whether broken window opportunities were handled (fixed or explicitly logged)
+
+## Review summary
+
+Start with a concise summary of overall risk and recommendation.
+
+## Assumptions challenged table
+
+When assumptions are present, report validation in table form:
+
+| Assumption | Was it validated? | Evidence | Impact if wrong | Action |
+|---|---|---|---|---|
+
+## Broken windows found table
+
+If broken windows are found during review, report them in table form:
+
+| Location | Issue | Severity | Immediate fix? | Follow-up |
+|---|---|---|---|---|
+
+If broken windows are found, mark each as fixed, deferred, or explicitly accepted with rationale.
+
+If an item is deferred to another session, create a follow-up plan in the shared next queue with:
+
+- `../../scripts/plan-next-init <topic>`
+
+Put the returned path in the `Follow-up` column.
 
 ## Output
 
