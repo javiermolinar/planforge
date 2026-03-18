@@ -2,7 +2,7 @@
   "name": "planforge",
   "version": "0.1.0",
   "private": true,
-  "description": "Lightweight, harness-agnostic workflow skills and rolling plan tooling for coding agents",
+  "description": "Pi agent harness workflow skills and rolling plan tooling for serious development",
   "keywords": ["pi-package"],
   "pi": {
     "skills": ["./skills"],

@@ -7,7 +7,7 @@
 
 ![Planforge](./forge.png)
 
-Planforge is a lightweight, harness-agnostic workflow for coding agents built for serious software development. It favors discipline over vibes: plan first, verify claims, review with fresh eyes, and ship code worthy of Olympus.
+Planforge is a lightweight workflow for the **Pi agent harness** built for serious software development. It favors discipline over vibes: plan first, verify claims, review with fresh eyes, and ship code worthy of Olympus.
 
 Planforge is for developers who want agents to behave more like strong engineers and less like autocomplete with delusions of grandeur.
 
@@ -105,21 +105,9 @@ Use `/skill:forge-investigate` when the first task is discovery (understanding c
 
 Use `/skill:forge-resume` to continue deferred follow-up plans from the shared next queue.
 
-### Other harnesses
+### Scope
 
-Planforge does not ship an installer for every harness.
-
-Clone the repo, symlink the skills you want into your harness skill directory, and add `scripts/` to your `PATH`.
-
-Example:
-
-```bash
-git clone https://github.com/javiermolinar/planforge ~/src/planforge
-export PATH="$HOME/src/planforge/scripts:$PATH"
-ln -s ~/src/planforge/skills/planforge ~/.config/your-harness/skills/planforge
-ln -s ~/src/planforge/skills/planforge-fast ~/.config/your-harness/skills/planforge-fast
-ln -s ~/src/planforge/skills/forge-investigate ~/.config/your-harness/skills/forge-investigate
-```
+Planforge is currently maintained as a **Pi-focused package**. The docs, extension behavior, and workflow examples assume Pi semantics.
 
 ## Rolling plans
 
