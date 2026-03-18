@@ -15,6 +15,7 @@ Use this after planning is approved and branch context is ready.
 - Avoid unrelated refactors unless clearly justified.
 - Surface scope drift instead of silently absorbing it.
 - Suggest rolling-plan updates at meaningful checkpoints.
+- Report step-level progress on every checkpoint so the user can see exactly what was completed.
 
 ## Execution mode inheritance
 
@@ -31,7 +32,7 @@ When running under supervised mode, approve work by implementation task/checkpoi
 1. Propose one implementation checkpoint with an id.
 2. Wait for explicit approval (`/pf-continue`).
 3. Execute the bounded commands needed to complete that checkpoint.
-4. Report result and propose the next checkpoint.
+4. Report result with an updated implementation step ledger (and per-step TDD table when required), ask for user acceptance of the completed scenario, and only then propose the next checkpoint.
 
 Checkpoint proposal format:
 
@@ -68,6 +69,35 @@ For write-path changes, implementation must preserve and report semantics from t
 - retry implications
 - idempotency expectations
 
+## Checkpoint reporting contract (mandatory)
+
+After each implementation checkpoint, include an updated ledger:
+
+| Step ID | Goal | Planned evidence | Actual evidence | User acceptance check | Status | Notes |
+|---|---|---|---|---|---|---|
+
+Use statuses: `pending`, `in_progress`, `awaiting_user_acceptance`, `done`, `revise_requested`, `blocked`.
+
+When TDD is required, also include an updated per-step TDD table:
+
+| Step ID | Red test command | Red evidence | Green test command | Green evidence | Refactor guard | User acceptance check | Status |
+|---|---|---|---|---|---|---|---|
+
+Use statuses: `pending`, `red_seen`, `green_seen`, `awaiting_user_acceptance`, `done`, `revise_requested`, `blocked`.
+
+Do not mark a TDD step `done` unless red and green evidence are both present.
+
+## Scenario acceptance loop (mandatory)
+
+After each scenario/checkpoint result:
+
+1. Mark the current step `awaiting_user_acceptance`.
+2. Ask the user whether the scenario is acceptable.
+3. If the user pushes back, mark `revise_requested`, propose a correction checkpoint for the same step, and do not advance.
+4. Only after user acceptance, mark `done` and propose the next scenario.
+
+Do not move to the next scenario while the current one is `awaiting_user_acceptance` or `revise_requested`.
+
 ## Scope drift and re-approval
 
 - If implementation discovers material scope drift (new behavior, extra modules, or changed acceptance criteria), stop and request re-approval before continuing.
@@ -79,6 +109,9 @@ For write-path changes, implementation must preserve and report semantics from t
 - execution mode (`supervised` or `unsupervised`)
 - change made
 - verification attempted
+- updated implementation step ledger
+- updated per-step TDD table (when required)
+- scenario acceptance status (accepted / awaiting feedback / revise requested)
 - TDD evidence status (red seen? green seen?) when required
 - approval status for current checkpoint (when supervised)
 - follow-up risks or gaps

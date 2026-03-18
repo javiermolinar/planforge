@@ -56,6 +56,12 @@ Each plan contains:
 
 The planning process should also surface:
 - a complexity check
+- architecture decisions (with rationale)
+- key tradeoffs (with explicit costs/benefits)
+- architecture/tradeoff quality rubric (pass/fail with evidence)
+- implementation step ledger (updated every checkpoint)
+- per-step TDD table when TDD applies
+- scenario acceptance gating (do not advance until user confirms satisfaction)
 - dependencies
 - obscurity and unknowns
 

@@ -20,6 +20,9 @@ Use this after the direction is clear and implementation is likely.
 - Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
 - Make complexity explicit instead of hand-waving it away.
 - Call out dependencies and obscurity before implementation starts.
+- Explain key architectural decisions explicitly and highlight major tradeoffs.
+- Apply a compact pass/fail rubric so architecture decisions and tradeoffs are reviewable, not hand-wavy.
+- Define step-level visibility so progress is obvious at every implementation checkpoint.
 
 ## Approval and mutation boundaries
 
@@ -46,6 +49,11 @@ If scope changes after approval, publish a revised plan summary + updated test t
 - risks / assumptions
 - tactical vs strategic split
 - complexity check
+- architecture decisions
+- tradeoff highlights
+- architecture/tradeoff quality rubric
+- implementation step ledger template
+- per-step TDD table template (when TDD required)
 - dependencies
 - obscurity and unknowns
 - broken-window check
@@ -59,6 +67,8 @@ If scope changes after approval, publish a revised plan summary + updated test t
 - next-skill handoff (`Next skill: ...`, `Reason: ...`)
 
 Do not ask for plan approval until the Plan summary and Assumptions table are present.
+Also require Architecture decisions, Tradeoff highlights, a passing Architecture/Tradeoff quality rubric, and an Implementation step ledger template before approval.
+When TDD is required, also require a per-step TDD table template before approval.
 For write-path changes, also require write-path semantics + lifecycle-safety + negative matrix sections before approval.
 
 ## Pushback / revision loop
@@ -160,6 +170,70 @@ Use the deep-vs-shallow module criteria from `../../docs/philosophy.md`.
 
 Treat shallow module decomposition as a red flag and simplify or merge where practical.
 
+## Architecture decisions
+
+Include a compact decision record so reviewers can understand *why* the shape was chosen:
+
+| Decision area | Options considered | Chosen option | Why this choice now | Impact |
+|---|---|---|---|---|
+
+At minimum, cover boundaries, module ownership, data flow, and error-handling strategy for touched components.
+
+## Tradeoff highlights
+
+Make tradeoffs explicit instead of implied:
+
+| Tradeoff | Option favored | Benefit | Cost | Why acceptable now |
+|---|---|---|---|---|
+
+Include at least one tradeoff each for delivery speed, maintainability, and runtime behavior (or state why not applicable).
+
+## Architecture/tradeoff quality rubric (pass/fail)
+
+Before requesting approval, include a compact rubric with explicit pass/fail status:
+
+| Check | Pass/Fail | Evidence |
+|---|---|---|
+| Architectural boundaries are explicit (owners and interfaces named) |  |  |
+| Data flow across touched components is explicit |  |  |
+| Error-handling strategy is explicit at boundaries |  |  |
+| At least two real alternatives were considered for major decisions |  |  |
+| Tradeoffs include both benefits and costs (not one-sided) |  |  |
+| Chosen option has a time-horizon rationale (why now, why not later) |  |  |
+| Red-flag exposure is called out with mitigation linkage |  |  |
+
+Approval gate: do not ask for implementation approval while any rubric row is `Fail` unless the user explicitly accepts the risk.
+
+## Implementation step ledger template (mandatory)
+
+Before implementation approval, define a checkpoint-visible ledger that will be updated on every step:
+
+| Step ID | Goal | Planned evidence | User acceptance check | Status | Notes |
+|---|---|---|---|---|---|
+
+Use statuses: `pending`, `in_progress`, `awaiting_user_acceptance`, `done`, `revise_requested`, `blocked`.
+
+Approval gate: do not ask for implementation approval without this ledger.
+
+## Per-step TDD table template (mandatory when TDD required)
+
+When TDD is required, define this table before implementation starts:
+
+| Step ID | Red test command (expected fail) | Green test command (expected pass) | Refactor guard | User acceptance check | Status |
+|---|---|---|---|---|---|
+
+Use statuses: `pending`, `red_seen`, `green_seen`, `awaiting_user_acceptance`, `done`, `revise_requested`, `blocked`.
+
+Approval gate (TDD scopes): do not ask for implementation approval until this table exists.
+
+## Scenario acceptance gate (mandatory)
+
+Implementation cannot advance to the next scenario/step until the user confirms they are satisfied with the current one.
+
+- After each scenario, set ledger status to `awaiting_user_acceptance` until the user responds.
+- If the user pushes back, set status to `revise_requested`, propose a correction for the same step, and do not advance to the next step.
+- Only move a step to `done` after user acceptance (or explicit user instruction to proceed despite issues).
+
 ## Dependencies
 
 Call out:
@@ -243,6 +317,8 @@ Use the red-flag list in `../../docs/philosophy.md` as canonical.
 If you hit one, either:
 - redesign the plan now, or
 - document the risk and mitigation explicitly before implementation.
+
+When a red flag remains, reference the exact architecture decision and tradeoff entry that contains its mitigation.
 
 ## Persistence
 

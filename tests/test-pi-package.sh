@@ -53,6 +53,10 @@ grep -q '../../scripts/plan-next-init' skills/forge-plan/SKILL.md
 grep -q '../../scripts/plan-next-init' skills/forge-review/SKILL.md
 test -f skills/forge-resume/SKILL.md
 test -f skills/planforge-fast/SKILL.md
+grep -q 'passing architecture/tradeoff quality rubric' skills/planforge-fast/SKILL.md
+grep -q 'implementation step ledger' skills/planforge-fast/SKILL.md
+grep -q 'per-step TDD table for checkpoint reporting' skills/planforge-fast/SKILL.md
+grep -q 'do not advance to the next scenario until satisfaction is explicit' skills/planforge-fast/SKILL.md
 grep -q '../../scripts/plan-next-list' skills/forge-resume/SKILL.md
 grep -q '../../scripts/plan-init' skills/forge-resume/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/planforge/SKILL.md
@@ -61,6 +65,10 @@ grep -q 'If the first task is understanding the codebase or deciding whether som
 grep -q 'If the direction is clear and implementation is likely, invoke `forge-plan` next.' skills/planforge/SKILL.md
 grep -Eq 'If deferred follow-up plans exist in the next queue, invoke `forge-resume`( to continue them\.)?' skills/planforge/SKILL.md
 grep -q 'For external API or networked tasks, auto-suggest a lightweight fresh-context `forge-review` pass before completion.' skills/planforge/SKILL.md
+grep -q 'passing architecture/tradeoff quality rubric' skills/planforge/SKILL.md
+grep -q 'implementation step ledger' skills/planforge/SKILL.md
+grep -q 'per-step TDD table for checkpoint reporting' skills/planforge/SKILL.md
+grep -q 'do not advance; revise that same scenario until user confirms satisfaction' skills/planforge/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-plan/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-plan/SKILL.md
 grep -q '## Tactical vs strategic split' skills/forge-plan/SKILL.md
@@ -77,7 +85,18 @@ grep -q 'Risk score (0-10)' skills/forge-plan/SKILL.md
 grep -q 'If Complexity >= 7 and Risk >= 7, include mitigation suggestions before asking for approval.' skills/forge-plan/SKILL.md
 grep -q '## Mitigation suggestions (required when both are high)' skills/forge-plan/SKILL.md
 grep -q 'Do not ask for plan approval until the Plan summary and Assumptions table are present.' skills/forge-plan/SKILL.md
+grep -q 'passing Architecture/Tradeoff quality rubric' skills/forge-plan/SKILL.md
+grep -q 'Implementation step ledger template before approval' skills/forge-plan/SKILL.md
 grep -q '## Complexity check' skills/forge-plan/SKILL.md
+grep -q '## Architecture/tradeoff quality rubric (pass/fail)' skills/forge-plan/SKILL.md
+grep -q '| Check | Pass/Fail | Evidence |' skills/forge-plan/SKILL.md
+grep -q 'Approval gate: do not ask for implementation approval while any rubric row is `Fail` unless the user explicitly accepts the risk.' skills/forge-plan/SKILL.md
+grep -q '## Implementation step ledger template (mandatory)' skills/forge-plan/SKILL.md
+grep -q '| Step ID | Goal | Planned evidence | User acceptance check | Status | Notes |' skills/forge-plan/SKILL.md
+grep -q '## Per-step TDD table template (mandatory when TDD required)' skills/forge-plan/SKILL.md
+grep -q '| Step ID | Red test command (expected fail) | Green test command (expected pass) | Refactor guard | User acceptance check | Status |' skills/forge-plan/SKILL.md
+grep -q 'Approval gate (TDD scopes): do not ask for implementation approval until this table exists.' skills/forge-plan/SKILL.md
+grep -q '## Scenario acceptance gate (mandatory)' skills/forge-plan/SKILL.md
 grep -q '## Dependencies' skills/forge-plan/SKILL.md
 grep -q '## Obscurity and unknowns' skills/forge-plan/SKILL.md
 grep -q '## Broken-window check' skills/forge-plan/SKILL.md
@@ -111,7 +130,13 @@ grep -q 'Review from a clean packet containing only the task summary, approved p
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-investigate/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-investigate/SKILL.md
 grep -q 'hidden control flow' skills/forge-investigate/SKILL.md
+grep -q '## Checkpoint reporting contract (mandatory)' skills/forge-implement/SKILL.md
+grep -q '| Step ID | Goal | Planned evidence | Actual evidence | User acceptance check | Status | Notes |' skills/forge-implement/SKILL.md
+grep -q '| Step ID | Red test command | Red evidence | Green test command | Green evidence | Refactor guard | User acceptance check | Status |' skills/forge-implement/SKILL.md
+grep -q 'Do not mark a TDD step `done` unless red and green evidence are both present.' skills/forge-implement/SKILL.md
+grep -q '## Scenario acceptance loop (mandatory)' skills/forge-implement/SKILL.md
 grep -q 'negative test matrix' skills/forge-test/SKILL.md
+grep -q 'updated per-step TDD table (for TDD-required scope)' skills/forge-test/SKILL.md
 grep -q 'reject-before-ready' skills/forge-test/SKILL.md
 grep -q 'reject-during-stopping' skills/forge-test/SKILL.md
 grep -q 'timeout handling' skills/forge-verify/SKILL.md
@@ -143,6 +168,10 @@ grep -q 'docs/philosophy.md' docs/flow.md
 grep -q 'source of truth' docs/flow.md
 grep -q '80/20' docs/flow.md
 grep -q 'broken-window rule' docs/flow.md
+grep -q 'architecture/tradeoff quality rubric (pass/fail with evidence)' docs/flow.md
+grep -q 'implementation step ledger (updated every checkpoint)' docs/flow.md
+grep -q 'per-step TDD table when TDD applies' docs/flow.md
+grep -q 'scenario acceptance gating (do not advance until user confirms satisfaction)' docs/flow.md
 grep -q '## Execution modes' docs/flow.md
 grep -q 'planforge-fast' docs/flow.md
 test -f docs/philosophy.md

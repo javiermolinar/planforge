@@ -16,6 +16,7 @@ Use this when code changes need stronger confidence.
 - When TDD is required, produce explicit failing-test evidence (command + failure summary) before any production code edits.
 - For write-path changes, build and run a negative test matrix before handoff (downstream failure, partial side effects, lifecycle transitions).
 - For new local callbacks/APIs, include lifecycle negatives: `reject-before-ready` and `reject-during-stopping`.
+- Keep step-level visibility: for TDD scopes, update a per-step TDD table so each step shows red/green progress.
 
 ## Mutation boundaries
 
@@ -34,6 +35,7 @@ For write-path changes, do not hand off as "done" until the negative matrix is e
 - testing approach
 - concrete cases
 - commands to run if known
+- updated per-step TDD table (for TDD-required scope)
 - red/green status for TDD-required scope
 - negative test matrix status for write paths (required rows: callback fail, partial side effects, lifecycle transitions)
 - lifecycle-safety status for new local callbacks/APIs (`reject-before-ready`, `reject-during-stopping`)

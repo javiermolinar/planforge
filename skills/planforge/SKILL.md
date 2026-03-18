@@ -15,6 +15,7 @@ Use this skill for normal build/change/fix work when safety and operator control
 - Do not silently widen scope.
 - If the user requests TDD (or the task is a bug fix with reproducible behavior), require failing-test-first evidence before production code edits.
 - For write-path/ingestion changes, require plan sections for write-path semantics, lifecycle safety, and a negative test matrix before implementation approval.
+- Require planning output to include explicit architecture decisions, tradeoff highlights, a passing architecture/tradeoff quality rubric, and an implementation step ledger before implementation approval.
 - Single-agent by default.
 - Suggest multiagent or worktrees only when clearly justified.
 - Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
@@ -87,6 +88,8 @@ Rules:
 - Do not bundle unrelated phases/tasks into one checkpoint approval.
 - If checkpoint scope changes materially, issue a new checkpoint id and re-request approval.
 - If user says reject, propose a revised checkpoint.
+- After each completed scenario/checkpoint, require explicit user satisfaction before advancing to the next scenario.
+- If user pushback indicates the scenario is not right, stay on the same scenario, propose a correction checkpoint, and do not advance.
 
 ## Skill handoff checkpoint
 
@@ -120,8 +123,10 @@ Flow guardrails:
 
 - Steps 9-14 are forbidden until step 7 is complete.
 - If scope changes at any point, return to step 5 and re-approve.
-- If TDD is required, no production code edits until failing test evidence is shown.
+- If TDD is required, no production code edits until failing test evidence is shown, and require a per-step TDD table for checkpoint reporting.
 - If user pushes back on the plan, next response must include revised plan summary + updated test table.
+- If user pushes back on an implementation scenario/checkpoint result, do not advance; revise that same scenario until user confirms satisfaction.
+- Do not approve implementation start until plan includes explicit architecture decisions, tradeoff highlights, a passing architecture/tradeoff quality rubric, and an implementation step ledger.
 - For write-path changes, do not approve implementation start until plan includes: side-effect order, fail-open/fail-closed policy, retry implications, idempotency expectations, lifecycle checks, and negative matrix rows.
 
 ## Skill routing

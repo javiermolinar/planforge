@@ -15,6 +15,7 @@ Use this skill when speed is prioritized and the user accepts reduced checkpoint
 - Do not silently widen scope.
 - If the user requests TDD (or the task is a bug fix with reproducible behavior), require failing-test-first evidence before production code edits.
 - For write-path/ingestion changes, require plan sections for write-path semantics, lifecycle safety, and a negative test matrix before implementation approval.
+- Require planning output to include explicit architecture decisions, tradeoff highlights, a passing architecture/tradeoff quality rubric, and an implementation step ledger before implementation approval.
 - Single-agent by default.
 - Suggest multiagent or worktrees only when clearly justified.
 - Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
@@ -45,6 +46,7 @@ After scope approval, this skill executes steps directly (no checkpoint approval
 - Keep user updates concise at meaningful checkpoints.
 - Surface scope drift immediately.
 - If risk rises, offer switching back to `planforge` supervised mode.
+- If the user pushes back on a scenario result, pause advancement, revise that same scenario, and wait for user satisfaction before moving on.
 
 ## Flow
 
@@ -65,7 +67,9 @@ Flow guardrails:
 
 - Steps 8-12 are forbidden until step 7 is complete.
 - If scope changes, return to step 5 and re-approve.
-- If TDD is required, no production edits until failing-test evidence is shown.
+- If TDD is required, no production edits until failing-test evidence is shown, and require a per-step TDD table for checkpoint reporting.
+- If user pushes back on a scenario/checkpoint result, do not advance to the next scenario until satisfaction is explicit.
+- Do not start implementation until plan includes explicit architecture decisions, tradeoff highlights, a passing architecture/tradeoff quality rubric, and an implementation step ledger.
 - For write-path changes, do not start implementation until plan includes write-path semantics + lifecycle checks + negative matrix rows.
 
 ## Skill handoff checkpoint
