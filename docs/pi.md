@@ -2,17 +2,19 @@
 
 ## Install
 
-Install from a local checkout:
+For a project-local install:
 
 ```bash
-pi install /absolute/path/to/planforge
+pi install git:github.com/javiermolinar/planforge -l
 ```
 
-Or from git:
+Or from a local checkout:
 
 ```bash
-pi install git:github.com/your-org/planforge
+pi install /absolute/path/to/planforge -l
 ```
+
+If you prefer a global install, drop `-l`.
 
 ## Use
 

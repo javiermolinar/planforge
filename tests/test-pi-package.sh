@@ -8,8 +8,8 @@ test -f package.json
 
 grep -q '"keywords"[[:space:]]*:[[:space:]]*\[[^]]*"pi-package"' package.json
 grep -q '"skills"[[:space:]]*:[[:space:]]*\[[^]]*"\./skills"' package.json
-grep -q 'pi install /absolute/path/to/planforge' README.md
-grep -q 'pi install git:github.com/' README.md
+grep -q 'pi install /absolute/path/to/planforge -l' README.md
+grep -q 'pi install git:github.com/javiermolinar/planforge -l' README.md
 grep -q '/skill:orchestrator' README.md
 grep -q '/skill:investigation' README.md
 grep -q '../../scripts/plan-init' skills/orchestrator/SKILL.md
@@ -35,7 +35,7 @@ grep -q 'plan-branch-name' README.md
 grep -q 'scorecard-init' README.md
 test -f docs/pi.md
 grep -q 'pi config' docs/pi.md
-grep -q 'pi install git:github.com/' docs/pi.md
+grep -q 'pi install git:github.com/javiermolinar/planforge -l' docs/pi.md
 grep -q 'Semantic branch and commit conventions also apply on Pi' docs/pi.md
 grep -q 'scorecard-init' docs/pi.md
 test -x scripts/plan-list

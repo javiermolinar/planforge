@@ -44,17 +44,19 @@ The first plan is created automatically after plan approval. Later updates are s
 
 Planforge is a valid Pi package.
 
-Install from a local checkout:
+For a project-local install:
 
 ```bash
-pi install /absolute/path/to/planforge
+pi install git:github.com/javiermolinar/planforge -l
 ```
 
-Or from git:
+Or from a local checkout:
 
 ```bash
-pi install git:github.com/your-org/planforge
+pi install /absolute/path/to/planforge -l
 ```
+
+If you prefer a global install, drop `-l`.
 
 Pi will discover the skills from `skills/` automatically. The shell helpers stay inside the package repo and Pi-loaded skills can refer to them with relative paths such as `../../scripts/plan-init`.
 
