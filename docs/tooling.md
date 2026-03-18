@@ -22,6 +22,12 @@ Plan files then live under:
 ${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/<branch>.md
 ```
 
+Deferred follow-up plans for later sessions live under:
+
+```text
+${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/next/
+```
+
 ## Helper scripts
 
 - `plan-context` — print repo, branch, and plan-path context
@@ -30,6 +36,8 @@ ${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/<branch>.md
 - `plan-append-item` — append a backlog item or checkpoint
 - `plan-list` — list saved rolling plans for discoverability
 - `plan-branch-name` — generate semantic branch names such as `feat/hn-top-cli`
+- `plan-next-init` — create a deferred follow-up plan under `${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/next/`
+- `plan-next-list` — list deferred follow-up plans for the current repo from the shared next queue
 - `scorecard-init` — create an optional benchmark scorecard file under `benchmarks/results/`
 
 ## Rolling-plan updates

@@ -2,6 +2,14 @@
 
 Planforge is optimized for long-term software quality, not just short-term velocity.
 
+## Zen of Planforge (5)
+
+1. Compose small interfaces, keep modules deep.
+2. Be explicit: surface contracts, dependencies, and unknowns.
+3. Prefer one obvious path over clever alternatives.
+4. Fail loudly, verify claims, and never hide ambiguity.
+5. Ship tactically, improve strategically.
+
 Each principle below uses the same structure:
 - **Statement** — the rule
 - **Intent** — why it exists

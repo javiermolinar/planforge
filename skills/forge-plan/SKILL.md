@@ -21,7 +21,8 @@ Use this after the direction is clear and implementation is likely.
 
 ## Output shape
 
-- goal
+- plan summary
+- assumptions table
 - tasks
 - test table
 - risks / assumptions
@@ -30,6 +31,27 @@ Use this after the direction is clear and implementation is likely.
 - dependencies
 - obscurity and unknowns
 - broken-window check
+- broken windows table
+
+Do not ask for plan approval until the Plan summary and Assumptions table are present.
+
+## Plan summary
+
+Provide a concise summary of:
+
+- what will be built
+- what will not be built yet
+- why this plan shape was chosen
+
+## Assumptions table
+
+When the plan relies on assumptions, include them explicitly in table form:
+
+| Assumption | Category | Evidence | Risk if wrong | Validation plan | Status |
+|---|---|---|---|---|---|
+
+Category examples: product, technical, dependency, environment.
+Status should be one of: unvalidated, partially validated, validated.
 
 ## Tactical vs strategic split
 
@@ -85,6 +107,19 @@ For each broken window:
 - explicitly record it in backlog/checkpoints with a concrete follow-up
 
 Do not ignore visible quality debt silently.
+
+## Broken windows table
+
+When broken windows are found during planning, include them in table form:
+
+| Location | Broken window | Severity | Decision (fix-now/log) | Rationale | Follow-up |
+|---|---|---|---|---|---|
+
+If an item is deferred to another session, create a follow-up plan in the shared next queue with:
+
+- `../../scripts/plan-next-init <topic>`
+
+Put the returned path in the `Follow-up` column.
 
 ## Red flags
 

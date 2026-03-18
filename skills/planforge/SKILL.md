@@ -38,6 +38,7 @@ Use this skill for normal build/change/fix work.
 
 - If the first task is understanding the codebase or deciding whether something is bloated, invoke `forge-investigate` first.
 - If the direction is clear and implementation is likely, invoke `forge-plan` next.
+- If deferred follow-up plans exist in the next queue, invoke `forge-resume` to continue them.
 - If there is a concrete failure, regression, or unexpected behavior, invoke `forge-debug`.
 - If code changes need stronger confidence, suggest or invoke `forge-test`.
 - After implementation, invoke `forge-verify` before claiming confidence.

@@ -40,6 +40,32 @@ Also review:
 - whether the tactical-to-strategic split was reasonable for the task
 - whether broken window opportunities were handled (fixed or explicitly logged)
 
+## Review summary
+
+Start with a concise summary of overall risk and recommendation.
+
+## Assumptions challenged table
+
+When assumptions are present, report validation in table form:
+
+| Assumption | Was it validated? | Evidence | Impact if wrong | Action |
+|---|---|---|---|---|
+
+## Broken windows found table
+
+If broken windows are found during review, report them in table form:
+
+| Location | Issue | Severity | Immediate fix? | Follow-up |
+|---|---|---|---|---|
+
+If broken windows are found, mark each as fixed, deferred, or explicitly accepted with rationale.
+
+If an item is deferred to another session, create a follow-up plan in the shared next queue with:
+
+- `../../scripts/plan-next-init <topic>`
+
+Put the returned path in the `Follow-up` column.
+
 ## Output
 
 - summary
