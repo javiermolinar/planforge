@@ -29,6 +29,10 @@ Philosophy source of truth: [`docs/philosophy.md`](docs/philosophy.md)
 4. Fail loudly, verify claims, and never hide ambiguity.
 5. Ship tactically, improve strategically.
 
+This is baked from years of real engineering tradeoffs, and from hard-won lessons shared by people like **Rob Pike, Ken Thompson, Brian Kernighan, John Ousterhout, and Rich Hickey**.
+
+> “Simplicity is prerequisite for reliability.” — Edsger W. Dijkstra
+
 ## Why it feels different
 
 Most agent workflows optimize for momentum. Planforge optimizes for judgment.
