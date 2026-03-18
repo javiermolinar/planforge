@@ -66,6 +66,41 @@ If an item is deferred to another session, create a follow-up plan in the shared
 
 Put the returned path in the `Follow-up` column.
 
+## Metrics snapshot
+
+At the end of the review summary, include:
+
+| Metric | Value | Method | Notes |
+|---|---:|---|---|
+| Complexity score (0-10) |  | calculated or measured |  |
+| Risk score (0-10) |  | calculated |  |
+
+Complexity score (0-10) should use the same five philosophy dimensions (0-2 each):
+- change amplification
+- cognitive load
+- dependency surface
+- obscurity
+- unknown unknowns
+
+Risk score (0-10) should use five operational factors (0-2 each):
+- blast radius
+- failure impact
+- assumption uncertainty
+- external/API dependency risk
+- verification/test gap
+
+If Complexity >= 7 and Risk >= 7, include mitigation suggestions before final recommendation.
+
+## Mitigation suggestions (required when both are high)
+
+When both metrics are high, recommend concrete mitigations such as:
+- scope split into smaller deliverables
+- dependency/interface reduction
+- explicit assumption-validation step before further coding
+- rollback/containment strategy
+- mandatory fresh-context follow-up review
+- defer non-essential work into the shared next queue with `../../scripts/plan-next-init <topic>`
+
 ## Output
 
 - summary

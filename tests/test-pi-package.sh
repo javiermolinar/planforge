@@ -37,6 +37,12 @@ grep -q '## Assumptions table' skills/forge-plan/SKILL.md
 grep -q '| Assumption | Category | Evidence | Risk if wrong | Validation plan | Status |' skills/forge-plan/SKILL.md
 grep -q '## Broken windows table' skills/forge-plan/SKILL.md
 grep -q '| Location | Broken window | Severity | Decision (fix-now/log) | Rationale | Follow-up |' skills/forge-plan/SKILL.md
+grep -q '## Metrics snapshot' skills/forge-plan/SKILL.md
+grep -q '| Metric | Value | Method | Notes |' skills/forge-plan/SKILL.md
+grep -q 'Complexity score (0-10)' skills/forge-plan/SKILL.md
+grep -q 'Risk score (0-10)' skills/forge-plan/SKILL.md
+grep -q 'If Complexity >= 7 and Risk >= 7, include mitigation suggestions before asking for approval.' skills/forge-plan/SKILL.md
+grep -q '## Mitigation suggestions (required when both are high)' skills/forge-plan/SKILL.md
 grep -q 'Do not ask for plan approval until the Plan summary and Assumptions table are present.' skills/forge-plan/SKILL.md
 grep -q '## Complexity check' skills/forge-plan/SKILL.md
 grep -q '## Dependencies' skills/forge-plan/SKILL.md
@@ -51,6 +57,12 @@ grep -q '## Assumptions challenged table' skills/forge-review/SKILL.md
 grep -q '| Assumption | Was it validated? | Evidence | Impact if wrong | Action |' skills/forge-review/SKILL.md
 grep -q '## Broken windows found table' skills/forge-review/SKILL.md
 grep -q '| Location | Issue | Severity | Immediate fix? | Follow-up |' skills/forge-review/SKILL.md
+grep -q '## Metrics snapshot' skills/forge-review/SKILL.md
+grep -q '| Metric | Value | Method | Notes |' skills/forge-review/SKILL.md
+grep -q 'Complexity score (0-10)' skills/forge-review/SKILL.md
+grep -q 'Risk score (0-10)' skills/forge-review/SKILL.md
+grep -q 'If Complexity >= 7 and Risk >= 7, include mitigation suggestions before final recommendation.' skills/forge-review/SKILL.md
+grep -q '## Mitigation suggestions (required when both are high)' skills/forge-review/SKILL.md
 grep -q 'If broken windows are found, mark each as fixed, deferred, or explicitly accepted with rationale.' skills/forge-review/SKILL.md
 grep -q 'Prefer a different agent or new session so the review is not contaminated by the implementation context.' skills/forge-review/SKILL.md
 grep -q 'Review from a clean packet containing only the task summary, approved plan, changed files or diff, and verification evidence.' skills/forge-review/SKILL.md

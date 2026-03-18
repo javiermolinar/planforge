@@ -32,6 +32,8 @@ Use this after the direction is clear and implementation is likely.
 - obscurity and unknowns
 - broken-window check
 - broken windows table
+- metrics snapshot
+- mitigation suggestions (when both complexity and risk are high)
 
 Do not ask for plan approval until the Plan summary and Assumptions table are present.
 
@@ -120,6 +122,41 @@ If an item is deferred to another session, create a follow-up plan in the shared
 - `../../scripts/plan-next-init <topic>`
 
 Put the returned path in the `Follow-up` column.
+
+## Metrics snapshot
+
+At the end of the plan, include a compact table:
+
+| Metric | Value | Method | Notes |
+|---|---:|---|---|
+| Complexity score (0-10) |  | calculated or measured |  |
+| Risk score (0-10) |  | calculated |  |
+
+Complexity score (0-10) should be based on the five philosophy dimensions from `../../docs/philosophy.md` (0-2 each):
+- change amplification
+- cognitive load
+- dependency surface
+- obscurity
+- unknown unknowns
+
+Risk score (0-10) should be based on five operational factors (0-2 each):
+- blast radius
+- failure impact
+- assumption uncertainty
+- external/API dependency risk
+- verification/test gap
+
+If Complexity >= 7 and Risk >= 7, include mitigation suggestions before asking for approval.
+
+## Mitigation suggestions (required when both are high)
+
+When both metrics are high, propose concrete actions such as:
+- split delivery into smaller slices
+- reduce interface/dependency surface
+- validate critical assumptions first (investigation spike)
+- add rollback or containment steps
+- require fresh-context `forge-review` before completion
+- defer non-essential scope into the shared next queue with `../../scripts/plan-next-init <topic>`
 
 ## Red flags
 
