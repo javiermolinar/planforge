@@ -1,15 +1,23 @@
 # Planforge
 
+![GitHub last commit](https://img.shields.io/github/last-commit/javiermolinar/planforge?style=flat-square)
+![Pi package](https://img.shields.io/badge/pi-package-6b8afd?style=flat-square)
+![Status](https://img.shields.io/badge/status-experimental-bf8700?style=flat-square)
+![Docs](https://img.shields.io/badge/docs-flow%20%7C%20pi%20%7C%20tooling-5c677d?style=flat-square)
+
 ![Planforge](./forge.png)
 
 Planforge is a lightweight, harness-agnostic workflow for coding agents built for serious software development. It favors discipline over vibes: plan first, verify claims, review with fresh eyes, and ship code worthy of Olympus.
+
+Planforge is for developers who want agents to behave more like strong engineers and less like autocomplete with delusions of grandeur.
 
 It favors:
 - short, explicit planning before implementation
 - firm pushback against unnecessary complexity
 - single-agent execution by default
-- best-effort verification
-- lightweight rolling branch plans instead of heavyweight specs
+- best-effort verification with honest reporting
+- fresh-context review for riskier work
+- lightweight rolling plans instead of heavyweight specs
 
 ## Example
 
@@ -28,19 +36,11 @@ Planforge should then:
 6. verify each meaningful step
 7. suggest a fresh-context review before completion
 
-## Rolling plans
+## Quickstart
 
-Planforge keeps one rolling plan per working branch. It is created after plan approval and updated at meaningful checkpoints so work stays resumable without turning into a heavyweight spec system.
+### Pi
 
-By default, Planforge stores state under `~/.planforge/`. To override that location, set `PLANFORGE_HOME`.
-
-## Install
-
-### Pi (recommended)
-
-Planforge is a valid Pi package.
-
-For a project-local install:
+Project-local install:
 
 ```bash
 pi install git:github.com/javiermolinar/planforge -l
@@ -52,95 +52,50 @@ Or from a local checkout:
 pi install /absolute/path/to/planforge -l
 ```
 
-If you prefer a global install, drop `-l`.
-
-Pi will discover the skills from `skills/` automatically. The shell helpers stay inside the package repo and Pi-loaded skills can refer to them with relative paths such as `../../scripts/plan-init`.
-
-### Other harnesses
-
-Planforge does not ship an installer in v1.
-
-1. Clone the repo
-2. Symlink the skills you want into your harness skill directory
-3. Add `scripts/` to your `PATH`
-
-Example:
-
-```bash
-git clone <repo-url> ~/src/planforge
-export PATH="$HOME/src/planforge/scripts:$PATH"
-```
-
-Then symlink the skills you want, for example:
-
-```bash
-ln -s ~/src/planforge/skills/planforge ~/.config/your-harness/skills/planforge
-ln -s ~/src/planforge/skills/forge-investigate ~/.config/your-harness/skills/forge-investigate
-```
-
-## Scripts
-
-- `plan-context` — print repo / branch / plan-path context
-- `plan-init` — create the rolling plan if missing
-- `plan-set-section` — replace a managed section from stdin
-- `plan-append-item` — append a backlog item or checkpoint
-- `plan-list` — list saved rolling plans for discoverability
-- `plan-branch-name` — generate semantic branch names such as `feat/hn-top-cli`
-- `scorecard-init` — create an optional benchmark scorecard file under `benchmarks/results/`
-
-## Semantic conventions
-
-Planforge uses a light semantic naming convention.
-
-### Branches
-
-```text
-feat/<slug>
-fix/<slug>
-refactor/<slug>
-docs/<slug>
-chore/<slug>
-test/<slug>
-```
-
-### Commits
-
-```text
-feat: add rolling plan helper
-fix: handle missing branch context
-refactor: tighten orchestrator routing
-```
-
-The orchestrator should infer the type when it is obvious and ask when it is ambiguous.
-
-## Verify the shell helpers
-
-```bash
-./tests/test-plan-scripts.sh
-```
-
-## Pi usage
-
-After installing in Pi, start with:
+Then start with:
 
 ```text
 /skill:planforge
 /skill:forge-investigate
 ```
 
-- Use `/skill:planforge` for normal feature or change requests
-- Use `/skill:forge-investigate` when the first task is understanding the current code or deciding whether something is bloated
-- For networked or external-API work, Planforge should suggest a fresh-context review pass before final completion
+### Other harnesses
 
-See `docs/pi.md` for Pi-specific notes.
+Planforge does not ship an installer for every harness.
 
-For benchmark runs and external API work, Planforge should prefer a fresh-context review handoff before final completion claims.
+Clone the repo, symlink the skills you want into your harness skill directory, and add `scripts/` to your `PATH`.
 
-## Starting points
+Example:
 
-- Use `planforge` for normal feature or change requests
-- Use `forge-investigate` when the first task is understanding the current code or deciding whether something is bloated
+```bash
+git clone https://github.com/javiermolinar/planforge ~/src/planforge
+export PATH="$HOME/src/planforge/scripts:$PATH"
+ln -s ~/src/planforge/skills/planforge ~/.config/your-harness/skills/planforge
+ln -s ~/src/planforge/skills/forge-investigate ~/.config/your-harness/skills/forge-investigate
+```
+
+## Rolling plans
+
+Planforge keeps one rolling plan per working branch. It is created after plan approval and updated at meaningful checkpoints so work stays resumable without turning into a heavyweight spec system.
+
+By default, Planforge stores state under `~/.planforge/`. To override that location, set `PLANFORGE_HOME`.
+
+## Why it feels different
+
+Most agent workflows optimize for momentum. Planforge optimizes for judgment.
+
+It pushes back when the plan is bloated, prefers small honest steps over dramatic leaps, and treats verification as evidence instead of theater. When the work is risky, it asks for fresh eyes instead of trusting the builder's own victory speech.
+
+This is not a temple for vibecoding. It is a forge.
+
+## Learn more
+
+- `docs/pi.md` — Pi-specific install and usage notes
+- `docs/flow.md` — workflow, branch policy, semantic conventions, and review handoff
+- `docs/tooling.md` — helper scripts, rolling-plan commands, and smoke checks
+- `docs/evaluation.md` — benchmarks and scoring model
+- `benchmarks/README.md` — repeatable benchmark tasks
 
 ## Status
 
-This is an early skeleton focused on clear boundaries, token economy, and portability.
+Experimental, but already usable.
