@@ -152,4 +152,3 @@ Flow guardrails:
 - Suggest commit points and messages.
 - Suggest semantic messages such as `feat: ...` / `fix: ...`.
 - After verification, suggest semantic commit message and whether to squash noisy history.
-sy history.

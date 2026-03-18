@@ -115,6 +115,18 @@ async function testInvestigateModeIsReadOnly() {
   });
   assert(blockedMutatingBash && blockedMutatingBash.block === true, "mutating bash must be blocked in investigate mode");
 
+  const blockedMetaBash = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: "ls > /tmp/planforge-bypass" },
+  });
+  assert(blockedMetaBash && blockedMetaBash.block === true, "redirection bypass attempts must be blocked in investigate mode");
+
+  const blockedPipeBash = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: "git status | wc -l" },
+  });
+  assert(blockedPipeBash && blockedPipeBash.block === true, "pipe-based commands must be blocked in investigate mode");
+
   const allowedReadOnlyBash = await harness.emit("tool_call", { toolName: "bash", input: { command: "ls -la" } });
   assert(allowedReadOnlyBash === undefined, "read-only bash should remain allowed in investigate mode");
 
@@ -131,6 +143,15 @@ async function testCheckpointLifecycle() {
 
   await harness.emit("session_start", {});
   await harness.emit("input", { text: "/skill:planforge" });
+
+  const blockedPreApprovalMetaBash = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: "ls > /tmp/planforge-pre-approval" },
+  });
+  assert(
+    blockedPreApprovalMetaBash && blockedPreApprovalMetaBash.block === true,
+    "pre-approval redirection bypass attempts must be blocked"
+  );
 
   await harness.runCommand("pf-continue", {});
 

@@ -30,20 +30,38 @@ const PLANFORGE_INVESTIGATE_SKILL_CMD = /^\s*\/skill:forge-investigate\b/i;
 const FORGE_SKILL_CMD = /^\s*\/skill:forge-[a-z0-9-]+\b/i;
 const CONTROL_COMMAND = /^\s*\/[a-z0-9:-]+\b/i;
 
-const PRE_APPROVAL_BASH_ALLOWLIST = [
-  /^ls(\s|$)/,
-  /^rg(\s|$)/,
-  /^find(\s|$)/,
-  /^git\s+status(\s|$)/,
-  /^git\s+branch\s+--show-current(\s|$)/,
-  /^pwd(\s|$)/,
-];
+const SHELL_META_PATTERN = /[<>`]|\$\(|\|(?!=\|)|&(?!&)/;
 
 function splitCommandSegments(command) {
   return String(command || "")
     .split(/&&|\|\||;|\n/g)
     .map((segment) => segment.trim())
     .filter(Boolean);
+}
+
+function isAllowedPreApprovalSegment(segment) {
+  const trimmed = String(segment || "").trim();
+  if (!trimmed) return true;
+  if (SHELL_META_PATTERN.test(trimmed)) return false;
+
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return true;
+
+  const [cmd, subcmd, third] = tokens;
+
+  if (cmd === "ls" || cmd === "rg" || cmd === "find" || cmd === "pwd") {
+    return true;
+  }
+
+  if (cmd === "git" && subcmd === "status") {
+    return true;
+  }
+
+  if (cmd === "git" && subcmd === "branch" && third === "--show-current" && tokens.length === 3) {
+    return true;
+  }
+
+  return false;
 }
 
 function isAllowedPreApprovalBash(command) {
@@ -53,7 +71,7 @@ function isAllowedPreApprovalBash(command) {
   const segments = splitCommandSegments(trimmed);
   if (segments.length === 0) return true;
 
-  return segments.every((segment) => PRE_APPROVAL_BASH_ALLOWLIST.some((pattern) => pattern.test(segment)));
+  return segments.every((segment) => isAllowedPreApprovalSegment(segment));
 }
 
 function isMutatingToolCall(event) {
@@ -85,6 +103,7 @@ function normalizeState(raw) {
 function statusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
+  if (mode === "none") return `PF gate: investigate read-only${modeLabel}`;
   if (!state.enabled) return `PF gate: off${modeLabel}`;
   if (state.approved && state.approvalConsumed) {
     return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}), awaiting /pf-continue`;
@@ -300,7 +319,7 @@ export default function (pi) {
         "switch-forge-investigate",
         ctx,
         "info",
-        "Investigation mode detected. Approval gate is off for read-only operations."
+        "Investigation mode detected. Read-only guard is active; mutation requires switching skills."
       );
       return { action: "continue" };
     }

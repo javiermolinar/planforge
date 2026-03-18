@@ -34,6 +34,8 @@ Prohibited before approval:
 
 Approval must be explicit from the user.
 
+On Pi, `planforge-fast` keeps checkpoint approvals off (no `/pf-continue` loop), so this approval is enforced as workflow policy rather than per-command gate prompts.
+
 If constraints change after approval, re-plan and re-request approval.
 
 ## Unsupervised execution mode

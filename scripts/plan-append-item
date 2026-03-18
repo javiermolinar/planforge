@@ -52,13 +52,21 @@ trap 'rm -f "$output_file"' EXIT
 awk -v sec="$section" -v item="$item" '
 BEGIN {
   end = "<!-- END:" sec " -->"
+  end_count = 0
 }
 $0 == end {
+  end_count++
   print item
   print
   next
 }
 { print }
+END {
+  if (end_count != 1) {
+    printf "plan-append-item: section marker for %s not found exactly once\n", sec > "/dev/stderr"
+    exit 2
+  }
+}
 ' "$plan_path" > "$output_file"
 
 mv "$output_file" "$plan_path"

@@ -93,8 +93,8 @@ Planforge ships a lightweight approval gate extension:
 
 - In `/skill:planforge`, mutating tool calls are blocked until you send `/pf-continue`.
 - Each `/pf-continue` approves one mutating checkpoint (phase/task boundary), not every individual command inside it.
-- In `/skill:planforge-fast`, the gate stays off (unsupervised mode).
-- In `/skill:forge-investigate`, the gate stays off for read-only investigation (no `/pf-continue` needed).
+- In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
+- In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf-continue` needed).
 - If scope changes after approval, the gate revokes approval and requires `/pf-continue` again.
 - Use `/pf-status` to open the right-side status overlay on demand.
 
@@ -119,6 +119,7 @@ By default, Planforge stores state under `~/.planforge/`. To override that locat
 - CI runs in GitHub Actions on push/PR and executes:
   - `tests/test-plan-scripts.sh`
   - `tests/test-pi-package.sh`
+  - `tests/test-approval-gate-behavior.sh`
 - Releases are tag-driven (`v*`) and automatically published via GitHub Actions.
 
 ## Learn more

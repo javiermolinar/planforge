@@ -41,22 +41,34 @@ awk -v sec="$section" -v content_file="$content_file" '
 BEGIN {
   begin = "<!-- BEGIN:" sec " -->"
   end = "<!-- END:" sec " -->"
+  begin_count = 0
+  end_count = 0
+  in_block = 0
+
   while ((getline line < content_file) > 0) {
     content = content line ORS
   }
 }
 $0 == begin {
+  begin_count++
   print
   printf "%s", content
   in_block = 1
   next
 }
 $0 == end {
+  end_count++
   in_block = 0
   print
   next
 }
 !in_block { print }
+END {
+  if (begin_count != 1 || end_count != 1) {
+    printf "plan-set-section: section markers for %s not found exactly once\n", sec > "/dev/stderr"
+    exit 2
+  }
+}
 ' "$plan_path" > "$output_file"
 
 mv "$output_file" "$plan_path"

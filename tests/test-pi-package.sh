@@ -19,8 +19,9 @@ grep -q 'PLANFORGE_INVESTIGATE_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'approvalConsumed' extensions/planforge-approval-gate.ts
 grep -q 'checkpoint-mutation-seen' extensions/planforge-approval-gate.ts
 grep -q 'checkpoint-approval-expired' extensions/planforge-approval-gate.ts
+grep -q 'SHELL_META_PATTERN' extensions/planforge-approval-gate.ts
 grep -q 'Each /pf-continue grants one mutating checkpoint.' extensions/pf-status.ts
-grep -q 'Investigation mode detected. Approval gate is off for read-only operations.' extensions/planforge-approval-gate.ts
+grep -q 'Investigation mode detected. Read-only guard is active; mutation requires switching skills.' extensions/planforge-approval-gate.ts
 grep -q 'Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd.' extensions/planforge-approval-gate.ts
 grep -q 'pi install /absolute/path/to/planforge' README.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' README.md
@@ -29,7 +30,7 @@ grep -q '/skill:planforge-fast' README.md
 grep -q '/pf-continue' README.md
 grep -q 'one mutating checkpoint' README.md
 grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
-grep -q 'gate stays off for read-only investigation' README.md
+grep -q 'checkpoint approvals stay off and a read-only guard blocks mutating tools' README.md
 grep -q 'PLANFORGE_HOME' README.md
 grep -q 'docs/tooling.md' README.md
 grep -q 'docs/releases.md' README.md
@@ -128,7 +129,7 @@ grep -q 'pi install git:github.com/javiermolinar/planforge' docs/pi.md
 grep -q '/skill:planforge-fast' docs/pi.md
 grep -q '/pf-continue' docs/pi.md
 grep -q 'grants one mutating checkpoint' docs/pi.md
-grep -q 'gate stays off for read-only investigation' docs/pi.md
+grep -q 'checkpoint approvals stay off and a read-only guard blocks mutating tools' docs/pi.md
 grep -q 'PLANFORGE_HOME' docs/tooling.md
 grep -q 'scorecard-init' docs/tooling.md
 grep -q 'plan-next-init' docs/tooling.md

@@ -110,4 +110,23 @@ fi
 grep -q 'Consider adding plan-list later' "$PLAN_PATH"
 grep -q 'Initialized the rolling plan' "$PLAN_PATH"
 
+BROKEN_SET_SECTION_PATH="$TEST_DIR/broken-set-section-plan.md"
+awk '$0 != "<!-- END:TASKS -->"' "$PLAN_PATH" > "$BROKEN_SET_SECTION_PATH"
+if "$ROOT/scripts/plan-set-section" --path "$BROKEN_SET_SECTION_PATH" TASKS <<'EOF'
+## Tasks
+- [ ] This should fail because markers are broken
+EOF
+then
+  echo "expected plan-set-section to fail when section markers are missing" >&2
+  exit 1
+fi
+
+BROKEN_APPEND_PATH="$TEST_DIR/broken-append-plan.md"
+awk '$0 != "<!-- END:BACKLOG -->"' "$PLAN_PATH" > "$BROKEN_APPEND_PATH"
+if "$ROOT/scripts/plan-append-item" --path "$BROKEN_APPEND_PATH" BACKLOG 'this should fail'
+then
+  echo "expected plan-append-item to fail when section markers are missing" >&2
+  exit 1
+fi
+
 echo 'plan script smoke test: PASS'

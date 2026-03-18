@@ -32,6 +32,7 @@ function normalizeGateState(raw) {
 function gateStatusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
+  if (mode === "none") return `PF gate: investigate read-only${modeLabel}`;
   if (!state.enabled) return `PF gate: off${modeLabel}`;
   if (state.approved && state.approvalConsumed) {
     return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}), awaiting /pf-continue`;
