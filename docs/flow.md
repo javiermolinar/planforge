@@ -20,6 +20,7 @@ Good changes:
 - reduce obscurity
 - turn unknown unknowns into explicit risks, questions, or tests
 - reserve a small strategic slice to improve long-term design quality
+- prefer deep modules over shallow modules
 
 Bad changes:
 - spread one behavior across too many places
@@ -27,6 +28,7 @@ Bad changes:
 - add dependencies without enough leverage
 - hide behavior behind indirection, vague naming, or unclear ownership
 - ignore visible local quality debt in touched areas
+- create shallow modules with complex interfaces and little payoff (red flag)
 
 Planforge uses an explicit 80/20 tactical-to-strategic split for most changes:
 - ~80% deliver the requested behavior

@@ -16,6 +16,7 @@ Use this after the direction is clear and implementation is likely.
 - Challenge unnecessary abstraction or scope.
 - Make complexity explicit instead of hand-waving it away.
 - Call out dependencies and obscurity before implementation starts.
+- Prefer deep modules over shallow modules: keep interfaces simple relative to the functionality they provide.
 
 ## Output shape
 
@@ -50,6 +51,15 @@ Assess the proposed change using these dimensions:
 
 Use a simple qualitative assessment such as low / medium / high with one sentence of reasoning and one mitigation.
 
+## Deep-vs-shallow module check
+
+Assess whether the proposed decomposition is creating deep modules or shallow modules:
+
+- Deep module: simple interface, substantial hidden implementation complexity.
+- Shallow module: complicated interface relative to the functionality provided (red flag).
+
+Treat unnecessary shallow modules as a red flag and simplify or merge them.
+
 ## Dependencies
 
 Call out:
@@ -77,6 +87,17 @@ For each broken window:
 - explicitly record it in backlog/checkpoints with a concrete follow-up
 
 Do not ignore visible quality debt silently.
+
+## Red flags
+
+Treat these as red flags during planning:
+
+- shallow module decomposition (complex interface, little functionality)
+- tiny pass-through wrappers that add little value but increase indirection
+- one behavior spread across many files with no clear boundary benefit
+- callers requiring knowledge of implementation details
+- new dependencies introduced without clear leverage
+- hidden failure modes or ownership ambiguity not called out in the plan
 
 ## Persistence
 

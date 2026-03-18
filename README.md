@@ -21,6 +21,14 @@ It favors:
 - explicit complexity checks: change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns
 - a pragmatic 80/20 tactical-to-strategic split and a broken-window mindset in touched areas
 
+## Why it feels different
+
+Most agent workflows optimize for momentum. Planforge optimizes for judgment.
+
+It pushes back when the plan is bloated, prefers small honest steps over dramatic leaps, and treats verification as evidence instead of theater. When the work is risky, it asks for fresh eyes instead of trusting the builder's own victory speech.
+
+This is not a temple for vibecoding. It is a forge.
+
 ## Example
 
 In Pi:
@@ -58,8 +66,9 @@ Then start with:
 
 ```text
 /skill:planforge
-/skill:forge-investigate
 ```
+
+Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
 
 ### Other harnesses
 
@@ -82,18 +91,11 @@ Planforge keeps one rolling plan per working branch. It is created after plan ap
 
 By default, Planforge stores state under `~/.planforge/`. To override that location, set `PLANFORGE_HOME`.
 
-## Why it feels different
-
-Most agent workflows optimize for momentum. Planforge optimizes for judgment.
-
-It pushes back when the plan is bloated, prefers small honest steps over dramatic leaps, and treats verification as evidence instead of theater. When the work is risky, it asks for fresh eyes instead of trusting the builder's own victory speech.
-
-This is not a temple for vibecoding. It is a forge.
-
 ## Learn more
 
 - `docs/pi.md` — Pi-specific install and usage notes
 - `docs/flow.md` — workflow, branch policy, semantic conventions, and review handoff
+- `docs/philosophy.md` — design philosophy, deep modules, and red flags
 - `docs/tooling.md` — helper scripts, rolling-plan commands, and smoke checks
 - `docs/evaluation.md` — benchmarks and scoring model
 - `benchmarks/README.md` — repeatable benchmark tasks

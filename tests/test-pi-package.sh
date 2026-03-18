@@ -11,7 +11,7 @@ grep -q '"skills"[[:space:]]*:[[:space:]]*\[[^]]*"\./skills"' package.json
 grep -q 'pi install /absolute/path/to/planforge -l' README.md
 grep -q 'pi install git:github.com/javiermolinar/planforge -l' README.md
 grep -q '/skill:planforge' README.md
-grep -q '/skill:forge-investigate' README.md
+grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
 grep -q 'PLANFORGE_HOME' README.md
 grep -q 'docs/tooling.md' README.md
 grep -q '../../scripts/plan-init' skills/planforge/SKILL.md
@@ -35,6 +35,9 @@ grep -q 'cognitive load' skills/forge-plan/SKILL.md
 grep -q 'dependency surface' skills/forge-plan/SKILL.md
 grep -q 'obscurity' skills/forge-plan/SKILL.md
 grep -q 'unknown unknowns' skills/forge-plan/SKILL.md
+grep -q 'deep modules' skills/forge-plan/SKILL.md
+grep -q 'shallow module' skills/forge-plan/SKILL.md
+grep -q 'red flag' skills/forge-plan/SKILL.md
 grep -q '## Dependencies' skills/forge-plan/SKILL.md
 grep -q '## Obscurity and unknowns' skills/forge-plan/SKILL.md
 grep -q '## Broken-window check' skills/forge-plan/SKILL.md
@@ -44,6 +47,9 @@ grep -q 'dependency surface' skills/forge-review/SKILL.md
 grep -q 'obscurity' skills/forge-review/SKILL.md
 grep -q 'tactical-to-strategic split' skills/forge-review/SKILL.md
 grep -q 'broken window' skills/forge-review/SKILL.md
+grep -q 'deep modules' skills/forge-review/SKILL.md
+grep -q 'shallow module' skills/forge-review/SKILL.md
+grep -q 'red flag' skills/forge-review/SKILL.md
 grep -q 'Prefer a different agent or new session so the review is not contaminated by the implementation context.' skills/forge-review/SKILL.md
 grep -q 'Review from a clean packet containing only the task summary, approved plan, changed files or diff, and verification evidence.' skills/forge-review/SKILL.md
 grep -q 'hidden control flow' skills/forge-investigate/SKILL.md
@@ -67,6 +73,15 @@ grep -q 'obscurity' docs/flow.md
 grep -q 'unknown unknowns' docs/flow.md
 grep -q '80/20 tactical-to-strategic split' docs/flow.md
 grep -q 'broken-window rule' docs/flow.md
+grep -q 'deep modules' docs/flow.md
+grep -q 'shallow module' docs/flow.md
+grep -q 'red flag' docs/flow.md
+test -f docs/philosophy.md
+grep -q 'deep modules' docs/philosophy.md
+grep -q 'shallow module' docs/philosophy.md
+grep -q 'Linux file interface' docs/philosophy.md
+grep -q '## Red flags' docs/philosophy.md
+grep -q 'docs/philosophy.md' README.md
 test -x scripts/plan-list
 test -x scripts/plan-branch-name
 test -x scripts/scorecard-init
