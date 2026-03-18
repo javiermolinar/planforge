@@ -82,6 +82,8 @@ grep -q 'PLANFORGE_HOME' docs/tooling.md
 grep -q 'scorecard-init' docs/tooling.md
 grep -q 'plan-next-init' docs/tooling.md
 grep -q 'plan-next-list' docs/tooling.md
+grep -q 'plan-ship' docs/tooling.md
+grep -q 'plan-ship' docs/pi.md
 grep -q '/plans/<repo>/next/' docs/tooling.md
 grep -q 'rolling plans only' docs/tooling.md
 grep -q '## Design philosophy' docs/flow.md
@@ -104,6 +106,7 @@ test -x scripts/plan-branch-name
 test -x scripts/scorecard-init
 test -x scripts/plan-next-init
 test -x scripts/plan-next-list
+test -x scripts/plan-ship
 test -f benchmarks/results/README.md
 grep -q 'optional scorecard output file' benchmarks/results/README.md
 test -f benchmarks/results/2026-03-18-api-cli-go.md

@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+usage() {
+  cat <<'EOF' >&2
+usage: plan-ship [--path PATH] [--token-usage TEXT] [--model MODEL] [--shipped-at ISO8601] [--end-line TEXT]
+EOF
+}
+
+plan_path=""
+token_usage="n/a"
+model=""
+shipped_at=""
+end_line="END OF SHIPPED PLAN"
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --path)
+      plan_path="${2:-}"
+      shift 2
+      ;;
+    --token-usage)
+      token_usage="${2:-}"
+      shift 2
+      ;;
+    --model)
+      model="${2:-}"
+      shift 2
+      ;;
+    --shipped-at)
+      shipped_at="${2:-}"
+      shift 2
+      ;;
+    --end-line)
+      end_line="${2:-}"
+      shift 2
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$plan_path" ]; then
+  context="$($SCRIPT_DIR/plan-context)"
+  plan_path="$(printf '%s\n' "$context" | awk -F= '/^PLAN_PATH=/{print substr($0, index($0,$2))}')"
+fi
+
+if [ ! -f "$plan_path" ]; then
+  echo "plan-ship: missing plan at $plan_path" >&2
+  exit 1
+fi
+
+if [ -z "$shipped_at" ]; then
+  shipped_at="$(date -Iseconds)"
+fi
+
+output_file="$(mktemp)"
+trap 'rm -f "$output_file"' EXIT
+
+awk -v shipped_at="$shipped_at" -v token_usage="$token_usage" -v model="$model" -v end_line="$end_line" '
+BEGIN {
+  footer_begin = "<!-- BEGIN:SHIPMENT_FOOTER -->"
+  footer_end = "<!-- END:SHIPMENT_FOOTER -->"
+  in_footer = 0
+  saw_footer = 0
+}
+$0 ~ /^Status: / {
+  print "Status: shipped"
+  next
+}
+$0 == footer_begin {
+  saw_footer = 1
+  in_footer = 1
+  print footer_begin
+  print "## Shipment"
+  print "Shipped: " shipped_at
+  if (length(model) > 0) {
+    print "Model: " model
+  }
+  print "Token usage: " token_usage
+  print end_line
+  next
+}
+$0 == footer_end {
+  in_footer = 0
+  print footer_end
+  next
+}
+in_footer {
+  next
+}
+{
+  print
+}
+END {
+  if (!saw_footer) {
+    print ""
+    print footer_begin
+    print "## Shipment"
+    print "Shipped: " shipped_at
+    if (length(model) > 0) {
+      print "Model: " model
+    }
+    print "Token usage: " token_usage
+    print end_line
+    print footer_end
+  }
+}
+' "$plan_path" > "$output_file"
+
+mv "$output_file" "$plan_path"
+now="$(date -Iseconds)"
+sed -i.bak -E "s|^Updated: .*|Updated: $now|" "$plan_path"
+rm -f "$plan_path.bak"
+
+printf '%s\n' "$plan_path"

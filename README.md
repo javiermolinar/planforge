@@ -99,6 +99,8 @@ ln -s ~/src/planforge/skills/forge-investigate ~/.config/your-harness/skills/for
 
 Planforge keeps one rolling plan per working branch. It is created after plan approval and updated at meaningful checkpoints so work stays resumable without turning into a heavyweight spec system.
 
+When work ships, `plan-ship` can mark the plan as `shipped` and append a compact shipment footer (token usage + explicit end line).
+
 By default, Planforge stores state under `~/.planforge/`. To override that location, set `PLANFORGE_HOME`.
 
 ## Learn more

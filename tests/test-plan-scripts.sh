@@ -57,10 +57,17 @@ grep -q '| create plan | integration | file exists | pending |' "$PLAN_PATH"
 
 "$ROOT/scripts/plan-append-item" BACKLOG 'Consider adding plan-list later'
 "$ROOT/scripts/plan-append-item" CHECKPOINTS 'Initialized the rolling plan'
+"$ROOT/scripts/plan-ship" --token-usage 'prompt 120 | completion 80 | total 200' --model 'gpt-5'
+
+grep -q '^Status: shipped$' "$PLAN_PATH"
+grep -q '^Token usage: prompt 120 | completion 80 | total 200$' "$PLAN_PATH"
+grep -q '^Model: gpt-5$' "$PLAN_PATH"
+grep -q '^END OF SHIPPED PLAN$' "$PLAN_PATH"
 
 LIST_OUTPUT="$($ROOT/scripts/plan-list)"
 printf '%s\n' "$LIST_OUTPUT" | grep '^REPO=sample-repo$'
 printf '%s\n' "$LIST_OUTPUT" | grep '^BRANCH=main$'
+printf '%s\n' "$LIST_OUTPUT" | grep '^STATUS=shipped$'
 printf '%s\n' "$LIST_OUTPUT" | grep "^PLAN_PATH=$PLAN_PATH$"
 
 BRANCH_NAME="$($ROOT/scripts/plan-branch-name feat 'HN top CLI')"

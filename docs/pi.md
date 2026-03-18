@@ -34,6 +34,7 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 - `pi config` lets you enable or disable package resources
 - `pi update` updates non-pinned package installs
 - `plan-list` lists saved rolling plans under `${PLANFORGE_HOME:-~/.planforge}/plans/`
+- `plan-ship` marks the current rolling plan as shipped and appends a shipment footer
 - `scorecard-init` creates an optional scorecard file under `benchmarks/results/` in the current repository
 
 ## Notes

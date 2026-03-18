@@ -33,3 +33,8 @@ TBD
 ## Checkpoints
 - __CREATED__ — plan created
 <!-- END:CHECKPOINTS -->
+
+<!-- BEGIN:SHIPMENT_FOOTER -->
+## Shipment
+Not shipped yet.
+<!-- END:SHIPMENT_FOOTER -->

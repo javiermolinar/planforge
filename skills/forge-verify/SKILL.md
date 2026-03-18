@@ -16,6 +16,7 @@ Use this before claiming something is fixed, done, or ready.
 - Do not overstate confidence.
 - For external API or networked tools, explicitly ask whether verification covered timeout handling, malformed external payload handling, and at least one automated failure-path test.
 - Call out remaining complexity risk explicitly: unresolved change amplification, cognitive load, dependency surface, obscurity, or unknown unknowns.
+- After successful verification and user confirmation, suggest `../../scripts/plan-ship --token-usage "..."` so the rolling plan is marked shipped with an explicit end line.
 
 ## Output
 

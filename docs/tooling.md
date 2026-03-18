@@ -38,6 +38,7 @@ ${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/next/
 - `plan-branch-name` — generate semantic branch names such as `feat/hn-top-cli`
 - `plan-next-init` — create a deferred follow-up plan under `${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/next/`
 - `plan-next-list` — list deferred follow-up plans for the current repo from the shared next queue
+- `plan-ship` — mark a plan as shipped and write a shipment footer (token usage + end line)
 - `scorecard-init` — create an optional benchmark scorecard file under `benchmarks/results/`
 
 ## Rolling-plan updates
@@ -51,6 +52,7 @@ Typical operations:
 - replace the test table
 - append a checkpoint
 - append a backlog item
+- mark the plan as shipped and add a shipment footer
 - list saved plans
 
 ## Smoke checks

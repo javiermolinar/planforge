@@ -39,6 +39,7 @@ Each plan contains:
 - test table
 - backlog
 - checkpoints
+- shipment footer (when shipped)
 
 The planning process should also surface:
 - a complexity check
