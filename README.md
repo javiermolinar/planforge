@@ -3,6 +3,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/javiermolinar/planforge?style=flat-square)
 ![Pi package](https://img.shields.io/badge/pi-package-6b8afd?style=flat-square)
 ![Status](https://img.shields.io/badge/status-experimental-bf8700?style=flat-square)
+[![CI](https://github.com/javiermolinar/planforge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/javiermolinar/planforge/actions/workflows/ci.yml)
 ![Docs](https://img.shields.io/badge/docs-flow%20%7C%20pi%20%7C%20tooling-5c677d?style=flat-square)
 
 ![Planforge](./forge.png)
