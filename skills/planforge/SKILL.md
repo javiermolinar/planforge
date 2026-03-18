@@ -1,5 +1,5 @@
 ---
-name: orchestrator
+name: planforge
 description: Default front door for implementation work. Plans first, challenges complexity, decides branch/plan flow, and invokes the next skill.
 ---
 
@@ -32,12 +32,12 @@ Use this skill for normal build/change/fix work.
 
 ## Skill routing
 
-- If the first task is understanding the codebase or deciding whether something is bloated, invoke `investigation` first.
-- If the direction is clear and implementation is likely, invoke `planning` next.
-- If there is a concrete failure, regression, or unexpected behavior, invoke `debugging`.
-- If code changes need stronger confidence, suggest or invoke `testing-and-tdd`.
-- After implementation, invoke `verification` before claiming confidence.
-- For external API or networked tasks, auto-suggest a lightweight fresh-context `review` pass before claiming completion.
+- If the first task is understanding the codebase or deciding whether something is bloated, invoke `forge-investigate` first.
+- If the direction is clear and implementation is likely, invoke `forge-plan` next.
+- If there is a concrete failure, regression, or unexpected behavior, invoke `forge-debug`.
+- If code changes need stronger confidence, suggest or invoke `forge-test`.
+- After implementation, invoke `forge-verify` before claiming confidence.
+- For external API or networked tasks, auto-suggest a lightweight fresh-context `forge-review` pass before claiming completion.
 
 ## Branch policy
 

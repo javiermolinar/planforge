@@ -1,5 +1,5 @@
 ---
-name: worktree
+name: forge-worktree
 description: Optional isolation skill for risky or parallel work.
 ---
 

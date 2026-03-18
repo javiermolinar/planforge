@@ -1,5 +1,5 @@
 ---
-name: investigation
+name: forge-investigate
 description: Read-first discovery skill for understanding code, tracing behavior, finding change points, and recommending next actions.
 ---
 

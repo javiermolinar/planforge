@@ -6,7 +6,8 @@ TEST_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEST_DIR"' EXIT
 
 export HOME="$TEST_DIR/home"
-mkdir -p "$HOME"
+export PLANFORGE_HOME="$TEST_DIR/custom-planforge-home"
+mkdir -p "$HOME" "$PLANFORGE_HOME"
 
 REPO_DIR="$TEST_DIR/sample-repo"
 mkdir -p "$REPO_DIR"
@@ -21,6 +22,7 @@ CONTEXT="$($ROOT/scripts/plan-context)"
 printf '%s\n' "$CONTEXT" | grep '^REPO_SLUG=sample-repo$'
 printf '%s\n' "$CONTEXT" | grep '^BRANCH=main$'
 PLAN_PATH="$(printf '%s\n' "$CONTEXT" | awk -F= '/^PLAN_PATH=/{print $2}')"
+test "$PLAN_PATH" = "$PLANFORGE_HOME/plans/sample-repo/main.md"
 
 "$ROOT/scripts/plan-init"
 test -f "$PLAN_PATH"

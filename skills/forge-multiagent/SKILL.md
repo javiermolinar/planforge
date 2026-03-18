@@ -1,5 +1,5 @@
 ---
-name: multiagent
+name: forge-multiagent
 description: Optional escalation skill for parallelizable work or independent review.
 ---
 

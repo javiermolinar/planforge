@@ -1,5 +1,5 @@
 ---
-name: verification
+name: forge-verify
 description: Best-effort verification skill that reports exactly what was and was not verified.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: planning
+name: forge-plan
 description: Lightweight planning skill for turning an approved direction into a short implementation plan and test table.
 ---
 

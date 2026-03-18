@@ -21,7 +21,8 @@ slugify() {
 
 repo_slug="$(slugify "$(basename "$repo_path")")"
 branch_slug="$(slugify "$branch")"
-plan_path="$HOME/.planforge/plans/$repo_slug/$branch_slug.md"
+planforge_home="${PLANFORGE_HOME:-$HOME/.planforge}"
+plan_path="$planforge_home/plans/$repo_slug/$branch_slug.md"
 
 printf 'REPO_SLUG=%s\n' "$repo_slug"
 printf 'REPO_PATH=%s\n' "$repo_path"

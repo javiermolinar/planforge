@@ -1,5 +1,5 @@
 ---
-name: review
+name: forge-review
 description: Focused fresh-context review skill for correctness, maintainability, and test gaps.
 ---
 

@@ -41,6 +41,6 @@ Plan files use managed section markers so shell helpers can update them cheaply 
 ## Pi package notes
 
 - Planforge can be installed with `pi install /absolute/path/to/planforge`.
-- After installation, use `/skill:orchestrator` or `/skill:investigation` to start explicitly.
+- After installation, use `/skill:planforge` or `/skill:forge-investigate` to start explicitly.
 - `pi config` can enable or disable resources from the package.
 - For external API tasks, Planforge should suggest a fresh-context review handoff before claiming completion.

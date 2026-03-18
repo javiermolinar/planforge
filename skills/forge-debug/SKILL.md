@@ -1,5 +1,5 @@
 ---
-name: debugging
+name: forge-debug
 description: Reproduce, isolate, and minimally fix failures before handing back to testing and verification.
 ---
 

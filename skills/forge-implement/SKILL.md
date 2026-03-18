@@ -1,5 +1,5 @@
 ---
-name: implementation
+name: forge-implement
 description: Execute the approved plan task by task while keeping scope tight and surfacing drift.
 ---
 

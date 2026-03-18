@@ -1,5 +1,5 @@
 ---
-name: testing-and-tdd
+name: forge-test
 description: Pragmatic testing skill that prefers test-first work when practical and keeps verification concrete.
 ---
 

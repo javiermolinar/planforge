@@ -16,7 +16,7 @@ It favors:
 In Pi:
 
 ```text
-/skill:orchestrator Build a small read-only Hacker News CLI. Keep it minimal, plan first, and challenge unnecessary complexity.
+/skill:planforge Build a small read-only Hacker News CLI. Keep it minimal, plan first, and challenge unnecessary complexity.
 ```
 
 Planforge should then:
@@ -28,34 +28,11 @@ Planforge should then:
 6. verify each meaningful step
 7. suggest a fresh-context review before completion
 
-## What it includes
-
-- `skills/` — orchestrator and focused support skills
-- `scripts/` — tiny shell helpers for rolling plan files
-- `templates/` — rolling plan template
-- `docs/` — workflow notes
-
-## Core flow
-
-1. Understand the task
-2. Clarify and challenge
-3. Produce a short plan in chat
-4. Get approval
-5. Create a branch if needed
-6. Create a rolling branch plan
-7. Implement in small tasks
-8. Verify best-effort
-9. Suggest commits / squash points
-
 ## Rolling plans
 
-Planforge stores one rolling plan per branch at:
+Planforge keeps one rolling plan per working branch. It is created after plan approval and updated at meaningful checkpoints so work stays resumable without turning into a heavyweight spec system.
 
-```text
-~/.planforge/plans/<repo-slug>/<branch-slug>.md
-```
-
-The first plan is created automatically after plan approval. Later updates are suggested, not silent.
+By default, Planforge stores state under `~/.planforge/`. To override that location, set `PLANFORGE_HOME`.
 
 ## Install
 
@@ -97,8 +74,8 @@ export PATH="$HOME/src/planforge/scripts:$PATH"
 Then symlink the skills you want, for example:
 
 ```bash
-ln -s ~/src/planforge/skills/orchestrator ~/.config/your-harness/skills/planforge-orchestrator
-ln -s ~/src/planforge/skills/investigation ~/.config/your-harness/skills/planforge-investigation
+ln -s ~/src/planforge/skills/planforge ~/.config/your-harness/skills/planforge
+ln -s ~/src/planforge/skills/forge-investigate ~/.config/your-harness/skills/forge-investigate
 ```
 
 ## Scripts
@@ -147,12 +124,12 @@ The orchestrator should infer the type when it is obvious and ask when it is amb
 After installing in Pi, start with:
 
 ```text
-/skill:orchestrator
-/skill:investigation
+/skill:planforge
+/skill:forge-investigate
 ```
 
-- Use `/skill:orchestrator` for normal feature or change requests
-- Use `/skill:investigation` when the first task is understanding the current code or deciding whether something is bloated
+- Use `/skill:planforge` for normal feature or change requests
+- Use `/skill:forge-investigate` when the first task is understanding the current code or deciding whether something is bloated
 - For networked or external-API work, Planforge should suggest a fresh-context review pass before final completion
 
 See `docs/pi.md` for Pi-specific notes.
@@ -161,8 +138,8 @@ For benchmark runs and external API work, Planforge should prefer a fresh-contex
 
 ## Starting points
 
-- Use `orchestrator` for normal feature or change requests
-- Use `investigation` when the first task is understanding the current code or deciding whether something is bloated
+- Use `planforge` for normal feature or change requests
+- Use `forge-investigate` when the first task is understanding the current code or deciding whether something is bloated
 
 ## Status
 

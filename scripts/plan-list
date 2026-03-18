@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-plans_root="$HOME/.planforge/plans"
+planforge_home="${PLANFORGE_HOME:-$HOME/.planforge}"
+plans_root="$planforge_home/plans"
 if [ ! -d "$plans_root" ]; then
   exit 0
 fi

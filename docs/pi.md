@@ -23,25 +23,25 @@ Once installed, Pi discovers the skills automatically.
 Typical starting points:
 
 ```text
-/skill:orchestrator
-/skill:investigation
+/skill:planforge
+/skill:forge-investigate
 ```
 
-Use `orchestrator` for normal implementation work. Use `investigation` when the first job is understanding the code, tracing behavior, or deciding whether something is bloated.
+Use `planforge` for normal implementation work. Use `forge-investigate` when the first job is understanding the code, tracing behavior, or deciding whether something is bloated.
 
 ## Package management
 
 - `pi list` shows installed packages
 - `pi config` lets you enable or disable package resources
 - `pi update` updates non-pinned package installs
-- `plan-list` lists saved rolling plans under `~/.planforge/plans/`
+- `plan-list` lists saved rolling plans under `${PLANFORGE_HOME:-~/.planforge}/plans/`
 - `scorecard-init` creates an optional scorecard file under `benchmarks/results/` in the current repository
 
 ## Notes
 
 - Planforge ships as a Pi package with skills under `skills/`.
 - The package keeps helper scripts in `scripts/` and skills can reference them relatively.
-- Rolling plans are written under `~/.planforge/plans/`.
+- Rolling plans are written under `${PLANFORGE_HOME:-~/.planforge}/plans/`.
 - Semantic branch and commit conventions also apply on Pi.
 - For external API and benchmark work, Planforge should prefer a fresh-context review handoff before final completion claims.
 
