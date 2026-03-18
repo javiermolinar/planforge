@@ -14,19 +14,32 @@ function normalizeBashPolicy(value) {
 
 const DEFAULT_BASH_POLICY = normalizeBashPolicy(process.env.PLANFORGE_GATE_BASH_POLICY || "balanced");
 
+const EXECUTION_MODES = new Set(["auto", "supervised", "yolo"]);
+
+function normalizeExecutionMode(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return EXECUTION_MODES.has(normalized) ? normalized : "auto";
+}
+
 const DEFAULT_STATE = {
   enabled: false,
   approved: false,
   scopeVersion: 0,
   approvedScopeVersion: 0,
   bashPolicy: DEFAULT_BASH_POLICY,
+  executionMode: "auto",
   updatedAt: 0,
   lastReason: "init",
 };
 
 const APPROVAL_PHRASE = /\b(approved|go ahead|proceed)\b/i;
+const ACTION_APPROVAL = /^\s*(approve|approved)\s+[A-Za-z0-9._:-]+\s*$/i;
+const ACTION_REJECTION = /^\s*reject\s+[A-Za-z0-9._:-]+\s*$/i;
 const TRIVIAL_ACK = /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice)\s*[.!]*\s*$/i;
-const PLANFORGE_SKILL_CMD = /^\s*\/skill:(planforge|forge-[a-z0-9-]+)/i;
+const PLANFORGE_SUPERVISED_SKILL_CMD = /^\s*\/skill:planforge\b/i;
+const PLANFORGE_YOLO_SKILL_CMD = /^\s*\/skill:planforge-yolo\b/i;
+const FORGE_SKILL_CMD = /^\s*\/skill:forge-[a-z0-9-]+\b/i;
+const CONTROL_COMMAND = /^\s*\/(pf-gate|skill:)\b/i;
 
 const MUTATING_BASH_TOKENS = [
   /(^|[^<])>>?/, // redirection
@@ -160,6 +173,7 @@ function normalizeState(raw) {
     scopeVersion: Math.max(0, scopeVersion),
     approvedScopeVersion: Math.max(0, approvedScopeVersion),
     bashPolicy: normalizeBashPolicy(state.bashPolicy),
+    executionMode: normalizeExecutionMode(state.executionMode),
     updatedAt: Number.isFinite(state.updatedAt) ? Number(state.updatedAt) : 0,
     lastReason: typeof state.lastReason === "string" ? state.lastReason : "restored",
   };
@@ -167,9 +181,11 @@ function normalizeState(raw) {
 
 function statusLine(state) {
   const policy = normalizeBashPolicy(state.bashPolicy);
-  if (!state.enabled) return `PF gate: off (bash ${policy})`;
-  if (state.approved) return `PF gate: approved (scope v${state.scopeVersion}, bash ${policy})`;
-  return `PF gate: waiting approval (scope v${state.scopeVersion}, bash ${policy})`;
+  const mode = normalizeExecutionMode(state.executionMode);
+  const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
+  if (!state.enabled) return `PF gate: off (bash ${policy}${modeLabel})`;
+  if (state.approved) return `PF gate: approved (scope v${state.scopeVersion}, bash ${policy}${modeLabel})`;
+  return `PF gate: waiting approval (scope v${state.scopeVersion}, bash ${policy}${modeLabel})`;
 }
 
 export default function (pi) {
@@ -369,15 +385,50 @@ export default function (pi) {
       return { action: "continue" };
     }
 
-    if (!state.enabled && PLANFORGE_SKILL_CMD.test(text)) {
+    if (PLANFORGE_YOLO_SKILL_CMD.test(text)) {
+      setState(
+        {
+          enabled: false,
+          approved: false,
+          scopeVersion: 0,
+          approvedScopeVersion: 0,
+          executionMode: "yolo",
+        },
+        "switch-planforge-yolo",
+        ctx,
+        "info",
+        "Planforge YOLO mode detected. Approval gate left off unless manually enabled with /pf-gate on."
+      );
+      return { action: "continue" };
+    }
+
+    if (PLANFORGE_SUPERVISED_SKILL_CMD.test(text)) {
+      setState(
+        {
+          enabled: true,
+          approved: false,
+          scopeVersion: Math.max(1, state.scopeVersion || 1),
+          approvedScopeVersion: 0,
+          executionMode: "supervised",
+        },
+        "switch-planforge-supervised",
+        ctx,
+        "info",
+        "Planforge gate enabled for supervised mode. Awaiting explicit approval before mutation."
+      );
+      return { action: "continue" };
+    }
+
+    if (!state.enabled && FORGE_SKILL_CMD.test(text) && normalizeExecutionMode(state.executionMode) !== "yolo") {
       setState(
         {
           enabled: true,
           approved: false,
           scopeVersion: 1,
           approvedScopeVersion: 0,
+          executionMode: normalizeExecutionMode(state.executionMode) === "auto" ? "supervised" : state.executionMode,
         },
-        "auto-enable-planforge-skill",
+        "auto-enable-forge-skill",
         ctx,
         "info",
         "Planforge gate enabled for this session. Awaiting explicit approval before mutation."
@@ -385,6 +436,27 @@ export default function (pi) {
     }
 
     if (!state.enabled) {
+      return { action: "continue" };
+    }
+
+    if (ACTION_APPROVAL.test(text)) {
+      const scope = Math.max(1, state.scopeVersion || 1);
+      setState(
+        {
+          enabled: true,
+          approved: true,
+          scopeVersion: scope,
+          approvedScopeVersion: scope,
+        },
+        "action-approval-token",
+        ctx,
+        state.approved ? undefined : "success",
+        state.approved ? undefined : `Planforge gate approved for scope v${scope}.`
+      );
+      return { action: "continue" };
+    }
+
+    if (ACTION_REJECTION.test(text) || CONTROL_COMMAND.test(text)) {
       return { action: "continue" };
     }
 

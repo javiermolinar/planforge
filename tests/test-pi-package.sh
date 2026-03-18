@@ -11,10 +11,14 @@ grep -q '"skills"[[:space:]]*:[[:space:]]*\[[^]]*"\./skills"' package.json
 grep -q '"extensions"[[:space:]]*:[[:space:]]*\[[^]]*"\./extensions"' package.json
 test -f extensions/planforge-approval-gate.ts
 grep -q 'registerCommand("pf-gate"' extensions/planforge-approval-gate.ts
+grep -q 'ACTION_APPROVAL' extensions/planforge-approval-gate.ts
+grep -q 'PLANFORGE_YOLO_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'Planforge gate blocked mutating bash command before approval' extensions/planforge-approval-gate.ts
 grep -q 'pi install /absolute/path/to/planforge' README.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' README.md
 grep -q '/skill:planforge' README.md
+grep -q '/skill:planforge-yolo' README.md
+grep -q 'approve <id>' README.md
 grep -q '/pf-gate status | on | off | approve | revoke | scope-changed | policy' README.md
 grep -q 'Use `/skill:forge-investigate` when the first task is discovery' README.md
 grep -q 'PLANFORGE_HOME' README.md
@@ -26,14 +30,15 @@ grep -q '../../scripts/plan-append-item' skills/forge-implement/SKILL.md
 grep -q '../../scripts/plan-next-init' skills/forge-plan/SKILL.md
 grep -q '../../scripts/plan-next-init' skills/forge-review/SKILL.md
 test -f skills/forge-resume/SKILL.md
+test -f skills/planforge-yolo/SKILL.md
 grep -q '../../scripts/plan-next-list' skills/forge-resume/SKILL.md
 grep -q '../../scripts/plan-init' skills/forge-resume/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/planforge/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/planforge/SKILL.md
 grep -q 'If the first task is understanding the codebase or deciding whether something is bloated, invoke `forge-investigate` first.' skills/planforge/SKILL.md
 grep -q 'If the direction is clear and implementation is likely, invoke `forge-plan` next.' skills/planforge/SKILL.md
-grep -q 'If deferred follow-up plans exist in the next queue, invoke `forge-resume` to continue them.' skills/planforge/SKILL.md
-grep -q 'For external API or networked tasks, auto-suggest a lightweight fresh-context `forge-review` pass before claiming completion.' skills/planforge/SKILL.md
+grep -Eq 'If deferred follow-up plans exist in the next queue, invoke `forge-resume`( to continue them\.)?' skills/planforge/SKILL.md
+grep -q 'For external API or networked tasks, auto-suggest a lightweight fresh-context `forge-review` pass before completion.' skills/planforge/SKILL.md
 grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-plan/SKILL.md
 grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-plan/SKILL.md
 grep -q '## Tactical vs strategic split' skills/forge-plan/SKILL.md
@@ -84,6 +89,7 @@ grep -q 'Philosophy source of truth' README.md
 test -f docs/pi.md
 grep -q 'pi config' docs/pi.md
 grep -q 'pi install git:github.com/javiermolinar/planforge' docs/pi.md
+grep -q '/skill:planforge-yolo' docs/pi.md
 grep -q '/pf-gate status | on | off | approve | revoke | scope-changed | policy' docs/pi.md
 grep -q 'PLANFORGE_GATE_BASH_POLICY' docs/pi.md
 grep -q 'PLANFORGE_HOME' docs/tooling.md
@@ -99,6 +105,8 @@ grep -q 'docs/philosophy.md' docs/flow.md
 grep -q 'source of truth' docs/flow.md
 grep -q '80/20' docs/flow.md
 grep -q 'broken-window rule' docs/flow.md
+grep -q '## Execution modes' docs/flow.md
+grep -q 'planforge-yolo' docs/flow.md
 test -f docs/philosophy.md
 grep -q 'deep modules' docs/philosophy.md
 grep -q 'shallow module' docs/philosophy.md
