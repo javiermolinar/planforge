@@ -42,6 +42,10 @@ It pushes back when the plan is bloated, prefers small honest steps over dramati
 
 This is not a temple for vibecoding. It is a forge.
 
+Exploration is welcome, but delivery runs through explicit checkpoints, tradeoffs, verification evidence, and user acceptance before advancing.
+
+Use `/skill:planforge-fast` for quick exploration and `/skill:planforge` when outcomes must be dependable.
+
 ## Example
 
 In Pi (supervised default):
