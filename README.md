@@ -110,6 +110,15 @@ By default, Planforge stores state under `~/.planforge/`. To override that locat
 - `docs/evaluation.md` — benchmarks and scoring model
 - `benchmarks/README.md` — repeatable benchmark tasks
 
+## Benchmark scoreboard (HN CLI)
+
+Task: minimal read-only Hacker News CLI (`hn top --limit N`).
+
+| Date | Language | Score | Notes |
+|---|---|---:|---|
+| 2026-03-18 | Go | 97 | `go test` + `go vet` + live smoke pass |
+| 2026-03-18 | Rust | 96 | `cargo fmt --check` + `cargo test` + live smoke pass |
+
 ## Status
 
 Experimental, but already usable.
