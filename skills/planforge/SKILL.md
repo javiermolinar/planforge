@@ -13,6 +13,7 @@ Use this skill for normal build/change/fix work.
 - Challenge unnecessary complexity firmly.
 - Prefer the simpler path.
 - Do not silently widen scope.
+- If the user requests TDD (or the task is a bug fix with reproducible behavior), require failing-test-first evidence before production code edits.
 - Single-agent by default.
 - Suggest multiagent or worktrees only when clearly justified.
 - Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
@@ -46,17 +47,12 @@ Pre-mutation gate:
 - Plan updated after latest scope change? [yes/no]
 - Explicit approval received for current plan? [yes/no]
 - Runtime gate allows mutation now? [yes/no]
+- TDD required for this scope? [yes/no]
+- If TDD required: failing test reproduced before production edits? [yes/no]
 - Next action mutates repo? [yes/no]
 ```
 
 If any answer blocks mutation, stop and request approval.
-
-## Tool discipline (Pi)
-
-- Use `read` for file contents.
-- Do **not** use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source file contents.
-- Use `bash` for discovery/status only (for example `ls`, `rg`, `find`, `git status`, `git branch --show-current`).
-- Treat command pipelines that render file bodies as policy violations unless there is no `read`-tool equivalent.
 
 ## Skill handoff checkpoint
 
@@ -88,12 +84,14 @@ Then it must load that skill file and follow it. Do not silently skip skill hand
 Flow guardrails:
 - Steps 9-13 are forbidden until step 7 is completed for the current scope.
 - If scope changes at any point, return to step 5, update plan + test table, and request re-approval.
+- If TDD is required, no production code edits are allowed until a failing test is shown for the target behavior.
 - If the user pushes back on the plan, the next assistant response must re-show a revised plan summary + updated test table before any further discussion.
 
 ## Skill routing
 
 - If the first task is understanding the codebase or deciding whether something is bloated, invoke `forge-investigate` first.
 - If the direction is clear and implementation is likely, invoke `forge-plan` next.
+- If TDD is required, invoke `forge-test` before any implementation skill and obtain failing-test evidence first.
 - If deferred follow-up plans exist in the next queue, invoke `forge-resume` to continue them.
 - If there is a concrete failure, regression, or unexpected behavior, invoke `forge-debug`.
 - If code changes need stronger confidence, suggest or invoke `forge-test`.

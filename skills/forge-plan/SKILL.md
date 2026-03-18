@@ -13,6 +13,7 @@ Use this after the direction is clear and implementation is likely.
 - Split work into small checklist tasks.
 - Include assumptions and constraints when they matter.
 - Include a compact test table.
+- When TDD is requested (or bug reproduction is practical), make the first executable task a failing test and call it out explicitly.
 - Challenge unnecessary abstraction or scope.
 - Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
 - Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
@@ -35,12 +36,6 @@ This skill is planning-only by default.
 
 If scope changes after approval, publish a revised plan summary + updated test table and request re-approval before any mutation.
 
-## Tool discipline (Pi)
-
-- Use `read` for file contents.
-- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source file contents.
-- Use `bash` for discovery/status commands, not file content rendering.
-
 ## Output shape
 
 - plan summary
@@ -56,6 +51,7 @@ If scope changes after approval, publish a revised plan summary + updated test t
 - broken windows table
 - metrics snapshot
 - mitigation suggestions (when both complexity and risk are high)
+- TDD gate status (required? failing test planned first?)
 - next-skill handoff (`Next skill: ...`, `Reason: ...`)
 
 Do not ask for plan approval until the Plan summary and Assumptions table are present.
@@ -70,6 +66,15 @@ If the user pushes back, changes scope, or asks for plan adjustments after seein
 - Then continue with clarifications only after the revised summary is visible.
 
 Never continue toward implementation with a stale summary.
+
+## TDD gate
+
+When TDD is required in this scope:
+
+- State it explicitly: `TDD required: yes`.
+- Define the first failing test case and the command expected to fail.
+- Route next skill to `forge-test` before implementation.
+- Do not route directly to implementation until failing-test evidence exists.
 
 ## Plan summary
 

@@ -60,8 +60,3 @@ Reason: <one sentence>
 
 Then stop investigation flow and switch skills.
 
-## Tool discipline (Pi)
-
-- Use `read` for source file contents.
-- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source files.
-- Use `bash` for search/discovery/status only.

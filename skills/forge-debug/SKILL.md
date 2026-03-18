@@ -24,12 +24,6 @@ Use this when behavior is wrong or tests fail unexpectedly.
 - Avoid branch changes and mutating helper scripts unless explicitly requested by the user/workflow.
 - If scope expands beyond the reported failure, stop and request explicit re-approval of expanded scope.
 
-## Tool discipline (Pi)
-
-- Use `read` for source file contents.
-- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source files.
-- Use `bash` for discovery/execution/status.
-
 ## Guardrails
 
 - Do not guess wildly.

@@ -14,6 +14,7 @@ Use this before claiming something is fixed, done, or ready.
 - State what passed.
 - State what was not verified.
 - Do not overstate confidence.
+- If TDD was required, explicitly confirm whether red→green evidence is present and sufficient.
 - For external API or networked tools, explicitly ask whether verification covered timeout handling, malformed external payload handling, and at least one automated failure-path test.
 - Call out remaining complexity risk explicitly: unresolved change amplification, cognitive load, dependency surface, obscurity, or unknown unknowns.
 - After successful verification and user confirmation, suggest `../../scripts/plan-ship --token-usage "..."` so the rolling plan is marked shipped with an explicit end line.
@@ -25,12 +26,6 @@ Use this before claiming something is fixed, done, or ready.
 - Allowed: `read`, non-mutating `bash` checks, and test/build commands.
 - Prohibited: `edit`, `write`, branch changes, mutating scripts, or mutating shell operations.
 - If verification fails and a fix is needed, emit explicit handoff to `forge-debug` or `forge-test` instead of patching inline.
-
-## Tool discipline (Pi)
-
-- Use `read` for source file contents.
-- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source files.
-- Use `bash` for verification commands and status.
 
 ## Output
 

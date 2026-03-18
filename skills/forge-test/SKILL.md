@@ -13,6 +13,7 @@ Use this when code changes need stronger confidence.
 - For bugs, prefer a failing reproduction first.
 - Expand or refine the test table.
 - If strict TDD is not practical, say why and choose the lightest acceptable verification path.
+- When TDD is required, produce explicit failing-test evidence (command + failure summary) before any production code edits.
 
 ## Mutation boundaries
 
@@ -22,16 +23,11 @@ Use this when code changes need stronger confidence.
 - Keep changes scoped to testability and correctness; avoid unrelated refactors.
 - If test work reveals broader implementation scope, stop and request explicit re-approval.
 
-## Tool discipline (Pi)
-
-- Use `read` for source file contents.
-- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source files.
-- Use `bash` for test execution/discovery/status.
-
 ## Output shape
 
 - testing approach
 - concrete cases
 - commands to run if known
+- red/green status for TDD-required scope
 - gaps that remain
 - suggested handoff (`Next skill: forge-verify`, `Reason: ...`) once testing is complete

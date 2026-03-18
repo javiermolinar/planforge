@@ -16,11 +16,23 @@ Use this after planning is approved and branch context is ready.
 - Surface scope drift instead of silently absorbing it.
 - Suggest rolling-plan updates at meaningful checkpoints.
 
+## TDD gate (strict when required)
+
+If the approved scope requires TDD:
+
+- Do not edit production code until failing-test evidence exists for the target behavior.
+- If failing-test evidence is missing, stop and hand off to `forge-test`.
+- Keep implementation changes tightly coupled to making the failing test pass.
+- After changes, re-run the same test(s) to show red → green progression.
+
+If TDD is not required, state why and proceed with the lightest acceptable verification path.
+
 ## Output
 
 - current task
 - change made
 - verification attempted
+- TDD evidence status (red seen? green seen?) when required
 - follow-up risks or gaps
 
 ## Rolling plan updates

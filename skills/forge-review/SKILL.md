@@ -22,12 +22,6 @@ Use this in a fresh context window when work is large enough or risky enough to 
 - Prohibited: `edit`, `write`, branch changes, mutating scripts, or mutating shell operations.
 - If a fix is obvious, report it as a recommendation; do not implement it in this skill.
 
-## Tool discipline (Pi)
-
-- Use `read` for source file contents.
-- Do not use `cat`, `sed`, `awk`, `head`, or `tail` to inspect source files.
-- Use `bash` for discovery/diff/status only.
-
 ## Priorities
 
 - correctness
