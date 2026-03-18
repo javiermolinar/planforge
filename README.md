@@ -2,7 +2,7 @@
 
 ![Planforge](./forge.png)
 
-Planforge is a lightweight, harness-agnostic workflow for coding agents.
+Planforge is a lightweight, harness-agnostic workflow for coding agents built for serious software development. It favors discipline over vibes: plan first, verify claims, review with fresh eyes, and ship code worthy of Olympus.
 
 It favors:
 - short, explicit planning before implementation
@@ -10,6 +10,23 @@ It favors:
 - single-agent execution by default
 - best-effort verification
 - lightweight rolling branch plans instead of heavyweight specs
+
+## Example
+
+In Pi:
+
+```text
+/skill:orchestrator Build a small read-only Hacker News CLI. Keep it minimal, plan first, and challenge unnecessary complexity.
+```
+
+Planforge should then:
+1. clarify the scope
+2. produce a short plan and test table
+3. create a semantic branch if needed
+4. create a rolling plan
+5. implement in small tasks
+6. verify each meaningful step
+7. suggest a fresh-context review before completion
 
 ## What it includes
 
