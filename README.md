@@ -20,7 +20,7 @@ It favors:
 - fresh-context review for riskier work
 - lightweight rolling plans instead of heavyweight specs
 
-Philosophy source of truth: [`docs/philosophy.md`](docs/philosophy.md)
+Check its philosophy: [`docs/philosophy.md`](docs/philosophy.md)
 
 ## Zen of Planforge
 
