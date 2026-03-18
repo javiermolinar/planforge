@@ -24,6 +24,9 @@ Use this in a fresh context window when work is large enough or risky enough to 
 
 ## Complexity review
 
+Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
+Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
+
 Review whether the change increased:
 
 - change amplification
@@ -31,11 +34,7 @@ Review whether the change increased:
 - dependency surface
 - obscurity
 
-Call out when a change spreads one behavior across too many places, hides simple behavior behind indirection, or introduces dependencies without enough payoff.
-
-Assess deep-vs-shallow module quality:
-- deep modules are preferred (simple interface, substantial hidden implementation).
-- A shallow module is a red flag when its interface is complicated relative to what it actually provides.
+Assess deep-vs-shallow module quality using the canonical criteria.
 
 Also review:
 - whether the tactical-to-strategic split was reasonable for the task

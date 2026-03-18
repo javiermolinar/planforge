@@ -14,9 +14,10 @@ Use this after the direction is clear and implementation is likely.
 - Include assumptions and constraints when they matter.
 - Include a compact test table.
 - Challenge unnecessary abstraction or scope.
+- Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
+- Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
 - Make complexity explicit instead of hand-waving it away.
 - Call out dependencies and obscurity before implementation starts.
-- Prefer deep modules over shallow modules: keep interfaces simple relative to the functionality they provide.
 
 ## Output shape
 
@@ -41,24 +42,21 @@ Strategic work must stay local and justified. Avoid turning a focused task into 
 
 ## Complexity check
 
-Assess the proposed change using these dimensions:
+Assess the proposed change using the philosophy dimensions from `../../docs/philosophy.md`:
 
-- change amplification — how many places need to change when the behavior changes later?
-- cognitive load — how much does a reader need to hold in their head to understand this?
-- dependency surface — what internal or external systems does this depend on?
-- obscurity — what behavior, ownership, or failure mode is hard to see quickly?
-- unknown unknowns — what are we likely underestimating or not understanding yet?
+- change amplification
+- cognitive load
+- dependency surface
+- obscurity
+- unknown unknowns
 
-Use a simple qualitative assessment such as low / medium / high with one sentence of reasoning and one mitigation.
+Use a simple qualitative assessment (low / medium / high) with one sentence of reasoning and one mitigation per dimension.
 
 ## Deep-vs-shallow module check
 
-Assess whether the proposed decomposition is creating deep modules or shallow modules:
+Use the deep-vs-shallow module criteria from `../../docs/philosophy.md`.
 
-- Deep module: simple interface, substantial hidden implementation complexity.
-- Shallow module: complicated interface relative to the functionality provided (red flag).
-
-Treat unnecessary shallow modules as a red flag and simplify or merge them.
+Treat shallow module decomposition as a red flag and simplify or merge where practical.
 
 ## Dependencies
 
@@ -90,14 +88,11 @@ Do not ignore visible quality debt silently.
 
 ## Red flags
 
-Treat these as red flags during planning:
+Use the red-flag list in `../../docs/philosophy.md` as canonical.
 
-- shallow module decomposition (complex interface, little functionality)
-- tiny pass-through wrappers that add little value but increase indirection
-- one behavior spread across many files with no clear boundary benefit
-- callers requiring knowledge of implementation details
-- new dependencies introduced without clear leverage
-- hidden failure modes or ownership ambiguity not called out in the plan
+If you hit one, either:
+- redesign the plan now, or
+- document the risk and mitigation explicitly before implementation.
 
 ## Persistence
 

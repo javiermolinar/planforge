@@ -17,43 +17,28 @@ grep -q 'docs/tooling.md' README.md
 grep -q '../../scripts/plan-init' skills/planforge/SKILL.md
 grep -q '../../scripts/plan-set-section' skills/forge-plan/SKILL.md
 grep -q '../../scripts/plan-append-item' skills/forge-implement/SKILL.md
-grep -q 'change amplification' skills/planforge/SKILL.md
-grep -q 'cognitive load' skills/planforge/SKILL.md
-grep -q 'dependency surface' skills/planforge/SKILL.md
-grep -q 'obscurity' skills/planforge/SKILL.md
-grep -q 'unknown unknowns' skills/planforge/SKILL.md
-grep -q '80/20 tactical-to-strategic split' skills/planforge/SKILL.md
-grep -q 'broken window' skills/planforge/SKILL.md
+grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/planforge/SKILL.md
+grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/planforge/SKILL.md
 grep -q 'If the first task is understanding the codebase or deciding whether something is bloated, invoke `forge-investigate` first.' skills/planforge/SKILL.md
 grep -q 'If the direction is clear and implementation is likely, invoke `forge-plan` next.' skills/planforge/SKILL.md
 grep -q 'For external API or networked tasks, auto-suggest a lightweight fresh-context `forge-review` pass before claiming completion.' skills/planforge/SKILL.md
+grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-plan/SKILL.md
+grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-plan/SKILL.md
 grep -q '## Tactical vs strategic split' skills/forge-plan/SKILL.md
 grep -q '80/20 tactical-to-strategic split' skills/forge-plan/SKILL.md
 grep -q '## Complexity check' skills/forge-plan/SKILL.md
-grep -q 'change amplification' skills/forge-plan/SKILL.md
-grep -q 'cognitive load' skills/forge-plan/SKILL.md
-grep -q 'dependency surface' skills/forge-plan/SKILL.md
-grep -q 'obscurity' skills/forge-plan/SKILL.md
-grep -q 'unknown unknowns' skills/forge-plan/SKILL.md
-grep -q 'deep modules' skills/forge-plan/SKILL.md
-grep -q 'shallow module' skills/forge-plan/SKILL.md
-grep -q 'red flag' skills/forge-plan/SKILL.md
 grep -q '## Dependencies' skills/forge-plan/SKILL.md
 grep -q '## Obscurity and unknowns' skills/forge-plan/SKILL.md
 grep -q '## Broken-window check' skills/forge-plan/SKILL.md
-grep -q 'change amplification' skills/forge-review/SKILL.md
-grep -q 'cognitive load' skills/forge-review/SKILL.md
-grep -q 'dependency surface' skills/forge-review/SKILL.md
-grep -q 'obscurity' skills/forge-review/SKILL.md
+grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-review/SKILL.md
+grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-review/SKILL.md
 grep -q 'tactical-to-strategic split' skills/forge-review/SKILL.md
 grep -q 'broken window' skills/forge-review/SKILL.md
-grep -q 'deep modules' skills/forge-review/SKILL.md
-grep -q 'shallow module' skills/forge-review/SKILL.md
-grep -q 'red flag' skills/forge-review/SKILL.md
 grep -q 'Prefer a different agent or new session so the review is not contaminated by the implementation context.' skills/forge-review/SKILL.md
 grep -q 'Review from a clean packet containing only the task summary, approved plan, changed files or diff, and verification evidence.' skills/forge-review/SKILL.md
+grep -q 'Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.' skills/forge-investigate/SKILL.md
+grep -q 'Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.' skills/forge-investigate/SKILL.md
 grep -q 'hidden control flow' skills/forge-investigate/SKILL.md
-grep -q 'unknown unknowns' skills/forge-investigate/SKILL.md
 grep -q 'timeout handling' skills/forge-verify/SKILL.md
 grep -q 'malformed external payload handling' skills/forge-verify/SKILL.md
 grep -q 'automated failure-path test' skills/forge-verify/SKILL.md
@@ -81,6 +66,10 @@ grep -q 'deep modules' docs/philosophy.md
 grep -q 'shallow module' docs/philosophy.md
 grep -q 'Linux file interface' docs/philosophy.md
 grep -q '## Red flags' docs/philosophy.md
+grep -q '## 6) Keep it simple' docs/philosophy.md
+grep -q '## 7) Data first' docs/philosophy.md
+grep -q '## 8) Measure before optimize' docs/philosophy.md
+grep -q 'premature optimization' docs/philosophy.md
 grep -q 'docs/philosophy.md' README.md
 test -x scripts/plan-list
 test -x scripts/plan-branch-name

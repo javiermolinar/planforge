@@ -2,59 +2,160 @@
 
 Planforge is optimized for long-term software quality, not just short-term velocity.
 
-## Deep modules over shallow modules
+Each principle below uses the same structure:
+- **Statement** — the rule
+- **Intent** — why it exists
+- **Operational rule** — how to apply it in practice
+- **Red flags** — signs you are violating it
 
-Planforge prefers deep modules.
+## 1) Complexity is the enemy
 
-- **Deep module**: simple interface, substantial hidden implementation complexity.
-- **Shallow module**: interface complexity is high relative to the functionality provided.
+**Statement**
+- Reduce change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns.
 
-A shallow module is a red flag. It adds cognitive load and obscurity without enough payoff.
+**Intent**
+- Keep future changes cheaper and safer.
 
-Small modules are not automatically good. Splitting code too aggressively often creates shallow wrappers and forces readers to chase behavior across many files.
+**Operational rule**
+- In planning and review, assess each complexity dimension with low/medium/high plus one mitigation.
 
-## Why this matters
+**Red flags**
+- behavior spread across too many files
+- hidden control flow
+- unknown unknowns left unstated
 
-By separating interface from implementation well, we hide complexity where it belongs.
+## 2) Compose small interfaces, keep modules deep
 
-A classic example is the Linux file interface: a small set of core system calls provides access to a very complex implementation beneath. The interface is relatively simple while the implementation carries the depth.
+**Statement**
+- Prefer deep modules over shallow modules.
 
-## Tactical vs strategic balance
+**Intent**
+- Hide implementation complexity behind simple interfaces.
 
-Planforge uses a pragmatic 80/20 tactical-to-strategic split:
+**Operational rule**
+- Keep interfaces small relative to the functionality provided.
+- Merge shallow wrappers that add indirection but little value.
 
-- Tactical (~80%): deliver the requested behavior.
-- Strategic (~20%): reduce future complexity in the touched area.
+**Red flags**
+- complicated interface with little functionality
+- tiny pass-through wrappers everywhere
+- callers needing internal implementation knowledge
 
-Strategic work should be local, high-leverage, and justified.
+## 3) Ship tactically, improve strategically
 
-## Broken-window rule
+**Statement**
+- Use a pragmatic 80/20 tactical-to-strategic split.
 
-If you touch an area with visible quality debt, do one of these:
+**Intent**
+- Deliver requested behavior while reducing future complexity.
 
-- fix one small local issue now, or
-- explicitly log it for follow-up
+**Operational rule**
+- Tactical (~80%): implement the requested behavior.
+- Strategic (~20%): local, high-leverage maintainability improvements.
 
-Ignoring obvious debt silently is discouraged.
+**Red flags**
+- only tactical shipping with no quality improvement
+- strategic rewrite that explodes scope
+
+## 4) Broken windows are fixed or logged
+
+**Statement**
+- If you touch visible local quality debt, fix one small issue now or log it explicitly.
+
+**Intent**
+- Prevent slow quality decay in touched areas.
+
+**Operational rule**
+- During planning/implementation, identify one local cleanup opportunity and either:
+  - implement it safely now, or
+  - record it with a concrete follow-up in backlog/checkpoints.
+
+**Red flags**
+- stepping over obvious local debt silently
+- repeatedly touching the same messy area without any cleanup or tracking
+
+## 5) Explicitness over guesswork
+
+**Statement**
+- Surface contracts, dependencies, and ambiguity explicitly.
+
+**Intent**
+- Make behavior understandable and reviewable.
+
+**Operational rule**
+- In ambiguous situations, ask or record assumptions; do not guess silently.
+- Verification should state what is verified vs unverified.
+
+**Red flags**
+- silent assumptions
+- vague ownership
+- confidence claims without evidence
+
+## 6) Keep it simple
+
+**Statement**
+- Prefer simple algorithms and simple structures over cleverness.
+
+**Intent**
+- Reduce bugs, cognitive load, and implementation risk.
+
+**Operational rule**
+- Start with the simplest implementation that satisfies the requirement.
+- Introduce fancier algorithms only when measured evidence justifies them.
+
+**Red flags**
+- hard-to-explain algorithmic complexity for small or unknown `n`
+- clever implementations that are difficult to test or reason about
+- optimization work that increases obscurity without proven benefit
+
+## 7) Data first
+
+**Statement**
+- Design the right data abstractions first; let algorithms follow from data shape.
+
+**Intent**
+- Improve clarity, reduce change amplification, and make behavior self-evident.
+
+**Operational rule**
+- Spend design effort on data ownership, boundaries, and interfaces before algorithmic tuning.
+- Prefer interfaces that hide representation details from callers.
+
+**Red flags**
+- logic spread across modules compensating for weak data modeling
+- caller code depending on internal representation details
+- repeated conversions or ad-hoc mappings due to poor abstraction boundaries
+
+## 8) Measure before optimize
+
+**Statement**
+- Avoid premature optimization; optimize only with measurement evidence.
+
+**Intent**
+- Prevent speculative complexity and focus effort on real bottlenecks.
+
+**Operational rule**
+- Do not tune for speed until profiling or measurement identifies a dominant hotspot.
+- Keep optimization scope local and verify impact after changes.
+
+**Red flags**
+- speed hacks added without benchmark/profiling evidence
+- micro-optimizations in non-dominant code paths
+- complexity introduced for hypothetical performance concerns
+
+## Linux interface example
+
+The Linux file interface is a good deep-module mental model: a small set of core calls provides access to substantial implementation complexity. The interface remains comparatively simple while complexity is hidden behind it.
 
 ## Red flags
 
-Treat these as red flags during planning and review:
+Treat these as strict warnings in planning, implementation, and review:
 
-- shallow module decomposition (complex interface, little functionality)
-- tiny pass-through wrappers that mostly forward calls
-- one behavior spread across many files without boundary benefit
-- callers needing implementation knowledge to use an interface safely
+- shallow module decomposition
+- one behavior spread across too many places without boundary benefit
 - dependency growth without clear leverage
 - hidden control flow or unclear ownership
-- unknown unknowns left unstated in plans
-
-## Practical rule of thumb
-
-A module is probably deep enough when:
-
-- callers can use it through a small, clear interface
-- callers do not need to understand its internals
-- internals can evolve without forcing widespread call-site changes
-
-If changing one behavior requires touching many modules, you likely have shallow boundaries and rising change amplification.
+- unknown unknowns left unstated
+- silent broken windows in touched areas
+- premature optimization without measurement evidence
+- fancy algorithmic complexity where simpler code would suffice
+- weak data abstractions that leak internals to callers
