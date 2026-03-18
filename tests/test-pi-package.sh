@@ -83,6 +83,7 @@ grep -q 'scorecard-init' docs/tooling.md
 grep -q 'plan-next-init' docs/tooling.md
 grep -q 'plan-next-list' docs/tooling.md
 grep -q '/plans/<repo>/next/' docs/tooling.md
+grep -q 'rolling plans only' docs/tooling.md
 grep -q '## Design philosophy' docs/flow.md
 grep -q 'docs/philosophy.md' docs/flow.md
 grep -q 'source of truth' docs/flow.md
@@ -105,6 +106,11 @@ test -x scripts/plan-next-init
 test -x scripts/plan-next-list
 test -f benchmarks/results/README.md
 grep -q 'optional scorecard output file' benchmarks/results/README.md
+test -f benchmarks/results/2026-03-18-api-cli-go.md
+test -f benchmarks/results/2026-03-18-api-cli-rust.md
+grep -q 'Benchmark scoreboard' README.md
+grep -q 'benchmarks/results/2026-03-18-api-cli-go.md' README.md
+grep -q 'benchmarks/results/2026-03-18-api-cli-rust.md' README.md
 test -f benchmarks/backlog.md
 grep -q 'save a formal scorecard for this run' benchmarks/backlog.md
 grep -q 'turn this benchmark run into a reusable scripted evaluation procedure' benchmarks/backlog.md

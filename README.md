@@ -116,8 +116,8 @@ Task: minimal read-only Hacker News CLI (`hn top --limit N`).
 
 | Date | Language | Score | Notes |
 |---|---|---:|---|
-| 2026-03-18 | Go | 97 | `go test` + `go vet` + live smoke pass |
-| 2026-03-18 | Rust | 96 | `cargo fmt --check` + `cargo test` + live smoke pass |
+| 2026-03-18 | Go | [97](benchmarks/results/2026-03-18-api-cli-go.md) | `go test` + `go vet` + live smoke pass |
+| 2026-03-18 | Rust | [96](benchmarks/results/2026-03-18-api-cli-rust.md) | `cargo fmt --check` + `cargo test` + live smoke pass |
 
 ## Status
 

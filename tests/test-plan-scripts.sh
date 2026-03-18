@@ -80,10 +80,25 @@ case "$NEXT_PATH" in
     ;;
 esac
 
+NEXT_PATH_2="$($ROOT/scripts/plan-next-init deferred-window-cleanup)"
+test -f "$NEXT_PATH_2"
+if [ "$NEXT_PATH" = "$NEXT_PATH_2" ]; then
+  echo "expected unique deferred plan paths, got same path twice: $NEXT_PATH" >&2
+  exit 1
+fi
+
 NEXT_LIST_OUTPUT="$($ROOT/scripts/plan-next-list)"
 printf '%s\n' "$NEXT_LIST_OUTPUT" | grep '^REPO=sample-repo$'
 printf '%s\n' "$NEXT_LIST_OUTPUT" | grep '^STATUS=deferred$'
 printf '%s\n' "$NEXT_LIST_OUTPUT" | grep "^NEXT_PLAN_PATH=$NEXT_PATH$"
+printf '%s\n' "$NEXT_LIST_OUTPUT" | grep "^NEXT_PLAN_PATH=$NEXT_PATH_2$"
+
+LIST_OUTPUT_AFTER_NEXT="$($ROOT/scripts/plan-list)"
+printf '%s\n' "$LIST_OUTPUT_AFTER_NEXT" | grep "^PLAN_PATH=$PLAN_PATH$"
+if printf '%s\n' "$LIST_OUTPUT_AFTER_NEXT" | grep -q '/next/'; then
+  echo "plan-list should not include deferred next queue paths" >&2
+  exit 1
+fi
 
 grep -q 'Consider adding plan-list later' "$PLAN_PATH"
 grep -q 'Initialized the rolling plan' "$PLAN_PATH"

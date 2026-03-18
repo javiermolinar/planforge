@@ -12,3 +12,5 @@ scorecard-init bugfix
 ```
 
 These result files are useful when you want a durable record of a run. They are optional by design so Planforge can stay lightweight.
+
+When the root `README.md` scoreboard links to a run, keep the referenced scorecard file here so evidence remains available even if temporary benchmark repos are deleted.

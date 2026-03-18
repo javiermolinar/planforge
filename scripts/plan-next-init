@@ -20,7 +20,17 @@ plan_path="$(printf '%s\n' "$context" | awk -F= '/^PLAN_PATH=/{print substr($0, 
 planforge_home="${PLANFORGE_HOME:-$HOME/.planforge}"
 next_dir="$planforge_home/plans/$repo_slug/next"
 slug="$(slugify "$*")"
-file="$next_dir/$(date +%F)-$slug.md"
+if [ -z "$slug" ]; then
+  slug="deferred"
+fi
+
+base="$next_dir/$(date +%F)-$slug"
+file="$base.md"
+index=2
+while [ -e "$file" ]; do
+  file="$base-$index.md"
+  index=$((index + 1))
+done
 
 mkdir -p "$next_dir"
 

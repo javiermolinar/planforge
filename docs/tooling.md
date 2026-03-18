@@ -34,7 +34,7 @@ ${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/next/
 - `plan-init` — create the rolling plan if missing
 - `plan-set-section` — replace a managed section from stdin
 - `plan-append-item` — append a backlog item or checkpoint
-- `plan-list` — list saved rolling plans for discoverability
+- `plan-list` — list saved rolling plans only (excludes the deferred next queue)
 - `plan-branch-name` — generate semantic branch names such as `feat/hn-top-cli`
 - `plan-next-init` — create a deferred follow-up plan under `${PLANFORGE_HOME:-~/.planforge}/plans/<repo>/next/`
 - `plan-next-list` — list deferred follow-up plans for the current repo from the shared next queue

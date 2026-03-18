@@ -7,7 +7,7 @@ if [ ! -d "$plans_root" ]; then
   exit 0
 fi
 
-find "$plans_root" -type f -name '*.md' | sort | while IFS= read -r plan_path; do
+find "$plans_root" -type f -name '*.md' ! -path '*/next/*' | sort | while IFS= read -r plan_path; do
   repo="$(awk -F': ' '/^Repo: /{print $2; exit}' "$plan_path")"
   branch="$(awk -F': ' '/^Branch: /{print $2; exit}' "$plan_path")"
   status="$(awk -F': ' '/^Status: /{print $2; exit}' "$plan_path")"
