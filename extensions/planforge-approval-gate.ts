@@ -16,6 +16,18 @@ function normalizeAcceptanceState(value) {
   return ACCEPTANCE_STATES.has(normalized) ? normalized : "none";
 }
 
+function inferBenchmarkModeFromInput(text) {
+  return BENCHMARK_HINT.test(String(text || ""));
+}
+
+function parseBenchmarkToggle(value, fallback) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return fallback;
+  if (normalized === "on" || normalized === "enable" || normalized === "true" || normalized === "1") return true;
+  if (normalized === "off" || normalized === "disable" || normalized === "false" || normalized === "0") return false;
+  return fallback;
+}
+
 const DEFAULT_STATE = {
   enabled: false,
   approved: false,
@@ -25,6 +37,7 @@ const DEFAULT_STATE = {
   executionMode: "auto",
   acceptanceState: "none",
   pendingScopeAdvance: false,
+  benchmarkMode: false,
   updatedAt: 0,
   lastReason: "init",
 };
@@ -39,6 +52,8 @@ const PLANFORGE_FAST_SKILL_CMD = /^\s*\/skill:planforge-fast\b/i;
 const PLANFORGE_INVESTIGATE_SKILL_CMD = /^\s*\/skill:forge-investigate\b/i;
 const FORGE_SKILL_CMD = /^\s*\/skill:forge-[a-z0-9-]+\b/i;
 const CONTROL_COMMAND = /^\s*\/[a-z0-9:-]+\b/i;
+const BENCHMARK_HINT = /\b(benchmark|scorecard|evaluation|leaderboard)\b/i;
+const BENCHMARK_COMMAND = /^\s*\/?pf-benchmark(?:\s+(on|off|enable|disable|true|false|1|0))?\s*[.!]*\s*$/i;
 
 const SHELL_META_PATTERN = /[<>`]|\$\(|\|(?!=\|)|&(?!&)/;
 
@@ -107,6 +122,7 @@ function normalizeState(raw) {
     executionMode: normalizeExecutionMode(state.executionMode),
     acceptanceState: normalizeAcceptanceState(state.acceptanceState),
     pendingScopeAdvance: Boolean(state.pendingScopeAdvance),
+    benchmarkMode: Boolean(state.benchmarkMode),
     updatedAt: Number.isFinite(state.updatedAt) ? Number(state.updatedAt) : 0,
     lastReason: typeof state.lastReason === "string" ? state.lastReason : "restored",
   };
@@ -115,20 +131,21 @@ function normalizeState(raw) {
 function statusLine(state) {
   const mode = normalizeExecutionMode(state.executionMode);
   const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
+  const profileLabel = state.benchmarkMode ? ", benchmark" : "";
   const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
-  if (mode === "none") return `PF gate: investigate read-only${modeLabel}`;
-  if (!state.enabled) return `PF gate: off${modeLabel}`;
+  if (mode === "none") return `PF gate: investigate read-only${modeLabel}${profileLabel}`;
+  if (!state.enabled) return `PF gate: off${modeLabel}${profileLabel}`;
   if (acceptanceState === "awaiting") {
-    return `PF gate: awaiting scenario acceptance (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel})`;
+    return `PF gate: awaiting scenario acceptance (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel}${profileLabel})`;
   }
   if (acceptanceState === "revise_requested") {
-    return `PF gate: revision requested (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel})`;
+    return `PF gate: revision requested (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel}${profileLabel})`;
   }
   if (state.approved && state.approvalConsumed) {
-    return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}), awaiting /pf-continue`;
+    return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}${profileLabel}), awaiting /pf-continue`;
   }
-  if (state.approved) return `PF gate: approved (scope v${state.scopeVersion}${modeLabel})`;
-  return `PF gate: waiting approval (scope v${state.scopeVersion}${modeLabel})`;
+  if (state.approved) return `PF gate: approved (scope v${state.scopeVersion}${modeLabel}${profileLabel})`;
+  return `PF gate: waiting approval (scope v${state.scopeVersion}${modeLabel}${profileLabel})`;
 }
 
 export default function (pi) {
@@ -243,6 +260,29 @@ export default function (pi) {
     );
   }
 
+  function handleBenchmarkCommand(ctx, explicitValue, viaInput = false) {
+    const nextValue = parseBenchmarkToggle(explicitValue, true);
+    if (state.benchmarkMode === nextValue) {
+      if (ctx?.hasUI) {
+        ctx.ui.notify(
+          `Planforge benchmark profile is already ${nextValue ? "on" : "off"}.`,
+          "info"
+        );
+      }
+      return;
+    }
+
+    setState(
+      {
+        benchmarkMode: nextValue,
+      },
+      viaInput ? "benchmark-command-input" : "benchmark-command",
+      ctx,
+      "info",
+      `Planforge benchmark profile ${nextValue ? "enabled" : "disabled"}.`
+    );
+  }
+
   function handleContinue(ctx) {
     const mode = normalizeExecutionMode(state.executionMode);
 
@@ -284,6 +324,23 @@ export default function (pi) {
     const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
     if (acceptanceState === "awaiting" || acceptanceState === "revise_requested") {
       handleAccept(ctx);
+
+      if (!ctx?.hasUI && state.pendingScopeAdvance) {
+        const nextScope = Math.max(1, state.scopeVersion || 1) + 1;
+        setState(
+          {
+            enabled: true,
+            approved: true,
+            approvalConsumed: false,
+            scopeVersion: nextScope,
+            approvedScopeVersion: nextScope,
+            acceptanceState: "accepted",
+            pendingScopeAdvance: false,
+          },
+          "continue-headless-next-checkpoint",
+          ctx
+        );
+      }
       return;
     }
 
@@ -315,6 +372,18 @@ export default function (pi) {
     approveCurrentScope(ctx, "continue-command", true);
   }
 
+  function shouldAutoContinueAfterApproval() {
+    const mode = normalizeExecutionMode(state.executionMode);
+    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    if (mode === "none") return false;
+    return state.enabled && state.approved && !state.approvalConsumed && acceptanceState === "accepted";
+  }
+
+  function triggerAutoContinueFromExtension() {
+    if (!shouldAutoContinueAfterApproval()) return;
+    pi.sendUserMessage("Continue with the approved checkpoint. Execute only currently approved work and report evidence.");
+  }
+
   pi.on("session_start", async (_event, ctx) => {
     restore(ctx);
   });
@@ -327,6 +396,16 @@ export default function (pi) {
     description: "Approve current Planforge mutating checkpoint and continue supervised execution",
     handler: async (_args, ctx) => {
       handleContinue(ctx);
+      triggerAutoContinueFromExtension();
+    },
+  });
+
+  pi.registerCommand("pf-benchmark", {
+    description: "Toggle Planforge benchmark profile (on/off)",
+    handler: async (args, ctx) => {
+      const raw = String(args?.raw || args?.text || args?.input || "").trim();
+      const explicit = raw ? raw.split(/\s+/)[0] : "";
+      handleBenchmarkCommand(ctx, explicit, false);
     },
   });
 
@@ -348,6 +427,7 @@ export default function (pi) {
           executionMode: "fast",
           acceptanceState: "none",
           pendingScopeAdvance: false,
+          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
         },
         "switch-planforge-fast",
         ctx,
@@ -368,6 +448,7 @@ export default function (pi) {
           executionMode: "supervised",
           acceptanceState: "accepted",
           pendingScopeAdvance: false,
+          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
         },
         "switch-planforge-supervised",
         ctx,
@@ -388,6 +469,7 @@ export default function (pi) {
           executionMode: "none",
           acceptanceState: "none",
           pendingScopeAdvance: false,
+          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
         },
         "switch-forge-investigate",
         ctx,
@@ -408,6 +490,7 @@ export default function (pi) {
           executionMode: "supervised",
           acceptanceState: "accepted",
           pendingScopeAdvance: false,
+          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
         },
         "auto-enable-forge-skill",
         ctx,
@@ -416,13 +499,38 @@ export default function (pi) {
       );
     }
 
+    if (!state.benchmarkMode && inferBenchmarkModeFromInput(text) && !CONTROL_COMMAND.test(text)) {
+      setState(
+        {
+          benchmarkMode: true,
+        },
+        "benchmark-auto-detected",
+        ctx,
+        "info",
+        "Planforge benchmark profile enabled from prompt context."
+      );
+    }
+
+    const benchmarkCmd = text.match(BENCHMARK_COMMAND);
+    if (benchmarkCmd) {
+      handleBenchmarkCommand(ctx, benchmarkCmd[1], true);
+      return { action: "continue" };
+    }
+
     if (!state.enabled) {
       return { action: "continue" };
     }
 
     if (CONTINUE_APPROVAL.test(text)) {
       handleContinue(ctx);
-      return { action: "continue" };
+      if (shouldAutoContinueAfterApproval()) {
+        return {
+          action: "transform",
+          text: "Continue with the approved checkpoint. Execute only currently approved work and report evidence.",
+          images: event?.images,
+        };
+      }
+      return { action: "handled" };
     }
 
     if (REQUEST_REVISION.test(text)) {
@@ -460,7 +568,16 @@ export default function (pi) {
       };
     }
 
-    if (!state.enabled) return;
+    const benchmarkNote = state.benchmarkMode
+      ? "[Planforge benchmark profile]\nBenchmark mode is ON. Keep scope strict and avoid unrequested docs churn. Do not claim completion until you report: (1) build/test command result, (2) functional smoke command result, and (3) one negative-path check result. End with explicit verified vs unverified evidence."
+      : "";
+
+    if (!state.enabled) {
+      if (!benchmarkNote) return;
+      return {
+        systemPrompt: `${event.systemPrompt}\n\n${benchmarkNote}`,
+      };
+    }
 
     if (state.approved && state.approvalConsumed) {
       setState(
@@ -487,7 +604,7 @@ export default function (pi) {
       : `Current mutating checkpoint (scope v${Math.max(1, state.scopeVersion || 1)}) is NOT approved. Request /pf-continue before calling mutating tools.`;
 
     return {
-      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}\n${acceptanceNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.`,
+      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}\n${acceptanceNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.${benchmarkNote ? `\n\n${benchmarkNote}` : ""}`,
     };
   });
 

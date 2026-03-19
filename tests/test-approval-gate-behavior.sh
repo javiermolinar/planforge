@@ -36,10 +36,11 @@ function loadExtension(filePath) {
   return sandbox.module.exports;
 }
 
-function createHarness() {
+function createHarness(hasUI = true) {
   const handlers = new Map();
   const commands = new Map();
   const branch = [];
+  const sentUserMessages = [];
 
   const pi = {
     on(name, handler) {
@@ -52,10 +53,13 @@ function createHarness() {
     appendEntry(customType, data) {
       branch.push({ type: "custom", customType, data });
     },
+    sendUserMessage(message) {
+      sentUserMessages.push(message);
+    },
   };
 
   const ctx = {
-    hasUI: true,
+    hasUI,
     ui: {
       notify() {},
       setStatus() {},
@@ -90,7 +94,11 @@ function createHarness() {
     return null;
   }
 
-  return { pi, emit, runCommand, getState };
+  function getSentUserMessages() {
+    return [...sentUserMessages];
+  }
+
+  return { pi, emit, runCommand, getState, getSentUserMessages };
 }
 
 const extensionPath = path.join(process.cwd(), "extensions", "planforge-approval-gate.ts");
@@ -209,9 +217,73 @@ async function testCheckpointLifecycle() {
   assert(blockedWithoutApproval === undefined, "mutation should be allowed after new checkpoint approval");
 }
 
+async function testBenchmarkProfile() {
+  const harness = createHarness();
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  await harness.emit("input", {
+    text: "/skill:planforge-fast I explicitly approve scope for mutation. Run benchmark: build a tiny CLI and scorecard.",
+  });
+
+  let state = harness.getState();
+  assert(state && state.benchmarkMode === true, "benchmark hints in prompt should auto-enable benchmark profile");
+
+  let beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
+  assert(
+    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("[Planforge benchmark profile]"),
+    "before_agent_start should inject benchmark profile guidance when enabled"
+  );
+
+  await harness.runCommand("pf-benchmark", { raw: "off" });
+  state = harness.getState();
+  assert(state && state.benchmarkMode === false, "pf-benchmark off should disable benchmark profile");
+
+  beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
+  assert(
+    beforeStart === undefined ||
+      (typeof beforeStart?.systemPrompt === "string" &&
+        !beforeStart.systemPrompt.includes("[Planforge benchmark profile]")),
+    "benchmark profile guidance should be omitted when disabled"
+  );
+
+  await harness.emit("input", { text: "/pf-benchmark on" });
+  state = harness.getState();
+  assert(state && state.benchmarkMode === true, "input command /pf-benchmark on should enable benchmark profile");
+}
+
+async function testHeadlessContinueBehavior() {
+  const harness = createHarness(false);
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  await harness.emit("input", { text: "/skill:planforge" });
+
+  await harness.runCommand("pf-continue", {});
+  let state = harness.getState();
+  assert(state && state.approved === true, "headless pf-continue should approve current checkpoint");
+  assert(harness.getSentUserMessages().length >= 1, "pf-continue command should auto-trigger a continuation message when approved");
+  const scopeV1 = state.scopeVersion;
+
+  await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
+  state = harness.getState();
+  assert(state.approvalConsumed === true && state.acceptanceState === "awaiting", "mutation should consume approval and await acceptance");
+
+  await harness.runCommand("pf-continue", {});
+  state = harness.getState();
+  assert(state.acceptanceState === "accepted", "headless continue should acknowledge acceptance");
+  assert(state.approved === true && state.approvalConsumed === false, "headless continue should auto-approve next checkpoint in one command");
+  assert(state.scopeVersion === scopeV1 + 1, "headless continue should advance scope after acceptance");
+
+  const inputResult = await harness.emit("input", { text: "pf-continue" });
+  assert(inputResult && inputResult.action === "transform", "plain pf-continue input should transform into a continuation prompt");
+}
+
 (async () => {
   await testInvestigateModeIsReadOnly();
   await testCheckpointLifecycle();
+  await testBenchmarkProfile();
+  await testHeadlessContinueBehavior();
   console.log("approval gate behavior test: PASS");
 })().catch((error) => {
   console.error(error?.stack || String(error));
