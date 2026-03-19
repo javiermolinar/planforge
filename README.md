@@ -22,6 +22,11 @@ It favors:
 
 Check its philosophy: [`docs/philosophy.md`](docs/philosophy.md)
 
+Operational references:
+- modes: [`docs/modes.md`](docs/modes.md)
+- plan packet: [`docs/plan-packet.md`](docs/plan-packet.md)
+- integration tests: [`docs/integration-tests.md`](docs/integration-tests.md)
+
 ## Zen of Planforge
 
 1. Compose small interfaces, keep modules deep.

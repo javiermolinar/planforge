@@ -1,333 +1,73 @@
 ---
 name: forge-plan
-description: Lightweight planning skill for turning an approved direction into a short implementation plan and test table.
+description: Lightweight planning skill for turning an approved direction into a compact, enforceable implementation plan.
 ---
 
 # Planning
 
-Use this after the direction is clear and implementation is likely.
+Use this when direction is clear and implementation is likely.
 
-## Requirements
+## Core contract (always on)
 
-- Keep the plan short and actionable.
-- Split work into small checklist tasks.
-- Include assumptions and constraints when they matter.
-- Include a compact test table.
-- When TDD is requested (or bug reproduction is practical), make the first executable task a failing test and call it out explicitly.
-- For write-path or ingestion changes, include mandatory write-path semantics and negative-path planning sections (see below).
-- Challenge unnecessary abstraction or scope.
-- Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
-- Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
-- Make complexity explicit instead of hand-waving it away.
-- Call out dependencies and obscurity before implementation starts.
-- Explain key architectural decisions explicitly and highlight major tradeoffs.
-- Apply a compact pass/fail rubric so architecture decisions and tradeoffs are reviewable, not hand-wavy.
-- Define step-level visibility so progress is obvious at every implementation checkpoint.
+- Planning-first: do not edit implementation code while running this skill.
+- Follow `../../docs/philosophy.md` as mandatory policy.
+- Treat philosophy red flags as strict warnings.
+- Use the canonical Plan Packet from `../../docs/plan-packet.md`.
+- Prefer the simplest acceptable plan shape; no silent scope widening.
+- Keep explicit 80/20 tactical-to-strategic split.
+- Apply broken windows rule: fix one local issue now or log concrete follow-up.
+- If scope changes, publish revised Plan Summary + updated Test Table before proceeding.
+- If TDD is required (user request or reproducible bug-fix scope), plan starts with failing-test evidence.
 
 ## Approval and mutation boundaries
 
-This skill is planning-only by default.
+Before explicit approval, only read-only actions are allowed:
 
-- Do not edit implementation code while running `forge-plan`.
-- Before explicit approval, allow only read-only actions:
-  - `read`
-  - non-mutating `bash` (`ls`, `rg`, `find`, `git status`, `git branch --show-current`)
-- Prohibited before approval:
-  - `edit`, `write`
-  - branch changes (`git checkout`, `git switch`, branch creation)
-  - mutating scripts (`../../scripts/plan-init`, `../../scripts/plan-set-section`, or equivalents)
-  - mutating shell operations (`>`, `>>`, `tee`, `sed -i`, write-mode formatters/fixers)
+- `read`
+- non-mutating `bash` (`ls`, `rg`, `find`, `git status`, `git branch --show-current`)
 
-If scope changes after approval, publish a revised plan summary + updated test table and request re-approval before any mutation.
+Prohibited before approval:
 
-## Output shape
+- `edit`, `write`
+- branch changes (`git checkout`, `git switch`, branch creation)
+- mutating scripts (`../../scripts/plan-init`, `../../scripts/plan-set-section`, etc.)
+- mutating shell ops (`>`, `>>`, `tee`, `sed -i`, write-mode fixers)
 
-- plan summary
-- assumptions table
-- tasks
-- test table
-- risks / assumptions
-- tactical vs strategic split
-- complexity check
-- architecture decisions
-- tradeoff highlights
-- architecture/tradeoff quality rubric
-- implementation step ledger template
-- per-step TDD table template (when TDD required)
-- dependencies
-- obscurity and unknowns
-- broken-window check
-- broken windows table
-- metrics snapshot
-- mitigation suggestions (when both complexity and risk are high)
-- TDD gate status (required? failing test planned first?)
-- write-path semantics table (mandatory when write path is touched)
-- lifecycle-safety checklist (mandatory for new local callbacks/APIs)
-- negative test matrix (mandatory for write paths)
-- next-skill handoff (`Next skill: ...`, `Reason: ...`)
+## Required flow
 
-Do not ask for plan approval until the Plan summary and Assumptions table are present.
-Also require Architecture decisions, Tradeoff highlights, a passing Architecture/Tradeoff quality rubric, and an Implementation step ledger template before approval.
-When TDD is required, also require a per-step TDD table template before approval.
-For write-path changes, also require write-path semantics + lifecycle-safety + negative matrix sections before approval.
+1. Understand scope and constraints
+2. Clarify unknowns
+3. Produce full Plan Packet (see `../../docs/plan-packet.md`)
+4. Request approval
+5. On pushback, revise same plan and re-request approval
+
+## Approval gates (before asking implementation approval)
+
+Require all applicable sections from `../../docs/plan-packet.md`:
+
+- Always: Plan Summary, Assumptions, Architecture Justification, Tradeoff Highlights, Rubric, Step Ledger, Test Table, Red Flags/Broken Windows, Harness Check, Next-skill handoff
+- If TDD scope: TDD Test Table + failing-test-first command
+- If write-path scope: write-path semantics + lifecycle safety + negative test matrix
+
+Do not request implementation approval while required sections are missing.
 
 ## Pushback / revision loop
 
-If the user pushes back, changes scope, or asks for plan adjustments after seeing a summary:
+If user pushes back or scope shifts:
 
-- Re-post a revised **Plan summary** before anything else.
-- Include an updated **test table** in that same response.
-- Make the delta explicit (what changed vs prior summary).
-- Then continue with clarifications only after the revised summary is visible.
+- Re-post revised **Plan Summary** first
+- Include updated **Test Table** in same response
+- Make deltas explicit
+- Re-request approval
 
-Never continue toward implementation with a stale summary.
+Never continue with stale summary.
 
-## TDD gate
+## Persistence (after approval only)
 
-When TDD is required in this scope:
-
-- State it explicitly: `TDD required: yes`.
-- Define the first failing test case and the command expected to fail.
-- Route next skill to `forge-test` before implementation.
-- Do not route directly to implementation until failing-test evidence exists.
-
-## Write-path semantics (mandatory when applicable)
-
-If the change touches ingestion/write paths, include this table:
-
-| Dimension | Decision | Notes |
-|---|---|---|
-| Side effects order |  |  |
-| Fail policy (fail-open/fail-closed) |  |  |
-| Retry implications |  |  |
-| Idempotency expectations |  |  |
-
-Do not request implementation approval for write-path changes without this table.
-
-## Lifecycle-safety checklist (mandatory for new local callbacks/APIs)
-
-For new local callbacks/APIs, include checks for:
-
-- starting behavior
-- ready behavior
-- stopping behavior
-- explicit negative tests: `reject-before-ready`, `reject-during-stopping`
-
-Do not request implementation approval until these checks are planned in the test table.
-
-## Negative test matrix (mandatory for write paths)
-
-For write-path changes, include at least:
-
-- downstream callback fails
-- partial side effects
-- service lifecycle transitions
-
-Mark this matrix as a blocking completion criterion in the plan.
-
-## Plan summary
-
-Provide a concise summary of:
-
-- what will be built
-- what will not be built yet
-- why this plan shape was chosen
-
-## Assumptions table
-
-When the plan relies on assumptions, include them explicitly in table form:
-
-| Assumption | Category | Evidence | Risk if wrong | Validation plan | Status |
-|---|---|---|---|---|---|
-
-Category examples: product, technical, dependency, environment.
-Status should be one of: unvalidated, partially validated, validated.
-
-## Tactical vs strategic split
-
-Use an explicit 80/20 tactical-to-strategic split:
-
-- Tactical (~80%): deliver the requested behavior now.
-- Strategic (~20%): make targeted improvements that reduce future complexity.
-
-Strategic work must stay local and justified. Avoid turning a focused task into a broad rewrite.
-
-## Complexity check
-
-Assess the proposed change using the philosophy dimensions from `../../docs/philosophy.md`:
-
-- change amplification
-- cognitive load
-- dependency surface
-- obscurity
-- unknown unknowns
-
-Use a simple qualitative assessment (low / medium / high) with one sentence of reasoning and one mitigation per dimension.
-
-## Deep-vs-shallow module check
-
-Use the deep-vs-shallow module criteria from `../../docs/philosophy.md`.
-
-Treat shallow module decomposition as a red flag and simplify or merge where practical.
-
-## Architecture decisions
-
-Include a compact decision record so reviewers can understand *why* the shape was chosen:
-
-| Decision area | Options considered | Chosen option | Why this choice now | Impact |
-|---|---|---|---|---|
-
-At minimum, cover boundaries, module ownership, data flow, and error-handling strategy for touched components.
-
-## Tradeoff highlights
-
-Make tradeoffs explicit instead of implied:
-
-| Tradeoff | Option favored | Benefit | Cost | Why acceptable now |
-|---|---|---|---|---|
-
-Include at least one tradeoff each for delivery speed, maintainability, and runtime behavior (or state why not applicable).
-
-## Architecture/tradeoff quality rubric (pass/fail)
-
-Before requesting approval, include a compact rubric with explicit pass/fail status:
-
-| Check | Pass/Fail | Evidence |
-|---|---|---|
-| Architectural boundaries are explicit (owners and interfaces named) |  |  |
-| Data flow across touched components is explicit |  |  |
-| Error-handling strategy is explicit at boundaries |  |  |
-| At least two real alternatives were considered for major decisions |  |  |
-| Tradeoffs include both benefits and costs (not one-sided) |  |  |
-| Chosen option has a time-horizon rationale (why now, why not later) |  |  |
-| Red-flag exposure is called out with mitigation linkage |  |  |
-
-Approval gate: do not ask for implementation approval while any rubric row is `Fail` unless the user explicitly accepts the risk.
-
-## Implementation step ledger template (mandatory)
-
-Before implementation approval, define a checkpoint-visible ledger that will be updated on every step:
-
-| Step ID | Goal | Planned evidence | User acceptance check | Status | Notes |
-|---|---|---|---|---|---|
-
-Use statuses: `pending`, `in_progress`, `awaiting_user_acceptance`, `done`, `revise_requested`, `blocked`.
-
-Approval gate: do not ask for implementation approval without this ledger.
-
-## Per-step TDD table template (mandatory when TDD required)
-
-When TDD is required, define this table before implementation starts:
-
-| Step ID | Red test command (expected fail) | Green test command (expected pass) | Refactor guard | User acceptance check | Status |
-|---|---|---|---|---|---|
-
-Use statuses: `pending`, `red_seen`, `green_seen`, `awaiting_user_acceptance`, `done`, `revise_requested`, `blocked`.
-
-Approval gate (TDD scopes): do not ask for implementation approval until this table exists.
-
-## Scenario acceptance gate (mandatory)
-
-Implementation cannot advance to the next scenario/step until the user confirms they are satisfied with the current one.
-
-- After each scenario, set ledger status to `awaiting_user_acceptance` until the user responds.
-- If the user pushes back, set status to `revise_requested`, propose a correction for the same step, and do not advance to the next step.
-- Only move a step to `done` after user acceptance (or explicit user instruction to proceed despite issues).
-
-## Dependencies
-
-Call out:
-
-- internal dependencies
-- external dependencies
-- any new dependency introduced by the plan
-- why each dependency is justified
-
-## Obscurity and unknowns
-
-Call out:
-
-- hidden behavior to make explicit
-- assumptions to validate
-- likely failure modes
-- anything that should move from unknown unknowns into explicit checks or tests
-
-## Broken-window check
-
-Before implementation starts, identify obvious local quality debt in the touched area.
-
-For each broken window:
-- fix one small, high-leverage item now when cheap and safe, or
-- explicitly record it in backlog/checkpoints with a concrete follow-up
-
-Do not ignore visible quality debt silently.
-
-## Broken windows table
-
-When broken windows are found during planning, include them in table form:
-
-| Location | Broken window | Severity | Decision (fix-now/log) | Rationale | Follow-up |
-|---|---|---|---|---|---|
-
-If an item is deferred to another session, create a follow-up plan in the shared next queue with:
-
-- `../../scripts/plan-next-init <topic>`
-
-Put the returned path in the `Follow-up` column.
-
-## Metrics snapshot
-
-At the end of the plan, include a compact table:
-
-| Metric | Value | Method | Notes |
-|---|---:|---|---|
-| Complexity score (0-10) |  | calculated or measured |  |
-| Risk score (0-10) |  | calculated |  |
-
-Complexity score (0-10) should be based on the five philosophy dimensions from `../../docs/philosophy.md` (0-2 each):
-- change amplification
-- cognitive load
-- dependency surface
-- obscurity
-- unknown unknowns
-
-Risk score (0-10) should be based on five operational factors (0-2 each):
-- blast radius
-- failure impact
-- assumption uncertainty
-- external/API dependency risk
-- verification/test gap
-
-If Complexity >= 7 and Risk >= 7, include mitigation suggestions before asking for approval.
-
-## Mitigation suggestions (required when both are high)
-
-When both metrics are high, propose concrete actions such as:
-- split delivery into smaller slices
-- reduce interface/dependency surface
-- validate critical assumptions first (investigation spike)
-- add rollback or containment steps
-- require fresh-context `forge-review` before completion
-- defer non-essential scope into the shared next queue with `../../scripts/plan-next-init <topic>`
-
-## Red flags
-
-Use the red-flag list in `../../docs/philosophy.md` as canonical.
-
-If you hit one, either:
-- redesign the plan now, or
-- document the risk and mitigation explicitly before implementation.
-
-When a red flag remains, reference the exact architecture decision and tradeoff entry that contains its mitigation.
-
-## Persistence
-
-These helper scripts mutate files. Run them only after explicit user approval of the current plan and once target branch context is known.
-
-When the plan is approved and the target branch is known, persist the rolling plan sections with relative helper scripts such as:
+When plan is approved and branch context is known, persist sections with:
 
 - `../../scripts/plan-set-section CURRENT_GOAL`
 - `../../scripts/plan-set-section TASKS`
 - `../../scripts/plan-set-section TEST_TABLE`
 
-Use these to keep the saved branch plan aligned with the approved in-chat plan.
+Use only after explicit approval.

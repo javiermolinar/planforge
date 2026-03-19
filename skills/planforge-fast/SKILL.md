@@ -1,27 +1,23 @@
 ---
 name: planforge-fast
-description: Fast front door for implementation work. Keeps planning discipline but runs unsupervised after scope approval.
+description: Fast front door for implementation work. Keeps plan quality/harness enforcement, then executes unsupervised after scope approval.
 ---
 
 # Orchestrator (Fast / Unsupervised)
 
 Use this skill when speed is prioritized and the user accepts reduced checkpoint-level oversight.
 
-## Rules
+## Core contract (always on)
 
-- Always produce a short plan before non-trivial implementation.
-- Challenge unnecessary complexity firmly.
-- Prefer the simpler path.
-- Do not silently widen scope.
-- If the user requests TDD (or the task is a bug fix with reproducible behavior), require failing-test-first evidence before production code edits.
-- For write-path/ingestion changes, require plan sections for write-path semantics, lifecycle safety, and a negative test matrix before implementation approval.
-- Require planning output to include explicit architecture decisions, tradeoff highlights, a passing architecture/tradeoff quality rubric, and an implementation step ledger before implementation approval.
-- Single-agent by default.
-- Suggest multiagent or worktrees only when clearly justified.
-- Follow the canonical Planforge philosophy in `../../docs/philosophy.md`.
-- Treat the red flags in `../../docs/philosophy.md` as strict warnings, not optional advice.
-- Keep an explicit 80/20 tactical-to-strategic split.
-- Apply the broken window rule: if you touch an area with obvious quality debt, fix one small local item now or log it explicitly.
+- Read-only actions only until explicit scope approval.
+- For non-trivial work, produce the full Plan Packet from `../../docs/plan-packet.md` before any mutation.
+- Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
+- Keep explicit 80/20 tactical-to-strategic split.
+- Apply broken windows rule: fix one local issue now or log a concrete follow-up.
+- Prefer the simplest acceptable path; do not silently widen scope.
+- If requirements/constraints change, re-plan and re-request approval.
+- If TDD is required (user asks, or reproducible bug fix), show failing-test evidence before production edits.
+- If a policy gate blocks mutation, stop and ask.
 
 ## Scope approval gate
 
@@ -31,77 +27,49 @@ Prohibited before approval:
 
 - `edit`, `write`
 - branch creation/switching
-- mutating scripts or mutating shell operations
+- mutating scripts/commands
 
 Approval must be explicit from the user.
+If scope changes after approval, re-plan and re-request approval.
 
-On Pi, `planforge-fast` keeps checkpoint approvals off (no `/pf-continue` loop), so this approval is enforced as workflow policy rather than per-command gate prompts.
+## Required flow
 
-If constraints change after approval, re-plan and re-request approval.
+1. Understand task
+2. Clarify unknowns
+3. Produce Plan Packet (per `../../docs/plan-packet.md`)
+4. Request explicit scope approval
+5. Execute unsupervised
+6. Verify and report (explicitly: verified vs unverified)
 
 ## Unsupervised execution mode
 
-After scope approval, this skill executes steps directly (no checkpoint approval loop).
+After scope approval, execute directly (no per-checkpoint approval loop):
 
-- Keep user updates concise at meaningful checkpoints.
-- Surface scope drift immediately.
-- If risk rises, offer switching back to `planforge` supervised mode.
-- If the user pushes back on a scenario result, pause advancement, revise that same scenario, and wait for user satisfaction before moving on.
+- keep updates concise at meaningful milestones
+- surface scope drift immediately
+- if risk rises materially, offer switching back to `planforge`
+- if user pushback indicates dissatisfaction, stay on same scenario and correct it before advancing
 
-## Flow
+## Skill handoff and routing
 
-1. Understand the task.
-2. Ask clarifying questions if needed.
-3. Challenge overengineering or unclear scope.
-4. Decide next skill.
-5. Produce short in-chat plan.
-6. Include compact test table.
-7. Get explicit scope approval.
-8. Check git branch context.
-9. If needed, create/switch branch.
-10. Create rolling branch plan with `../../scripts/plan-init`.
-11. Emit explicit handoff line.
-12. Invoke next skill and execute unsupervised.
-
-Flow guardrails:
-
-- Steps 8-12 are forbidden until step 7 is complete.
-- If scope changes, return to step 5 and re-approve.
-- If TDD is required, no production edits until failing-test evidence is shown, and require a per-step TDD table for checkpoint reporting.
-- If user pushes back on a scenario/checkpoint result, do not advance to the next scenario until satisfaction is explicit.
-- Do not start implementation until plan includes explicit architecture decisions, tradeoff highlights, a passing architecture/tradeoff quality rubric, and an implementation step ledger.
-- For write-path changes, do not start implementation until plan includes write-path semantics + lifecycle checks + negative matrix rows.
-
-## Skill handoff checkpoint
-
-Before implementation starts, explicitly emit:
+Before implementation, emit:
 
 ```md
 Next skill: <forge-plan|forge-investigate|forge-debug|...>
 Reason: <one sentence>
 ```
 
-Then load and follow that skill.
+Routing defaults:
+- uncertain codebase/shape -> `forge-investigate`
+- clear implementation direction -> `forge-plan`
+- TDD-required scope -> `forge-test` first
+- concrete failure/regression -> `forge-debug`
+- confidence boost -> `forge-test`
+- before final confidence claim -> `forge-verify`
+- external/networked tasks -> suggest `forge-review`
 
-## Skill routing
+## Branch and commit policy
 
-- Investigate-first uncertainty: `forge-investigate`.
-- Clear direction: `forge-plan`.
-- TDD-required scope: `forge-test` before implementation.
-- Concrete failure/regression: `forge-debug`.
-- Confidence boost for changes: `forge-test`.
-- Before completion claims: `forge-verify`.
-- For external/networked changes: suggest fresh-context `forge-review`.
-
-## Branch policy
-
-- On `main` / `master` / trunk-like branches: create a new branch for non-trivial implementation after approval.
-- On unrelated feature branch: create a new branch after approval.
-- On matching feature branch: continue and reuse branch plan.
+- On trunk-like or unrelated branches: create/switch to a task branch after approval.
 - Use `<type>/<slug>` naming.
-
-## Commit policy
-
-- Do not commit automatically.
-- Suggest semantic commit messages.
-- Suggest squash when history is noisy.
+- Do not commit automatically; suggest semantic commit points/messages.

@@ -25,6 +25,8 @@ Use `docs/philosophy.md` as the source of truth for:
 
 ## Execution modes
 
+Canonical mode matrix lives in `docs/modes.md`.
+
 - `planforge` (default): supervised mode for serious development workflows.
   - one mutating checkpoint proposal at a time (phase/task boundary)
   - explicit approval (`/pf-continue`) before executing that checkpoint

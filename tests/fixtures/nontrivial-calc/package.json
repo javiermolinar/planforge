@@ -1,0 +1,8 @@
+{
+  "name": "planforge-e2e-nontrivial-calc",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test"
+  }
+}

@@ -18,5 +18,8 @@ jobs:
       - name: Run Pi package smoke tests
         run: bash tests/test-pi-package.sh
 
+      - name: Run mode contract integration tests
+        run: bash tests/test-mode-contract.sh
+
       - name: Run approval gate behavior tests
         run: bash tests/test-approval-gate-behavior.sh
