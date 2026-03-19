@@ -22,11 +22,11 @@ Planforge uses two layers of integration testing:
    - asks for implementation anyway
    - asserts repository remains unchanged
 2. `planforge` (supervised)
-   - asserts no mutation before `/pf-continue`
-   - asserts response explicitly requests `/pf-continue`
+   - asserts no mutation before `/pf`
+   - asserts response explicitly requests `/pf`
 3. `planforge-fast` (unsupervised)
    - starts with explicit scope approval in prompt
-   - expects convergence without `/pf-continue`
+   - expects convergence without `/pf`
 
 ## Run locally
 

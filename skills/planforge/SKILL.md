@@ -7,10 +7,30 @@ description: Supervised-by-default front door for implementation work. Plans fir
 
 Use this skill for normal build/change/fix work when safety and operator control matter.
 
+## Mission and done criteria
+
+Mission:
+- Deliver approved scope with minimal complexity and explicit evidence.
+
+Definition of done:
+- Requested behavior is implemented within approved scope.
+- Verification evidence is captured and reported (verified vs unverified).
+- Plan/ledger/checkpoint state is updated to reflect current reality.
+- User acceptance is explicit before advancing scenarios/checkpoints.
+
+## Stop-and-ask triggers
+
+Stop and ask before continuing when any of these occur:
+- scope drift or conflicting requirements
+- policy/runtime gate denies mutation
+- evidence contradicts prior assumptions or plan
+- risk increases materially versus approved plan
+
 ## Core contract (always on)
 
 - Read-only actions only until explicit scope approval.
 - For non-trivial work, produce the full Plan Packet from `../../docs/plan-packet.md` before any mutation.
+- Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval.
 - Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
 - Keep explicit 80/20 tactical-to-strategic split.
 - Apply broken windows rule: fix one local issue now or log a concrete follow-up.
@@ -33,14 +53,14 @@ Prohibited before scope approval:
 - mutating scripts/commands (including redirection `>`/`>>`, `tee`, `sed -i`, write-mode fixers)
 - any command that changes files, git state, or environment
 
-Approval must be explicit from the user (`/pf-continue` in supervised mode).
+Approval must be explicit from the user (`/pf` in supervised mode).
 
 ## Required flow
 
 1. Understand task
 2. Clarify unknowns
 3. Produce Plan Packet (per `../../docs/plan-packet.md`)
-4. Request explicit scope approval
+4. Request explicit scope + review-gate approval
 5. Execute in supervised checkpoints
 6. Verify and report (explicitly: verified vs unverified)
 

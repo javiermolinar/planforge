@@ -17,6 +17,10 @@ Use this as the single source of truth for planning output across Planforge skil
 - What I will not do:
 - Step order (1..N):
 
+## File Touch Map
+| Path | Action (create/modify/test/docs) | Responsibility | Interface/contract impact |
+|---|---|---|---|
+
 ## Assumptions
 | Assumption | Category | Evidence | Risk if wrong | Validation plan | Status |
 |---|---|---|---|---|---|
@@ -47,6 +51,15 @@ Use this as the single source of truth for planning output across Planforge skil
 ## Test Table
 | Scenario | Test command/check | Expected result | Evidence |
 |---|---|---|---|
+
+## Proposed Review Gates
+| Gate ID | Trigger | Required evidence | Why this gate |
+|---|---|---|---|
+
+Rules:
+- Propose 1-3 review gates for the current scope.
+- Prefer meaningful review boundaries over per-command approvals.
+- Human may accept, remove, merge, or edit gates before mutation approval.
 
 ## Red Flags / Broken Windows
 - Relevant red flags from `docs/philosophy.md`:
@@ -85,6 +98,18 @@ Reason: <one sentence>
 ```
 
 ## Conditional sections
+
+### When complexity >= 6, risk >= 6, or external/networked boundaries are touched
+
+```md
+## High-Risk Execution Checks
+| Step ID | Command/check | Expected signal | Fallback if mismatch |
+|---|---|---|---|
+```
+
+Rules:
+- Include only high-signal checks for risky steps (target: <= 3 rows).
+- Use executable commands/checks with clear expected signals.
 
 ### When TDD is required (user request or reproducible bug fix)
 
@@ -126,11 +151,13 @@ Rules:
 
 Before asking implementation approval, require:
 
-- Plan Summary + Assumptions
+- Plan Summary + File Touch Map + Assumptions
 - Architecture Justification + Tradeoff Highlights
 - Architecture/Tradeoff Rubric complete (no unresolved critical fail unless explicitly accepted by user)
 - Implementation Step Ledger
 - Test Table
+- Proposed Review Gates
 - Harness Check
+- High-Risk Execution Checks when high-risk scope applies
 - TDD sections when TDD scope applies
 - Write-path sections when write-path scope applies

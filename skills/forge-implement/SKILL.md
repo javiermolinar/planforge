@@ -30,7 +30,7 @@ Use this after planning is approved and branch context is ready.
 When running under supervised mode, approve work by implementation task/checkpoint (not per command):
 
 1. Propose one implementation checkpoint with an id.
-2. Wait for explicit approval (`/pf-continue`).
+2. Wait for explicit approval (`/pf`).
 3. Execute the bounded commands needed to complete that checkpoint.
 4. Report result with an updated implementation step ledger (and per-step TDD table when required), ask for user acceptance of the completed scenario, and only then propose the next checkpoint.
 
@@ -47,7 +47,7 @@ Proposed checkpoint: I<n>
 
 Rules:
 
-- Do not request `/pf-continue` for purely read-only steps.
+- Do not request `/pf` for purely read-only steps.
 - Do not bundle unrelated tasks into one checkpoint approval.
 - If task scope changes materially, issue a new id and re-request approval before further mutation.
 
@@ -92,7 +92,7 @@ Do not mark a TDD step `done` unless red and green evidence are both present.
 After each scenario/checkpoint result:
 
 1. Mark the current step `awaiting_user_acceptance`.
-2. Ask the user whether the scenario is acceptable (in Pi supervised mode, `/pf-continue` can be used as explicit acceptance).
+2. Ask the user whether the scenario is acceptable (in Pi supervised mode, `/pf` can be used as explicit acceptance).
 3. If the user pushes back, mark `revise_requested`, propose a correction checkpoint for the same step, and do not advance.
 4. Only after user acceptance, mark `done` and propose the next scenario.
 

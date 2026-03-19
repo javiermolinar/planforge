@@ -29,9 +29,9 @@ Canonical mode matrix lives in `docs/modes.md`.
 
 - `planforge` (default): supervised mode for serious development workflows.
   - one mutating checkpoint proposal at a time (phase/task boundary)
-  - explicit approval (`/pf-continue`) before executing that checkpoint
-  - in supervised mutation flow, each `/pf-continue` grants one mutating checkpoint (not per command)
-  - if a scenario result is awaiting acceptance, `/pf-continue` records acceptance first
+  - explicit approval (`/pf`) before executing that checkpoint
+  - in supervised mutation flow, each `/pf` grants one mutating checkpoint (not per command)
+  - if a scenario result is awaiting acceptance, `/pf` records acceptance first
   - scope changes trigger re-planning and re-approval
 - `planforge-fast`: unsupervised mode when speed is prioritized.
   - still requires scope approval before non-trivial mutation

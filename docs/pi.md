@@ -28,7 +28,7 @@ Start with:
 /skill:planforge
 ```
 
-`/skill:planforge` is supervised by default (propose one mutating checkpoint, then use `/pf-continue` to approve and execute that checkpoint).
+`/skill:planforge` is supervised by default (propose one mutating checkpoint, then use `/pf` to approve and execute that checkpoint).
 
 If you prefer faster unsupervised execution, use:
 
@@ -60,14 +60,17 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 Planforge includes a lightweight stateful approval gate for Pi:
 
 - Auto-enables when you start with `/skill:planforge` or mutating `forge-*` workflows.
-- In supervised mode, use `/pf-continue` to approve and execute the currently proposed mutating checkpoint (phase/task boundary).
-- In supervised mutation flow, each `/pf-continue` grants one mutating checkpoint, not per-command approvals within that checkpoint.
-- If a scenario result is awaiting acceptance, `/pf-continue` records acceptance first; send it again to approve the next mutating checkpoint.
+- In supervised mode, use `/pf` to approve and execute the currently proposed mutating checkpoint (phase/task boundary).
+- Before first mutation approval in supervised mode, plans should include `## Proposed Review Gates` so humans can accept/edit review boundaries.
+- In supervised flow, `/pf` approves mutation scope and is reused at review gates (not per-command approvals).
+- If a review gate is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
-- In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf-continue` needed).
-- Before `/pf-continue`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).
+- In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
+- Before `/pf`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).
 - Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval.
-- Use `/pf-status` for a right-side overlay panel with current state on demand.
+- Use `/pf benchmark on` to enable benchmark-profile guidance (strict scope + minimum verification evidence), and `/pf benchmark off` to disable it.
+- Benchmark profile may auto-enable when prompts explicitly mention benchmark/evaluation/scorecard context.
+- Use `/pf status` for a right-side overlay panel with current state on demand (including parsed review gates and per-gate status).
 
 ## Publishing later
 

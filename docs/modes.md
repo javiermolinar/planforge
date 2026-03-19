@@ -8,7 +8,7 @@ For machine-checkable mode contracts used in regression tests, see `AGENTS.md`.
 
 | Mode id | Start command | Gate execution mode | Scope approval required before mutation | Checkpoint approvals | Typical use |
 |---|---|---|---|---|---|
-| `planforge` | `/skill:planforge` | `supervised` | Yes | Yes (`/pf-continue` per mutating checkpoint) | Higher-risk or high-confidence delivery work |
+| `planforge` | `/skill:planforge` | `supervised` | Yes | Yes (`/pf` per mutating checkpoint) | Higher-risk or high-confidence delivery work |
 | `planforge-fast` | `/skill:planforge-fast` | `fast` | Yes | No (unsupervised after scope approval) | Faster iteration with lighter operator overhead |
 | `forge-investigate` | `/skill:forge-investigate` | `none` | N/A (investigation is read-only) | No | Discovery, codebase understanding, risk surfacing |
 

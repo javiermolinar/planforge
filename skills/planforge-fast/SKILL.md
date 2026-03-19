@@ -7,10 +7,30 @@ description: Fast front door for implementation work. Keeps plan quality/harness
 
 Use this skill when speed is prioritized and the user accepts reduced checkpoint-level oversight.
 
+## Mission and done criteria
+
+Mission:
+- Deliver approved scope quickly while preserving plan quality and verification honesty.
+
+Definition of done:
+- Requested behavior is implemented within approved scope.
+- Verification evidence is captured and reported (verified vs unverified).
+- Plan/ledger state reflects what was completed and what remains.
+- Scope drift is surfaced immediately and re-approved when needed.
+
+## Stop-and-ask triggers
+
+Stop and ask before continuing when any of these occur:
+- scope drift or conflicting requirements
+- policy/runtime gate denies mutation
+- evidence contradicts prior assumptions or plan
+- risk increases materially versus approved plan
+
 ## Core contract (always on)
 
 - Read-only actions only until explicit scope approval.
 - For non-trivial work, produce the full Plan Packet from `../../docs/plan-packet.md` before any mutation.
+- Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval.
 - Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
 - Keep explicit 80/20 tactical-to-strategic split.
 - Apply broken windows rule: fix one local issue now or log a concrete follow-up.
@@ -37,7 +57,7 @@ If scope changes after approval, re-plan and re-request approval.
 1. Understand task
 2. Clarify unknowns
 3. Produce Plan Packet (per `../../docs/plan-packet.md`)
-4. Request explicit scope approval
+4. Request explicit scope + review-gate approval
 5. Execute unsupervised
 6. Verify and report (explicitly: verified vs unverified)
 

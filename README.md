@@ -66,7 +66,7 @@ Planforge should then:
 3. get explicit scope approval
 4. create a semantic branch if needed
 5. create a rolling plan
-6. propose one implementation checkpoint at a time and wait for `/pf-continue`
+6. propose one implementation checkpoint at a time and wait for `/pf`
 7. execute bounded work for that checkpoint and verify each meaningful step
 8. wait for explicit user acceptance before advancing to the next scenario/checkpoint
 9. suggest a fresh-context review before completion
@@ -95,20 +95,22 @@ Use `-l` only if you want a project-local install for the current repo.
 
 | Mode | Start command | Best for | Behavior |
 |---|---|---|---|
-| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one mutating checkpoint at a time and wait for explicit `/pf-continue` before executing that checkpoint |
+| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one mutating checkpoint at a time and wait for explicit `/pf` before executing that checkpoint |
 | Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without checkpoint approvals after scope approval |
 
 ### Supervised approvals (Pi)
 
 Planforge ships a lightweight approval gate extension:
 
-- In `/skill:planforge`, mutating tool calls are blocked until you send `/pf-continue`.
-- In supervised mutation flow, each `/pf-continue` approves one mutating checkpoint (phase/task boundary), not every individual command inside it.
-- If a scenario result is awaiting user acceptance, `/pf-continue` first records acceptance; send it again to approve the next mutating checkpoint.
+- In `/skill:planforge`, mutating tool calls are blocked until you send `/pf`.
+- Before first mutation approval, Planforge expects a `## Proposed Review Gates` section in the plan so humans can push back on review boundaries.
+- In supervised flow, `/pf` approves mutation scope and is reused at review gates (instead of per-command approvals).
+- If a review gate result is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
-- In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf-continue` needed).
-- If scope changes after approval, the gate revokes approval and requires `/pf-continue` again.
-- Use `/pf-status` to open the right-side status overlay on demand.
+- In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
+- If scope changes after approval, the gate revokes approval and requires `/pf` again.
+- Use `/pf benchmark on` to enable stricter benchmark-run guidance (scope discipline + minimum evidence checks), and `/pf benchmark off` to disable it.
+- Use `/pf status` to open the right-side status overlay on demand (includes parsed review gates and per-gate status).
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
 
@@ -132,6 +134,7 @@ Task: minimal read-only Hacker News CLI (`hn top --limit N`).
 
 | Date | Language | Score | Notes |
 |---|---|---:|---|
+| 2026-03-19 | C | [94](benchmarks/results/2026-03-19-api-cli-c.md) | `make clean && make` + smoke + live API pass |
 | 2026-03-18 | Go | [97](benchmarks/results/2026-03-18-api-cli-go.md) | `go test` + `go vet` + live smoke pass |
 | 2026-03-18 | Rust | [96](benchmarks/results/2026-03-18-api-cli-rust.md) | `cargo fmt --check` + `cargo test` + live smoke pass |
 

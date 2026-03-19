@@ -17,6 +17,7 @@ Use this when direction is clear and implementation is likely.
 - Keep explicit 80/20 tactical-to-strategic split.
 - Apply broken windows rule: fix one local issue now or log concrete follow-up.
 - If scope changes, publish revised Plan Summary + updated Test Table before proceeding.
+- Planning must propose explicit review gates and invite user pushback before mutation approval.
 - If TDD is required (user request or reproducible bug-fix scope), plan starts with failing-test evidence.
 
 ## Approval and mutation boundaries
@@ -45,7 +46,8 @@ Prohibited before approval:
 
 Require all applicable sections from `../../docs/plan-packet.md`:
 
-- Always: Plan Summary, Assumptions, Architecture Justification, Tradeoff Highlights, Rubric, Step Ledger, Test Table, Red Flags/Broken Windows, Harness Check, Next-skill handoff
+- Always: Plan Summary, File Touch Map, Assumptions, Architecture Justification, Tradeoff Highlights, Rubric, Step Ledger, Test Table, Proposed Review Gates, Red Flags/Broken Windows, Harness Check, Next-skill handoff
+- If high-risk scope: High-Risk Execution Checks
 - If TDD scope: TDD Test Table + failing-test-first command
 - If write-path scope: write-path semantics + lifecycle safety + negative test matrix
 
@@ -56,7 +58,7 @@ Do not request implementation approval while required sections are missing.
 If user pushes back or scope shifts:
 
 - Re-post revised **Plan Summary** first
-- Include updated **Test Table** in same response
+- Include updated **Test Table** in same response (and revised **File Touch Map** / **Proposed Review Gates** when changed)
 - Make deltas explicit
 - Re-request approval
 

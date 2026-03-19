@@ -104,6 +104,20 @@ function createHarness(hasUI = true) {
 const extensionPath = path.join(process.cwd(), "extensions", "planforge-approval-gate.ts");
 const installApprovalGate = loadExtension(extensionPath);
 
+async function emitReviewGateProposal(harness) {
+  await harness.emit("message_end", {
+    message: {
+      role: "assistant",
+      content: [
+        {
+          type: "text",
+          text: "## Proposed Review Gates\n| Gate ID | Trigger | Required evidence | Why this gate |\n|---|---|---|---|\n| RG1 | before mutation | build + smoke | keep drift low |",
+        },
+      ],
+    },
+  });
+}
+
 async function testInvestigateModeIsReadOnly() {
   const harness = createHarness();
   installApprovalGate(harness.pi);
@@ -151,6 +165,11 @@ async function testCheckpointLifecycle() {
 
   await harness.emit("session_start", {});
   await harness.emit("input", { text: "/skill:planforge" });
+  await emitReviewGateProposal(harness);
+
+  let state = harness.getState();
+  assert(state && state.reviewGatesProposed === true, "review gate proposal should be captured from assistant message");
+  assert(Array.isArray(state.reviewGates) && state.reviewGates.length >= 1, "review gate proposal should parse structured gate rows");
 
   const blockedPreApprovalMetaBash = await harness.emit("tool_call", {
     toolName: "bash",
@@ -161,60 +180,51 @@ async function testCheckpointLifecycle() {
     "pre-approval redirection bypass attempts must be blocked"
   );
 
-  await harness.runCommand("pf-continue", {});
+  await harness.runCommand("pf", {});
 
-  let state = harness.getState();
-  assert(state && state.approved === true, "pf-continue should approve current checkpoint");
-  assert(state.approvalConsumed === false, "approval should start unconsumed");
+  state = harness.getState();
+  assert(state && state.approved === true, "pf should approve current scope");
+  assert(state.reviewGatesApproved === true, "scope approval should mark review gates approved");
   const scopeV1 = state.scopeVersion;
 
-  await harness.emit("tool_call", { toolName: "bash", input: { command: "ls" } });
-  state = harness.getState();
-  assert(state.approvalConsumed === false, "read-only commands must not consume approval");
-
   const firstMutation = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
-  assert(firstMutation === undefined, "first mutation after approval should be allowed");
+  assert(firstMutation === undefined, "mutation should be allowed after approval");
 
   state = harness.getState();
-  assert(state.approvalConsumed === true, "first mutation should consume checkpoint approval");
-  assert(state.acceptanceState === "awaiting", "after mutation, scenario should await user acceptance");
+  assert(state.approved === true, "approval should remain active between mutations until review gate");
+  assert(state.acceptanceState === "accepted", "acceptance state remains accepted before review gate");
 
-  await harness.runCommand("pf-continue", {});
-  state = harness.getState();
-  assert(state.acceptanceState === "accepted", "pf-continue should first acknowledge scenario acceptance");
-  assert(state.scopeVersion === scopeV1, "acceptance ack should not increment scope version");
+  await harness.emit("message_end", {
+    message: {
+      role: "assistant",
+      content: [{ type: "text", text: "REVIEW_GATE_REACHED: G1\nBuild evidence\nVerified vs unverified\n- build pass\n- smoke pass\n- negative-path pass" }],
+    },
+  });
 
-  await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
   state = harness.getState();
-  assert(state.approved === false, "consumed approval should expire before the next agent start");
-  assert(state.approvalConsumed === false, "approvalConsumed should reset after expiry");
+  assert(state.approved === false, "reaching review packet should pause mutation approval");
+  assert(state.acceptanceState === "awaiting", "review gate should await acceptance");
+  assert(typeof state.currentReviewGateId === "string" && state.currentReviewGateId.length > 0, "review gate should track current gate id when awaiting acceptance");
 
-  await harness.runCommand("pf-continue", {});
+  await harness.runCommand("pf", {});
   state = harness.getState();
-  assert(state.approved === true && state.approvalConsumed === false, "pf-continue should approve next checkpoint after acceptance");
-  assert(state.scopeVersion === scopeV1 + 1, "next checkpoint approval should increment scope version");
+  assert(state.acceptanceState === "accepted", "pf should accept review gate");
+  assert(state.approved === true, "pf should also approve next scope after review gate");
+  assert(state.scopeVersion === scopeV1 + 1, "next scope should be advanced after accepted review gate");
+  assert(Array.isArray(state.acceptedReviewGates) && state.acceptedReviewGates.length >= 1, "accepted review gates should be tracked");
 
   await harness.emit("tool_call", { toolName: "edit", input: { path: "docs/pi.md" } });
   state = harness.getState();
-  assert(state.approvalConsumed === true, "second checkpoint should become consumed on first mutation");
-  assert(state.acceptanceState === "awaiting", "second mutation should await acceptance again");
+  assert(state.approved === true, "next mutation should be allowed after one continue");
 
   await harness.emit("input", { text: "needs changes" });
   state = harness.getState();
   assert(state.acceptanceState === "revise_requested", "pushback should mark scenario revision requested");
   assert(state.approved === false, "pushback should clear approval for further mutation");
 
-  await harness.runCommand("pf-continue", {});
+  await harness.runCommand("pf", {});
   state = harness.getState();
-  assert(state.acceptanceState === "accepted", "pf-continue should accept revised scenario once user is satisfied");
-  assert(state.approved === false, "accepting scenario alone should not auto-approve mutation in this state");
-
-  await harness.runCommand("pf-continue", {});
-  state = harness.getState();
-  assert(state.approved === true, "a second pf-continue should approve the next checkpoint after acceptance");
-
-  const blockedWithoutApproval = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
-  assert(blockedWithoutApproval === undefined, "mutation should be allowed after new checkpoint approval");
+  assert(state.acceptanceState === "accepted", "pf should accept revised scenario once user is satisfied");
 }
 
 async function testBenchmarkProfile() {
@@ -235,9 +245,9 @@ async function testBenchmarkProfile() {
     "before_agent_start should inject benchmark profile guidance when enabled"
   );
 
-  await harness.runCommand("pf-benchmark", { raw: "off" });
+  await harness.runCommand("pf", { raw: "benchmark off" });
   state = harness.getState();
-  assert(state && state.benchmarkMode === false, "pf-benchmark off should disable benchmark profile");
+  assert(state && state.benchmarkMode === false, "pf benchmark off should disable benchmark profile");
 
   beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
   assert(
@@ -247,9 +257,32 @@ async function testBenchmarkProfile() {
     "benchmark profile guidance should be omitted when disabled"
   );
 
-  await harness.emit("input", { text: "/pf-benchmark on" });
+  await harness.emit("input", { text: "/pf benchmark on" });
   state = harness.getState();
-  assert(state && state.benchmarkMode === true, "input command /pf-benchmark on should enable benchmark profile");
+  assert(state && state.benchmarkMode === true, "input command /pf benchmark on should enable benchmark profile");
+}
+
+async function testReviewGatePushbackFlow() {
+  const harness = createHarness();
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  await harness.emit("input", { text: "/skill:planforge" });
+  await emitReviewGateProposal(harness);
+
+  let state = harness.getState();
+  assert(state && state.reviewGatesProposed === true, "review gates should be proposed before pushback");
+
+  await harness.emit("input", { text: "please change review gates to one final gate" });
+  state = harness.getState();
+  assert(state && state.reviewGatesProposed === false, "review-gate pushback should force revised proposal");
+  assert(Array.isArray(state.reviewGates) && state.reviewGates.length === 0, "review-gate pushback should clear parsed review gates");
+
+  const gateBlockedResult = await harness.emit("input", { text: "pf" });
+  assert(
+    gateBlockedResult && gateBlockedResult.action === "transform" && gateBlockedResult.text.includes("Proposed Review Gates"),
+    "pf input should require review-gate proposal before approval"
+  );
 }
 
 async function testHeadlessContinueBehavior() {
@@ -259,30 +292,49 @@ async function testHeadlessContinueBehavior() {
   await harness.emit("session_start", {});
   await harness.emit("input", { text: "/skill:planforge" });
 
-  await harness.runCommand("pf-continue", {});
+  await harness.runCommand("pf", {});
   let state = harness.getState();
-  assert(state && state.approved === true, "headless pf-continue should approve current checkpoint");
-  assert(harness.getSentUserMessages().length >= 1, "pf-continue command should auto-trigger a continuation message when approved");
+  assert(state && state.approved === false, "headless pf should not approve before review gates are proposed");
+  assert(
+    harness.getSentUserMessages().some((m) => String(m).includes("Proposed Review Gates")),
+    "missing review-gate proposal should trigger guidance message"
+  );
+
+  await emitReviewGateProposal(harness);
+  await harness.runCommand("pf", {});
+  state = harness.getState();
+  assert(state && state.approved === true, "headless pf should approve after review gates are proposed");
+  assert(state.reviewGatesApproved === true, "approval should also mark review gates approved");
   const scopeV1 = state.scopeVersion;
 
   await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
   state = harness.getState();
-  assert(state.approvalConsumed === true && state.acceptanceState === "awaiting", "mutation should consume approval and await acceptance");
+  assert(state.approved === true && state.acceptanceState === "accepted", "mutation should keep approval active before review gate");
 
-  await harness.runCommand("pf-continue", {});
+  await harness.emit("message_end", {
+    message: {
+      role: "assistant",
+      content: [{ type: "text", text: "REVIEW_GATE_REACHED: G1\nEvidence\nVerified vs unverified\n- build\n- smoke\n- negative path" }],
+    },
+  });
   state = harness.getState();
-  assert(state.acceptanceState === "accepted", "headless continue should acknowledge acceptance");
-  assert(state.approved === true && state.approvalConsumed === false, "headless continue should auto-approve next checkpoint in one command");
-  assert(state.scopeVersion === scopeV1 + 1, "headless continue should advance scope after acceptance");
+  assert(state.approved === false && state.acceptanceState === "awaiting", "review packet should open review gate and pause mutation");
 
-  const inputResult = await harness.emit("input", { text: "pf-continue" });
-  assert(inputResult && inputResult.action === "transform", "plain pf-continue input should transform into a continuation prompt");
+  await harness.runCommand("pf", {});
+  state = harness.getState();
+  assert(state.acceptanceState === "accepted", "headless pf should acknowledge acceptance");
+  assert(state.approved === true, "headless pf should auto-approve next scope in one command");
+  assert(state.scopeVersion === scopeV1 + 1, "headless pf should advance scope after acceptance");
+
+  const inputResult = await harness.emit("input", { text: "pf" });
+  assert(inputResult && inputResult.action === "transform", "plain pf input should transform into a continuation prompt");
 }
 
 (async () => {
   await testInvestigateModeIsReadOnly();
   await testCheckpointLifecycle();
   await testBenchmarkProfile();
+  await testReviewGatePushbackFlow();
   await testHeadlessContinueBehavior();
   console.log("approval gate behavior test: PASS");
 })().catch((error) => {

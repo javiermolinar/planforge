@@ -11,7 +11,7 @@ grep -q '"./extensions"' package.json
 
 test -f extensions/planforge-approval-gate.ts
 test -f extensions/pf-status.ts
-grep -q 'registerCommand("pf-continue"' extensions/planforge-approval-gate.ts
+grep -q 'registerCommand("pf"' extensions/planforge-approval-gate.ts
 grep -q 'registerCommand("pf-status"' extensions/pf-status.ts
 grep -q 'PLANFORGE_SUPERVISED_SKILL_CMD' extensions/planforge-approval-gate.ts
 grep -q 'PLANFORGE_FAST_SKILL_CMD' extensions/planforge-approval-gate.ts
@@ -47,7 +47,7 @@ test -x tests/test-pi-e2e-modes.sh
 test -f README.md
 grep -q '/skill:planforge' README.md
 grep -q '/skill:planforge-fast' README.md
-grep -q '/pf-continue' README.md
+grep -Eq '/pf($|[^a-z-])' README.md
 grep -q 'docs/philosophy.md' README.md
 
 test -f .github/workflows/ci.yml

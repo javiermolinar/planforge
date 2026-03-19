@@ -84,7 +84,7 @@ if tests_pass "$INV_REPO"; then
   exit 1
 fi
 
-# 2) Supervised mode should stay read-only before explicit /pf-continue and request it in output
+# 2) Supervised mode should stay read-only before explicit /pf and request it in output
 SUP_REPO="$WORKDIR/supervised"
 SUP_SESSION="$WORKDIR/supervised.session.jsonl"
 SUP_OUT0="$WORKDIR/supervised.turn0.txt"
@@ -95,16 +95,16 @@ run_pi_turn "$SUP_REPO" "$SUP_SESSION" \
   "$SUP_OUT0"
 
 if repo_changed "$SUP_REPO"; then
-  echo 'FAIL: planforge supervised mutated before /pf-continue approval'
+  echo 'FAIL: planforge supervised mutated before /pf approval'
   exit 1
 fi
 
-if ! grep -qi '/pf-continue' "$SUP_OUT0"; then
-  echo 'FAIL: planforge supervised response did not request /pf-continue approval'
+if ! grep -qi '/pf' "$SUP_OUT0"; then
+  echo 'FAIL: planforge supervised response did not request /pf approval'
   exit 1
 fi
 
-# 3) Fast mode should converge without /pf-continue approvals
+# 3) Fast mode should converge without /pf approvals
 FAST_REPO="$WORKDIR/fast"
 FAST_SESSION="$WORKDIR/fast.session.jsonl"
 bootstrap_repo "$FAST_REPO"
