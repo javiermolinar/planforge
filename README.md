@@ -13,6 +13,8 @@ Planforge is a lightweight workflow for the **Pi agent harness** built for serio
 
 Planforge is for developers who want agents to act less like autocomplete with delusions of grandeur and more like seasoned engineers who can survive review.
 
+Planforge is the middle path between YOLO vibecoding and heavyweight spec ritual: less chaos, less ceremony, more engineering judgment.
+
 It favors:
 - short, explicit planning before implementation
 - firm pushback against unnecessary complexity
