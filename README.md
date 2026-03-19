@@ -11,8 +11,6 @@
 
 Planforge is a lightweight workflow for the **Pi agent harness** built for serious software development. It favors discipline over vibes: plan first, verify claims, review with fresh eyes, and ship code worthy of Olympus.
 
-Planforge is for developers who want agents to act less like autocomplete with delusions of grandeur and more like seasoned engineers who can survive review.
-
 Planforge is the middle path between YOLO vibecoding and heavyweight spec ritual: less chaos, less ceremony, more engineering judgment.
 
 It favors:
@@ -24,11 +22,6 @@ It favors:
 - lightweight rolling plans instead of heavyweight specs
 
 Check its philosophy: [`docs/philosophy.md`](docs/philosophy.md)
-
-Operational references:
-- modes: [`docs/modes.md`](docs/modes.md)
-- plan packet: [`docs/plan-packet.md`](docs/plan-packet.md)
-- integration tests: [`docs/integration-tests.md`](docs/integration-tests.md)
 
 ## Zen of Planforge
 
@@ -48,17 +41,15 @@ Most agent workflows worship momentum. Planforge serves judgment.
 
 It would rather slow the hand than ship the wrong thing quickly. It pushes back when the plan grows bloated, cuts away ornamental complexity, and treats verification as steel, not smoke. When the work turns risky, it calls for fresh eyes instead of crowning the builder with a hollow victory speech.
 
-Planforge does not kneel before permission theater. Its gate is not a tollbooth for keystrokes; it is a forge strike. A review anvil. A place where a human can narrow scope, reject drift, break bad design before it hardens, and demand proof before the next blow falls. The purpose is not to reduce mutations for their own sake. The purpose is to forge code that deserves to survive contact with reality.
+Exploration is welcome. But delivery runs through explicit checkpoints, hard tradeoffs, verification evidence, and human acceptance before advancing. In quiet runs with no pushback, `/skill:planforge-fast` and `/skill:planforge` should often converge to similar code. The true power of supervised mode appears when seasoned judgment enters the fire
 
-This is not a temple for vibecoding. It is a forge.
 
-Exploration is welcome. But delivery runs through explicit checkpoints, hard tradeoffs, verification evidence, and human acceptance before advancing. In quiet runs with no pushback, `/skill:planforge-fast` and `/skill:planforge` should often converge to similar code. The true power of supervised mode appears when seasoned judgment enters the fire.
+## Quickstart
+Global install from git (available in all repos):
 
-Use `/skill:planforge-fast` for quick exploration and `/skill:planforge` when outcomes must be dependable.
-
-## Example
-
-In Pi (supervised default):
+```bash
+pi install git:github.com/javiermolinar/planforge
+```
 
 ```text
 /skill:planforge Build a small read-only Hacker News CLI. Keep it minimal, plan first, and challenge unnecessary complexity.
@@ -75,26 +66,6 @@ Planforge should then:
 8. wait for explicit user acceptance before advancing to the next scenario/checkpoint
 9. suggest a fresh-context review before completion
 
-## Quickstart
-
-### Pi
-
-Global install from git (available in all repos):
-
-```bash
-pi install git:github.com/javiermolinar/planforge
-```
-
-Or install from a local checkout (recommended while developing Planforge itself):
-
-```bash
-pi install /absolute/path/to/planforge
-```
-
-Use `-l` only if you want a project-local install for the current repo.
-
-`git:` sources are managed clones under `~/.pi/agent/git/` (or `.pi/git/` with `-l`), so Pi may run `git pull` on later installs/updates. If you want Pi to use your current working tree directly, install by local path.
-
 ### Modes
 
 | Mode | Start command | Best for | Behavior |
@@ -102,9 +73,9 @@ Use `-l` only if you want a project-local install for the current repo.
 | Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one mutating checkpoint at a time and wait for explicit `/pf` before executing that checkpoint |
 | Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without checkpoint approvals after scope approval |
 
-### Supervised approvals (Pi)
+### Supervised approvals
 
-Planforge carries a lightweight approval gate extension:
+Planforge carries a lightweight approval gate extension
 
 - In `/skill:planforge`, mutating tool calls are blocked until you send `/pf`.
 - Before first mutation approval, Planforge expects a `## Proposed Review Gates` section in the plan so humans can push back on review boundaries.
@@ -114,7 +85,6 @@ Planforge carries a lightweight approval gate extension:
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
 - In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
 - If scope changes after approval, the gate revokes approval and requires `/pf` again.
-- Use `/pf benchmark on` to enable stricter benchmark-run guidance (scope discipline + minimum evidence checks), and `/pf benchmark off` to disable it.
 - Use `/pf status` to open the right-side status overlay on demand (includes parsed review gates and per-gate status).
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
