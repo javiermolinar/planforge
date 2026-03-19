@@ -2,8 +2,9 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/javiermolinar/planforge?style=flat-square)
 ![Pi package](https://img.shields.io/badge/pi-package-6b8afd?style=flat-square)
-![Status](https://img.shields.io/badge/status-experimental-bf8700?style=flat-square)
+![Development mode](https://img.shields.io/badge/development-heavy%20%7C%20may%20break%20any%20time-d97706?style=flat-square)
 [![CI](https://github.com/javiermolinar/planforge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/javiermolinar/planforge/actions/workflows/ci.yml)
+[![CI passed](https://img.shields.io/github/actions/workflow/status/javiermolinar/planforge/ci.yml?branch=main&style=flat-square&label=ci%20passed)](https://github.com/javiermolinar/planforge/actions/workflows/ci.yml)
 ![Docs](https://img.shields.io/badge/docs-flow%20%7C%20pi%20%7C%20tooling-5c677d?style=flat-square)
 
 ![Planforge](./forge.png)
@@ -136,4 +137,8 @@ Task: minimal read-only Hacker News CLI (`hn top --limit N`).
 
 ## Status
 
-Experimental, but already usable.
+Heavy development mode: behavior and interfaces may break at any time.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
