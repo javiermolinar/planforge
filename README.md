@@ -11,7 +11,7 @@
 
 Planforge is a lightweight workflow for the **Pi agent harness** built for serious software development. It favors discipline over vibes: plan first, verify claims, review with fresh eyes, and ship code worthy of Olympus.
 
-Planforge is for developers who want agents to behave more like strong engineers and less like autocomplete with delusions of grandeur.
+Planforge is for developers who want agents to act less like autocomplete with delusions of grandeur and more like seasoned engineers who can survive review.
 
 It favors:
 - short, explicit planning before implementation
@@ -42,13 +42,15 @@ This is baked from years of real engineering tradeoffs, and from hard-won lesson
 
 ## Why it feels different
 
-Most agent workflows optimize for momentum. Planforge optimizes for judgment.
+Most agent workflows worship momentum. Planforge serves judgment.
 
-It pushes back when the plan is bloated, prefers small honest steps over dramatic leaps, and treats verification as evidence instead of theater. When the work is risky, it asks for fresh eyes instead of trusting the builder's own victory speech.
+It would rather slow the hand than ship the wrong thing quickly. It pushes back when the plan grows bloated, cuts away ornamental complexity, and treats verification as steel, not smoke. When the work turns risky, it calls for fresh eyes instead of crowning the builder with a hollow victory speech.
+
+Planforge does not kneel before permission theater. Its gate is not a tollbooth for keystrokes; it is a forge strike. A review anvil. A place where a human can narrow scope, reject drift, break bad design before it hardens, and demand proof before the next blow falls. The purpose is not to reduce mutations for their own sake. The purpose is to forge code that deserves to survive contact with reality.
 
 This is not a temple for vibecoding. It is a forge.
 
-Exploration is welcome, but delivery runs through explicit checkpoints, tradeoffs, verification evidence, and user acceptance before advancing.
+Exploration is welcome. But delivery runs through explicit checkpoints, hard tradeoffs, verification evidence, and human acceptance before advancing. In quiet runs with no pushback, `/skill:planforge-fast` and `/skill:planforge` should often converge to similar code. The true power of supervised mode appears when seasoned judgment enters the fire.
 
 Use `/skill:planforge-fast` for quick exploration and `/skill:planforge` when outcomes must be dependable.
 
@@ -100,12 +102,13 @@ Use `-l` only if you want a project-local install for the current repo.
 
 ### Supervised approvals (Pi)
 
-Planforge ships a lightweight approval gate extension:
+Planforge carries a lightweight approval gate extension:
 
 - In `/skill:planforge`, mutating tool calls are blocked until you send `/pf`.
 - Before first mutation approval, Planforge expects a `## Proposed Review Gates` section in the plan so humans can push back on review boundaries.
 - In supervised flow, `/pf` approves mutation scope and is reused at review gates (instead of per-command approvals).
 - If a review gate result is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step.
+- The gate is not a bureaucrat guarding keystrokes; it is a review anvil. Use it to temper scope, break complexity, reject drift, and demand stronger evidence before the next strike.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
 - In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
 - If scope changes after approval, the gate revokes approval and requires `/pf` again.
@@ -118,11 +121,11 @@ Use `/skill:forge-resume` to continue deferred follow-up plans from the shared n
 
 ### Scope
 
-Planforge is currently maintained as a **Pi-focused package**. The docs, extension behavior, and workflow examples assume Pi semantics.
+For now, the forge is built around **Pi**. The docs, extension behavior, and workflow examples assume Pi semantics.
 
 ## Rolling plans
 
-Planforge keeps one rolling plan per working branch. It is created after plan approval and updated at meaningful checkpoints so work stays resumable without turning into a heavyweight spec system.
+Each working branch carries its own rolling plan. It is born after approval and updated at meaningful checkpoints so work stays resumable without collapsing into a bloated spec ritual.
 
 When work ships, `plan-ship` can mark the plan as `shipped` and append a compact shipment footer (token usage + explicit end line).
 
