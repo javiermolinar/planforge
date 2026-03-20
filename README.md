@@ -99,7 +99,7 @@ Use `-l` only if you want a project-local install for the current repo.
 
 | Mode | Start command | Best for | Behavior |
 |---|---|---|---|
-| Supervised (default) | `/skill:planforge` | serious/high-risk work | Propose one mutating checkpoint at a time and wait for explicit `/pf` before executing that checkpoint |
+| Supervised (default) | `/skill:planforge` | serious/high-risk work | Approve the first mutating scope with `/pf`, then keep work inside that approved scope until a review gate or scope change requires another `/pf` |
 | Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without checkpoint approvals after scope approval |
 
 ### Supervised approvals (Pi)

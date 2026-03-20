@@ -24,6 +24,8 @@ Planforge uses two layers of integration testing:
 2. `planforge` (supervised)
    - asserts no mutation before `/pf`
    - asserts response explicitly requests `/pf`
+   - asserts review gates are proposed before approval
+   - asserts the approved continuation message records scope + review-gate context after `/pf`
 3. `planforge-fast` (unsupervised)
    - starts with explicit scope approval in prompt
    - expects convergence without `/pf`

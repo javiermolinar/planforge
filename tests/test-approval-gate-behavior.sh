@@ -171,6 +171,25 @@ async function testCheckpointLifecycle() {
   assert(state && state.reviewGatesProposed === true, "review gate proposal should be captured from assistant message");
   assert(Array.isArray(state.reviewGates) && state.reviewGates.length >= 1, "review gate proposal should parse structured gate rows");
 
+  const allowedQuotedRg = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: 'rg -n "bash|zsh|completion" .' },
+  });
+  assert(allowedQuotedRg === undefined, "quoted rg alternation should remain allowed before approval");
+
+  const allowedReadOnlyChain = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: 'pwd && rg -n "bash|zsh|completion" .' },
+  });
+  assert(allowedReadOnlyChain === undefined, "allowlisted read-only command chains should remain allowed before approval");
+
+  const blockedPreApprovalEdit = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
+  assert(blockedPreApprovalEdit && blockedPreApprovalEdit.block === true, "pre-approval edit must be blocked");
+  assert(
+    blockedPreApprovalEdit.reason.includes("RG1") && blockedPreApprovalEdit.reason.includes("/pf status"),
+    "blocked edit reason should surface next review gate and status hint"
+  );
+
   const blockedPreApprovalMetaBash = await harness.emit("tool_call", {
     toolName: "bash",
     input: { command: "ls > /tmp/planforge-pre-approval" },
@@ -178,6 +197,10 @@ async function testCheckpointLifecycle() {
   assert(
     blockedPreApprovalMetaBash && blockedPreApprovalMetaBash.block === true,
     "pre-approval redirection bypass attempts must be blocked"
+  );
+  assert(
+    blockedPreApprovalMetaBash.reason.includes("RG1") && blockedPreApprovalMetaBash.reason.includes("/pf status"),
+    "blocked bash reason should surface next review gate and status hint"
   );
 
   await harness.runCommand("pf", {});
@@ -328,6 +351,10 @@ async function testHeadlessContinueBehavior() {
 
   const inputResult = await harness.emit("input", { text: "pf" });
   assert(inputResult && inputResult.action === "transform", "plain pf input should transform into a continuation prompt");
+  assert(
+    inputResult.text.includes("Review gates: RG1") && inputResult.text.includes("Next review gate: none"),
+    "continuation prompt should surface approved review gates and next gate"
+  );
 }
 
 (async () => {

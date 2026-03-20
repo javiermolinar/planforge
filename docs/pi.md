@@ -28,7 +28,7 @@ Start with:
 /skill:planforge
 ```
 
-`/skill:planforge` is supervised by default (propose one mutating checkpoint, then use `/pf` to approve and execute that checkpoint).
+`/skill:planforge` is supervised by default (approve the first mutating scope with `/pf`, then keep work inside that approved scope until a review gate or scope change requires another `/pf`).
 
 If you prefer faster unsupervised execution, use:
 
@@ -60,7 +60,7 @@ Use `forge-investigate` when the first job is discovery: understanding the code,
 Planforge includes a lightweight stateful approval gate for Pi:
 
 - Auto-enables when you start with `/skill:planforge` or mutating `forge-*` workflows.
-- In supervised mode, use `/pf` to approve and execute the currently proposed mutating checkpoint (phase/task boundary).
+- In supervised mode, use `/pf` to approve the current mutating scope; keep work inside that scope until a review gate or scope change requires another `/pf`.
 - Before first mutation approval in supervised mode, plans should include `## Proposed Review Gates` so humans can accept/edit review boundaries.
 - In supervised flow, `/pf` approves mutation scope and is reused at review gates (not per-command approvals).
 - If a review gate is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step.
