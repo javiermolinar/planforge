@@ -68,7 +68,7 @@ Planforge includes a lightweight stateful approval gate for Pi:
 - When the final review gate is accepted and a closeout lane was declared, Planforge can enter an approved closeout scope instead of forcing a full re-plan.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
 - In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
-- Before `/pf`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).
+- Before `/pf`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`). Strict read-only `curl` is allowed only for safe GET/HEAD-style requests; upload/data/output flags remain blocked.
 - Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval.
 - Use `/pf benchmark on` to enable benchmark-profile guidance (strict scope + minimum verification evidence), and `/pf benchmark off` to disable it.
 - Benchmark profile may auto-enable when prompts explicitly mention benchmark/evaluation/scorecard context.

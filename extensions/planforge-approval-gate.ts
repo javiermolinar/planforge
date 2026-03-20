@@ -367,6 +367,99 @@ function isAllowedReadOnlyGitSegment(tokens) {
   return false;
 }
 
+function consumeCurlFlagArg(tokens, index) {
+  return index + 1 < tokens.length ? index + 1 : -1;
+}
+
+function isAllowedReadOnlyCurlSegment(tokens) {
+  if (!Array.isArray(tokens) || tokens[0] !== "curl") return false;
+
+  let sawUrl = false;
+
+  for (let i = 1; i < tokens.length; i += 1) {
+    const token = String(tokens[i] || "");
+    if (!token) continue;
+
+    if (!token.startsWith("-")) {
+      sawUrl = true;
+      continue;
+    }
+
+    if (token === "--") {
+      for (let j = i + 1; j < tokens.length; j += 1) {
+        if (String(tokens[j] || "").trim()) sawUrl = true;
+      }
+      break;
+    }
+
+    if (token === "-I" || token === "--head" || token === "-L" || token === "--location" || token === "-s" || token === "--silent" || token === "-S" || token === "--show-error" || token === "-f" || token === "--fail" || token === "--fail-with-body" || token === "--compressed" || token === "-i" || token === "--include" || token === "-k" || token === "--insecure" || token === "--http1.1" || token === "--http2" || token === "-G" || token === "--get") {
+      continue;
+    }
+
+    if (/^-[A-Za-z]{2,}$/.test(token)) {
+      const shortFlags = token.slice(1).split("");
+      if (shortFlags.every((flag) => "ILsSfkiG".includes(flag))) continue;
+      return false;
+    }
+
+    if (token.startsWith("--request=")) {
+      const method = token.slice("--request=".length).trim().toUpperCase();
+      if (method !== "GET" && method !== "HEAD") return false;
+      continue;
+    }
+
+    if (token === "-X" || token === "--request") {
+      const nextIndex = consumeCurlFlagArg(tokens, i);
+      if (nextIndex < 0) return false;
+      const method = String(tokens[nextIndex] || "").trim().toUpperCase();
+      if (method !== "GET" && method !== "HEAD") return false;
+      i = nextIndex;
+      continue;
+    }
+
+    if (token.startsWith("--url=")) {
+      sawUrl = true;
+      continue;
+    }
+
+    if (token === "--url") {
+      const nextIndex = consumeCurlFlagArg(tokens, i);
+      if (nextIndex < 0) return false;
+      sawUrl = true;
+      i = nextIndex;
+      continue;
+    }
+
+    if (token.startsWith("--header=") || token.startsWith("--user-agent=") || token.startsWith("--user=") || token.startsWith("--connect-timeout=") || token.startsWith("--max-time=") || token.startsWith("--write-out=")) {
+      continue;
+    }
+
+    if (token === "-H" || token === "--header" || token === "-A" || token === "--user-agent" || token === "-u" || token === "--user" || token === "--connect-timeout" || token === "-m" || token === "--max-time" || token === "-w" || token === "--write-out") {
+      const nextIndex = consumeCurlFlagArg(tokens, i);
+      if (nextIndex < 0) return false;
+      i = nextIndex;
+      continue;
+    }
+
+    if (
+      token === "-d" || token === "--data" || token.startsWith("--data=") || token.startsWith("--data-") ||
+      token === "-F" || token === "--form" || token.startsWith("--form=") ||
+      token === "-T" || token === "--upload-file" || token.startsWith("--upload-file=") ||
+      token === "-o" || token === "--output" || token.startsWith("--output=") ||
+      token === "-O" || token === "--remote-name" || token === "--remote-name-all" ||
+      token === "-K" || token === "--config" || token.startsWith("--config=") ||
+      token === "--json" || token.startsWith("--json=") ||
+      token === "--next"
+    ) {
+      return false;
+    }
+
+    return false;
+  }
+
+  return sawUrl;
+}
+
 function isAllowedPreApprovalSegment(segment) {
   const trimmed = String(segment || "").trim();
   if (!trimmed) return true;
@@ -382,6 +475,7 @@ function isAllowedPreApprovalSegment(segment) {
   }
 
   if (cmd === "git") return isAllowedReadOnlyGitSegment(tokens);
+  if (cmd === "curl") return isAllowedReadOnlyCurlSegment(tokens);
 
   return false;
 }
@@ -551,7 +645,7 @@ function buildBashBlockReason(gateState, command) {
   const analysis = analyzeCommandSegments(command, isAllowedPreApprovalSegment);
   const parts = [
     `Planforge gate is waiting approval for scope v${scope}. Blocked bash command before /pf because it is outside the read-only allowlist.`,
-    "Allowed pre-approval commands: ls, rg, find, pwd, printf, echo, git status, git diff, git log, git remote -v, git branch --show-current.",
+    "Allowed pre-approval commands: ls, rg, find, pwd, printf, echo, git status, git diff, git log, git remote -v, git branch --show-current, strict read-only curl GET/HEAD.",
   ];
   if (analysis.blockedSegment) parts.push(`Offending segment: \`${analysis.blockedSegment}\`.`);
   if (analysis.allowedSegments.length > 0) parts.push(`Safe split suggestion: run ${analysis.allowedSegments.map((segment) => `\`${segment}\``).join(" then ")} separately before /pf.`);

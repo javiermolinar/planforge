@@ -240,6 +240,18 @@ async function testCheckpointLifecycle() {
   });
   assert(allowedGitRemoteAndPrintf === undefined, "semantic read-only command chains should remain allowed before approval");
 
+  const allowedReadOnlyCurl = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: 'curl -I -sS https://example.com' },
+  });
+  assert(allowedReadOnlyCurl === undefined, "strict read-only curl should remain allowed before approval");
+
+  const blockedMutatingCurl = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: 'curl -X POST https://example.com' },
+  });
+  assert(blockedMutatingCurl && blockedMutatingCurl.block === true, "mutating curl should be blocked before approval");
+
   const blockedPreApprovalEdit = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
   assert(blockedPreApprovalEdit && blockedPreApprovalEdit.block === true, "pre-approval edit must be blocked");
   assert(
