@@ -41,6 +41,8 @@ function createHarness(hasUI = true) {
   const commands = new Map();
   const branch = [];
   const sentUserMessages = [];
+  const statuses = new Map();
+  const notifications = [];
 
   const pi = {
     on(name, handler) {
@@ -61,8 +63,12 @@ function createHarness(hasUI = true) {
   const ctx = {
     hasUI,
     ui: {
-      notify() {},
-      setStatus() {},
+      notify(message, level) {
+        notifications.push({ message, level });
+      },
+      setStatus(key, value) {
+        statuses.set(key, value);
+      },
       setWidget() {},
       custom: async () => {},
     },
@@ -98,7 +104,15 @@ function createHarness(hasUI = true) {
     return [...sentUserMessages];
   }
 
-  return { pi, emit, runCommand, getState, getSentUserMessages };
+  function getStatus(key) {
+    return statuses.get(key);
+  }
+
+  function getNotifications() {
+    return [...notifications];
+  }
+
+  return { pi, emit, runCommand, getState, getSentUserMessages, getStatus, getNotifications };
 }
 
 const extensionPath = path.join(process.cwd(), "extensions", "planforge-approval-gate.ts");
@@ -116,6 +130,29 @@ async function emitReviewGateProposal(harness) {
       ],
     },
   });
+}
+
+async function testInactiveStatusIsHiddenUntilPlanforgeStarts() {
+  const harness = createHarness();
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  assert(harness.getStatus("planforge-gate") === undefined, "inactive sessions should not render PF status");
+
+  await harness.emit("input", { text: "/skill:planforge" });
+  assert(
+    typeof harness.getStatus("planforge-gate") === "string" && harness.getStatus("planforge-gate").includes("waiting approval"),
+    "starting planforge should render PF status"
+  );
+
+  const headlessHarness = createHarness(false);
+  installApprovalGate(headlessHarness.pi);
+  await headlessHarness.emit("session_start", {});
+  await headlessHarness.runCommand("pf", { raw: "status" });
+  assert(
+    headlessHarness.getSentUserMessages().some((m) => String(m).includes("Planforge is not active in this session")),
+    "pf status should explain how to activate Planforge when inactive"
+  );
 }
 
 async function testInvestigateModeIsReadOnly() {
@@ -358,6 +395,7 @@ async function testHeadlessContinueBehavior() {
 }
 
 (async () => {
+  await testInactiveStatusIsHiddenUntilPlanforgeStarts();
   await testInvestigateModeIsReadOnly();
   await testCheckpointLifecycle();
   await testBenchmarkProfile();
