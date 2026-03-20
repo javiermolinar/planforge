@@ -73,21 +73,18 @@ Planforge should then:
 | Supervised (default) | `/skill:planforge` | serious/high-risk work | Approve the first mutating scope with `/pf`, then keep work inside that approved scope until a review gate or scope change requires another `/pf` |
 | Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without checkpoint approvals after scope approval |
 
-### Supervised approvals
+### Approval gate
 
-Planforge carries a lightweight approval gate extension
+| Mode | Behavior |
+|---|---|
+| `/skill:planforge` | Supervised: `/pf` approves mutation scope, then again at review gates or scope changes |
+| `/skill:planforge-fast` | Fast: one scope approval, then unsupervised |
+| `/skill:forge-investigate` | Read-only investigation; no `/pf` |
 
-- In `/skill:planforge`, mutating tool calls are blocked until you send `/pf`.
-- Before first mutation approval, Planforge expects a `## Proposed Review Gates` section in the plan so humans can push back on review boundaries.
-- Plans should also declare repo obligations up front and, when appropriate, a bounded `## Closeout Scope` for predictable trailing work such as docs regen, mandated verification, commit, push, or PR drafting.
-- In supervised flow, `/pf` approves mutation scope and is reused at review gates (instead of per-command approvals).
-- If a review gate result is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step.
-- When the final review gate is accepted and a closeout lane was declared, Planforge may enter a minor closeout scope instead of forcing a full re-plan.
-- The gate is not a bureaucrat guarding keystrokes; it is a review anvil. Use it to temper scope, break complexity, reject drift, and demand stronger evidence before the next strike.
-- In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
-- In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
-- If scope changes after approval, the gate revokes approval and requires `/pf` again.
-- Use `/pf status` to open the right-side status overlay on demand (includes parsed review gates and per-gate status).
+Notes:
+- Supervised plans must include review gates before first mutation approval.
+- Declared closeout work can continue after final review without a full re-plan.
+- Use `/pf status` to inspect current gate state.
 
 Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
 
