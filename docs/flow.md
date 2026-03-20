@@ -55,6 +55,7 @@ Operational mapping:
 ## Branch policy
 
 - On `main` / `master` / trunk-like branches, non-trivial implementation should move to a new branch after plan approval.
+- The approval gate should challenge first implementation edits on trunk and require a branch create/switch step before code mutation.
 - On an unrelated feature branch, create a new branch after plan approval.
 - On a matching feature branch, continue and reuse its rolling plan.
 - Use semantic branch names such as `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, or `test/<slug>`.

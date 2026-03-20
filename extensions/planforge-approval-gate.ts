@@ -1,3 +1,6 @@
+const { execSync } = require("child_process");
+const proc = require("process");
+
 let gateShared;
 try {
   gateShared = require("../lib/planforge-gate-shared.js");
@@ -359,6 +362,25 @@ function hasBlockedShellMeta(segment) {
   return blocked || scanResult.unclosedQuote || scanResult.trailingEscape;
 }
 
+function detectCurrentBranch() {
+  const override = String(proc.env.PLANFORGE_TEST_CURRENT_BRANCH || "").trim();
+  if (override) return override;
+  try {
+    return execSync("git branch --show-current", {
+      cwd: proc.cwd(),
+      stdio: ["ignore", "pipe", "ignore"],
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return "";
+  }
+}
+
+function isTrunkLikeBranch(branchName) {
+  const normalized = String(branchName || "").trim().toLowerCase();
+  return normalized === "main" || normalized === "master" || normalized === "trunk";
+}
+
 function isAllowedReadOnlyGitSegment(tokens) {
   const [, subcmd, third] = tokens;
   if (subcmd === "status" || subcmd === "diff" || subcmd === "log") return true;
@@ -565,6 +587,36 @@ function isAllowedCloseoutEditPath(pathValue) {
   const normalized = String(pathValue || "").trim();
   if (!normalized) return false;
   return normalized.endsWith(".md") || normalized.startsWith("docs/") || normalized.startsWith(".github/");
+}
+
+function isAllowedBranchBootstrapSegment(segment) {
+  const trimmed = String(segment || "").trim();
+  if (!trimmed) return true;
+  if (hasBlockedShellMeta(trimmed)) return false;
+
+  const tokens = tokenizeShellWords(trimmed);
+  if (!tokens || tokens.length === 0) return true;
+
+  const [cmd, subcmd, third, fourth] = tokens;
+  if (cmd !== "git") return false;
+  if (subcmd === "switch" && third === "-c" && Boolean(fourth)) return true;
+  if (subcmd === "checkout" && third === "-b" && Boolean(fourth)) return true;
+  if ((subcmd === "switch" || subcmd === "checkout") && Boolean(third) && !String(third).startsWith("-")) return true;
+  return false;
+}
+
+function isAllowedBranchBootstrapBash(command) {
+  const analysis = analyzeCommandSegments(command, isAllowedBranchBootstrapSegment);
+  return !analysis.blockedSegment;
+}
+
+function suggestBranchNames() {
+  return ["feat/<slug>", "fix/<slug>", "refactor/<slug>"];
+}
+
+function buildBranchPolicyBlockReason(branchName) {
+  const branch = String(branchName || "main");
+  return `Planforge branch policy blocked mutation on '${branch}'. Non-trivial implementation should move off trunk after approval. Create or switch to a task branch first (for example: ${suggestBranchNames().join(", ")}), then continue.`;
 }
 
 function isMutatingToolCall(event) {
@@ -1443,6 +1495,11 @@ export default function (pi) {
           ? "Current scenario has revision requested. Revise the same scenario; do not advance to the next scenario yet."
           : "";
 
+    const currentBranch = detectCurrentBranch();
+    const branchNote = state.approved && !state.closeoutActive && isTrunkLikeBranch(currentBranch)
+      ? `Current branch is '${currentBranch}'. Before implementation edits, create or switch to a task branch.`
+      : "";
+
     const gateNote = state.approved
       ? state.closeoutActive
         ? `Current approved closeout scope (v${state.scopeVersion}) is active. Stay inside declared closeout work only: ${state.closeoutOperations.join(", ") || "docs/verification/commit/push/PR"}.`
@@ -1469,7 +1526,7 @@ export default function (pi) {
       : "";
 
     return {
-      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}\n${acceptanceNote}\n${reviewGateSummary}\n${reviewGateNote}${closeoutNote ? `\n${closeoutNote}` : ""}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.${benchmarkNote ? `\n\n${benchmarkNote}` : ""}`,
+      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}${branchNote ? `\n${branchNote}` : ""}\n${acceptanceNote}\n${reviewGateSummary}\n${reviewGateNote}${closeoutNote ? `\n${closeoutNote}` : ""}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.${benchmarkNote ? `\n\n${benchmarkNote}` : ""}`,
     };
   });
 
@@ -1494,6 +1551,20 @@ export default function (pi) {
     }
 
     if (state.approved) {
+      if (!state.closeoutActive) {
+        const currentBranch = detectCurrentBranch();
+        if (isTrunkLikeBranch(currentBranch)) {
+          if (toolName === "bash" && isAllowedBranchBootstrapBash(bashCommand)) {
+            return;
+          }
+          if (toolName === "edit" || toolName === "write" || (toolName === "bash" && isMutatingCall)) {
+            const reason = buildBranchPolicyBlockReason(currentBranch);
+            if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
+            return { block: true, reason };
+          }
+        }
+      }
+
       if (state.closeoutActive) {
         if ((toolName === "edit" || toolName === "write") && !isAllowedCloseoutEditPath(event?.input?.path)) {
           const reason = buildCloseoutBlockReason(state, `Blocked ${toolName} on non-doc path '${String(event?.input?.path || "")}'.`);

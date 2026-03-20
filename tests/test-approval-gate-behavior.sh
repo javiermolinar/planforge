@@ -36,13 +36,15 @@ function loadExtension(filePath) {
   return sandbox.module.exports;
 }
 
-function createHarness(hasUI = true) {
+function createHarness(hasUI = true, currentBranch = "feat/test-harness") {
   const handlers = new Map();
   const commands = new Map();
   const branch = [];
   const sentUserMessages = [];
   const statuses = new Map();
   const notifications = [];
+
+  process.env.PLANFORGE_TEST_CURRENT_BRANCH = currentBranch;
 
   const pi = {
     on(name, handler) {
@@ -381,6 +383,30 @@ async function testReviewGatePushbackFlow() {
   );
 }
 
+async function testBranchPolicyEnforcement() {
+  const harness = createHarness(true, "main");
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  await harness.emit("input", { text: "/skill:planforge" });
+  await emitReviewGateProposal(harness);
+  await harness.runCommand("pf", {});
+
+  let blockedEdit = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
+  assert(blockedEdit && blockedEdit.block === true, "edits on trunk should be blocked after approval");
+  assert(String(blockedEdit.reason).includes("branch policy") && String(blockedEdit.reason).includes("main"), "branch policy block should explain trunk enforcement");
+
+  const allowedBranchCreate = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: "git switch -c feat/test-branch" },
+  });
+  assert(allowedBranchCreate === undefined, "branch bootstrap command should be allowed on trunk");
+
+  process.env.PLANFORGE_TEST_CURRENT_BRANCH = "feat/test-branch";
+  const allowedEdit = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
+  assert(allowedEdit === undefined, "edits should proceed after switching to a task branch");
+}
+
 async function testCloseoutLaneBehavior() {
   const harness = createHarness();
   installApprovalGate(harness.pi);
@@ -483,6 +509,7 @@ async function testHeadlessContinueBehavior() {
   await testCheckpointLifecycle();
   await testBenchmarkProfile();
   await testReviewGatePushbackFlow();
+  await testBranchPolicyEnforcement();
   await testCloseoutLaneBehavior();
   await testHeadlessContinueBehavior();
   console.log("approval gate behavior test: PASS");
