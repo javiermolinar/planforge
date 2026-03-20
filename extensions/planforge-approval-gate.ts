@@ -1,20 +1,22 @@
+let gateShared;
+try {
+  gateShared = require("./planforge-gate-shared.js");
+} catch {
+  gateShared = require("./extensions/planforge-gate-shared.js");
+}
+
+const {
+  normalizeExecutionMode,
+  normalizeAcceptanceState,
+  resolveNextReviewGate: resolveNextReviewGateBase,
+  summarizeReviewGates,
+  nextReviewGateLabel,
+  gateStatusLine: statusLine,
+} = gateShared;
+
 const STATE_ENTRY_TYPE = "planforge-approval-gate-state";
 
 const STATUS_KEY = "planforge-gate";
-
-const EXECUTION_MODES = new Set(["auto", "supervised", "fast", "none"]);
-
-function normalizeExecutionMode(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  return EXECUTION_MODES.has(normalized) ? normalized : "auto";
-}
-
-const ACCEPTANCE_STATES = new Set(["none", "awaiting", "accepted", "revise_requested"]);
-
-function normalizeAcceptanceState(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  return ACCEPTANCE_STATES.has(normalized) ? normalized : "none";
-}
 
 function inferBenchmarkModeFromInput(text) {
   return BENCHMARK_HINT.test(String(text || ""));
@@ -168,9 +170,7 @@ function extractReachedReviewGateId(text) {
 const DEFAULT_STATE = {
   enabled: false,
   approved: false,
-  approvalConsumed: false,
   scopeVersion: 0,
-  approvedScopeVersion: 0,
   executionMode: "auto",
   acceptanceState: "none",
   pendingScopeAdvance: false,
@@ -202,22 +202,135 @@ const REVIEW_GATES_PUSHBACK_HINT = /\b(review\s+gate|gates?)\b.*\b(change|revise
 const REVIEW_PACKET_HINT = /\bverified\s+vs\s+unverified\b/i;
 const REVIEW_PACKET_EVIDENCE_HINT = /\bevidence\b|\bbuild\b|\bsmoke\b|\bnegative[- ]path\b/i;
 
-const SHELL_META_PATTERN = /[<>`]|\$\(|\|(?!=\|)|&(?!&)/;
+function scanShell(command, visitor) {
+  const text = String(command || "");
+  let quote = "";
+  let escaped = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    const next = text[i + 1] || "";
+
+    if (escaped) {
+      escaped = false;
+      visitor(ch, i, { quote, escaped: true, next });
+      continue;
+    }
+
+    if (ch === "\\" && quote !== "'") {
+      escaped = true;
+      visitor(ch, i, { quote, escaped: false, next });
+      continue;
+    }
+
+    if (quote) {
+      if (ch === quote) quote = "";
+      visitor(ch, i, { quote, escaped: false, next });
+      continue;
+    }
+
+    if (ch === "'" || ch === '"') {
+      quote = ch;
+      visitor(ch, i, { quote: "", escaped: false, next });
+      continue;
+    }
+
+    visitor(ch, i, { quote: "", escaped: false, next });
+  }
+
+  return { unclosedQuote: Boolean(quote), trailingEscape: escaped };
+}
 
 function splitCommandSegments(command) {
-  return String(command || "")
-    .split(/&&|\|\||;|\n/g)
-    .map((segment) => segment.trim())
-    .filter(Boolean);
+  const segments = [];
+  let start = 0;
+
+  scanShell(command, (ch, index, state) => {
+    if (state.quote) return;
+
+    if (ch === "\n" || ch === ";") {
+      const segment = String(command || "").slice(start, index).trim();
+      if (segment) segments.push(segment);
+      start = index + 1;
+      return;
+    }
+
+    if ((ch === "&" && state.next === "&") || (ch === "|" && state.next === "|")) {
+      const segment = String(command || "").slice(start, index).trim();
+      if (segment) segments.push(segment);
+      start = index + 2;
+    }
+  });
+
+  const tail = String(command || "").slice(start).trim();
+  if (tail) segments.push(tail);
+  return segments;
+}
+
+function tokenizeShellWords(segment) {
+  const tokens = [];
+  let current = "";
+
+  const flush = () => {
+    if (!current) return;
+    tokens.push(current);
+    current = "";
+  };
+
+  const scanResult = scanShell(segment, (ch, _index, state) => {
+    if (state.quote) {
+      if (ch !== state.quote) current += ch;
+      return;
+    }
+
+    if (ch === "'" || ch === '"') {
+      return;
+    }
+
+    if (/\s/.test(ch)) {
+      flush();
+      return;
+    }
+
+    current += ch;
+  });
+
+  if (scanResult.unclosedQuote || scanResult.trailingEscape) return null;
+  flush();
+  return tokens;
+}
+
+function hasBlockedShellMeta(segment) {
+  let blocked = false;
+  const scanResult = scanShell(segment, (ch, _index, state) => {
+    if (state.quote || blocked) return;
+    if (ch === "<" || ch === ">" || ch === "`") {
+      blocked = true;
+      return;
+    }
+    if (ch === "$" && state.next === "(") {
+      blocked = true;
+      return;
+    }
+    if (ch === "|" && state.next !== "|") {
+      blocked = true;
+      return;
+    }
+    if (ch === "&" && state.next !== "&") {
+      blocked = true;
+    }
+  });
+
+  return blocked || scanResult.unclosedQuote || scanResult.trailingEscape;
 }
 
 function isAllowedPreApprovalSegment(segment) {
   const trimmed = String(segment || "").trim();
   if (!trimmed) return true;
-  if (SHELL_META_PATTERN.test(trimmed)) return false;
+  if (hasBlockedShellMeta(trimmed)) return false;
 
-  const tokens = trimmed.split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return true;
+  const tokens = tokenizeShellWords(trimmed);
+  if (!tokens || tokens.length === 0) return true;
 
   const [cmd, subcmd, third] = tokens;
 
@@ -256,16 +369,11 @@ function normalizeState(raw) {
   if (!raw || typeof raw !== "object") return { ...DEFAULT_STATE };
   const state = raw;
   const scopeVersion = Number.isFinite(state.scopeVersion) ? Number(state.scopeVersion) : 0;
-  const approvedScopeVersion = Number.isFinite(state.approvedScopeVersion)
-    ? Number(state.approvedScopeVersion)
-    : 0;
 
   return {
     enabled: Boolean(state.enabled),
     approved: Boolean(state.approved),
-    approvalConsumed: Boolean(state.approvalConsumed),
     scopeVersion: Math.max(0, scopeVersion),
-    approvedScopeVersion: Math.max(0, approvedScopeVersion),
     executionMode: normalizeExecutionMode(state.executionMode),
     acceptanceState: normalizeAcceptanceState(state.acceptanceState),
     pendingScopeAdvance: Boolean(state.pendingScopeAdvance),
@@ -293,44 +401,32 @@ function normalizeState(raw) {
 }
 
 function resolveNextReviewGate(state) {
-  const gates = Array.isArray(state?.reviewGates) ? state.reviewGates : [];
-  const accepted = new Set(Array.isArray(state?.acceptedReviewGates) ? state.acceptedReviewGates : []);
-  const start = Math.max(0, Number(state?.reviewGateCursor) || 0);
-  for (let i = start; i < gates.length; i++) {
-    if (!accepted.has(gates[i].id)) return { gate: gates[i], index: i };
-  }
-  for (let i = 0; i < start; i++) {
-    if (!accepted.has(gates[i].id)) return { gate: gates[i], index: i };
-  }
-  return { gate: null, index: -1 };
+  const gate = resolveNextReviewGateBase(state);
+  if (!gate) return { gate: null, index: -1 };
+  const index = Array.isArray(state?.reviewGates) ? state.reviewGates.findIndex((candidate) => candidate.id === gate.id) : -1;
+  return { gate, index };
 }
 
-function statusLine(state) {
-  const mode = normalizeExecutionMode(state.executionMode);
-  const modeLabel = mode === "auto" ? "" : `, mode ${mode}`;
-  const profileLabel = state.benchmarkMode ? ", benchmark" : "";
-  const gateCount = Array.isArray(state.reviewGates) ? state.reviewGates.length : 0;
-  const nextGate = resolveNextReviewGate(state).gate;
-  const reviewLabel = state.reviewGatesProposed
-    ? state.reviewGatesApproved
-      ? `, review-gates approved (${gateCount})`
-      : `, review-gates proposed (${gateCount})`
-    : ", review-gates missing";
-  const reviewNextLabel = nextGate ? `, next ${nextGate.id}` : "";
-  const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
-  if (mode === "none") return `PF gate: investigate read-only${modeLabel}${profileLabel}${reviewLabel}${reviewNextLabel}`;
-  if (!state.enabled) return `PF gate: off${modeLabel}${profileLabel}${reviewLabel}${reviewNextLabel}`;
-  if (acceptanceState === "awaiting") {
-    return `PF gate: awaiting scenario acceptance (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel}${profileLabel}${reviewLabel}${reviewNextLabel})`;
+function buildContinuationMessage(gateState) {
+  const scope = Math.max(1, gateState?.scopeVersion || 1);
+  return `Continue with the approved checkpoint. Scope v${scope} is approved. Review gates: ${summarizeReviewGates(gateState)}. Next review gate: ${nextReviewGateLabel(gateState)}. Execute only currently approved work and report evidence.`;
+}
+
+function buildPreApprovalGateHint(gateState) {
+  if (!gateState?.reviewGatesProposed || !Array.isArray(gateState?.reviewGates) || gateState.reviewGates.length === 0) {
+    return "No review gates parsed yet. Post the Plan Packet with Proposed Review Gates, then use /pf. Use /pf status for details.";
   }
-  if (acceptanceState === "revise_requested") {
-    return `PF gate: revision requested (scope v${Math.max(1, state.scopeVersion || 1)}${modeLabel}${profileLabel}${reviewLabel}${reviewNextLabel})`;
-  }
-  if (state.approved && state.approvalConsumed) {
-    return `PF gate: checkpoint used (scope v${state.scopeVersion}${modeLabel}${profileLabel}${reviewLabel}${reviewNextLabel}), awaiting /pf`;
-  }
-  if (state.approved) return `PF gate: approved (scope v${state.scopeVersion}${modeLabel}${profileLabel}${reviewLabel}${reviewNextLabel})`;
-  return `PF gate: waiting approval (scope v${state.scopeVersion}${modeLabel}${profileLabel}${reviewLabel}${reviewNextLabel})`;
+  return `Review gates: ${summarizeReviewGates(gateState)}. Next review gate: ${nextReviewGateLabel(gateState)}. Use /pf status for details.`;
+}
+
+function buildMutationBlockReason(gateState, toolName) {
+  const scope = Math.max(1, gateState?.scopeVersion || 1);
+  return `Planforge gate is waiting approval for scope v${scope}. Blocked ${toolName} until /pf. ${buildPreApprovalGateHint(gateState)}`;
+}
+
+function buildBashBlockReason(gateState) {
+  const scope = Math.max(1, gateState?.scopeVersion || 1);
+  return `Planforge gate is waiting approval for scope v${scope}. Blocked bash command before /pf because it is outside the read-only allowlist. Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd. ${buildPreApprovalGateHint(gateState)}`;
 }
 
 function buildOverlayLines(state) {
@@ -467,9 +563,7 @@ export default function (pi) {
       {
         enabled: true,
         approved: true,
-        approvalConsumed: false,
         scopeVersion: scope,
-        approvedScopeVersion: scope,
         acceptanceState: "accepted",
         pendingScopeAdvance: false,
         reviewGatesApproved: Boolean(state.reviewGatesProposed),
@@ -478,7 +572,9 @@ export default function (pi) {
       reason,
       ctx,
       notify ? "success" : undefined,
-      notify ? `Planforge gate approved for scope v${scope}.` : undefined
+      notify
+        ? `Planforge gate approved for scope v${scope}. Review gates: ${summarizeReviewGates(state)}. Next review gate: ${nextReviewGateLabel(state)}.`
+        : undefined
     );
   }
 
@@ -502,9 +598,7 @@ export default function (pi) {
       {
         enabled: true,
         approved: false,
-        approvalConsumed: false,
         scopeVersion: nextScope,
-        approvedScopeVersion: 0,
         acceptanceState: "none",
         pendingScopeAdvance: false,
         reviewGatesProposed: false,
@@ -544,8 +638,6 @@ export default function (pi) {
       {
         acceptanceState: "revise_requested",
         approved: false,
-        approvalConsumed: false,
-        approvedScopeVersion: 0,
       },
       reason,
       ctx,
@@ -601,9 +693,7 @@ export default function (pi) {
         {
           enabled: true,
           approved: false,
-          approvalConsumed: false,
           scopeVersion: Math.max(1, state.scopeVersion || 1),
-          approvedScopeVersion: 0,
           executionMode: mode === "auto" ? "supervised" : mode,
           acceptanceState: "accepted",
           pendingScopeAdvance: false,
@@ -635,9 +725,7 @@ export default function (pi) {
           {
             enabled: true,
             approved: true,
-            approvalConsumed: false,
             scopeVersion: nextScope,
-            approvedScopeVersion: nextScope,
             acceptanceState: "accepted",
             pendingScopeAdvance: false,
             currentReviewGateId: "",
@@ -654,26 +742,6 @@ export default function (pi) {
     }
 
     if (state.approved) {
-      if (state.approvalConsumed) {
-        const nextScope = Math.max(1, state.scopeVersion || 1) + 1;
-        setState(
-          {
-            enabled: true,
-            approved: true,
-            approvalConsumed: false,
-            scopeVersion: nextScope,
-            approvedScopeVersion: nextScope,
-            acceptanceState: "accepted",
-            pendingScopeAdvance: false,
-          },
-          "continue-next-checkpoint",
-          ctx,
-          "success",
-          `Planforge gate approved for next mutating checkpoint (scope v${nextScope}).`
-        );
-        return;
-      }
-
       ctx.ui.notify(`Continue acknowledged (scope v${Math.max(1, state.scopeVersion || 1)}).`, "info");
       return;
     }
@@ -685,7 +753,7 @@ export default function (pi) {
     const mode = normalizeExecutionMode(state.executionMode);
     const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
     if (mode === "none") return false;
-    return state.enabled && state.approved && !state.approvalConsumed && acceptanceState === "accepted";
+    return state.enabled && state.approved && acceptanceState === "accepted";
   }
 
   function isReviewGateProposalRequiredForApproval() {
@@ -696,7 +764,7 @@ export default function (pi) {
 
   function triggerAutoContinueFromExtension() {
     if (!shouldAutoContinueAfterApproval()) return;
-    pi.sendUserMessage("Continue with the approved checkpoint. Execute only currently approved work and report evidence.");
+    pi.sendUserMessage(buildContinuationMessage(state));
   }
 
   pi.on("session_start", async (_event, ctx) => {
@@ -758,9 +826,7 @@ export default function (pi) {
         {
           enabled: false,
           approved: false,
-          approvalConsumed: false,
           scopeVersion: 0,
-          approvedScopeVersion: 0,
           executionMode: "fast",
           acceptanceState: "none",
           pendingScopeAdvance: false,
@@ -785,9 +851,7 @@ export default function (pi) {
         {
           enabled: true,
           approved: false,
-          approvalConsumed: false,
           scopeVersion: Math.max(1, state.scopeVersion || 1),
-          approvedScopeVersion: 0,
           executionMode: "supervised",
           acceptanceState: "accepted",
           pendingScopeAdvance: false,
@@ -812,9 +876,7 @@ export default function (pi) {
         {
           enabled: false,
           approved: false,
-          approvalConsumed: false,
           scopeVersion: 0,
-          approvedScopeVersion: 0,
           executionMode: "none",
           acceptanceState: "none",
           pendingScopeAdvance: false,
@@ -839,9 +901,7 @@ export default function (pi) {
         {
           enabled: true,
           approved: false,
-          approvalConsumed: false,
           scopeVersion: 1,
-          approvedScopeVersion: 0,
           executionMode: "supervised",
           acceptanceState: "accepted",
           pendingScopeAdvance: false,
@@ -894,7 +954,7 @@ export default function (pi) {
       if (shouldAutoContinueAfterApproval()) {
         return {
           action: "transform",
-          text: "Continue with the approved checkpoint. Execute only currently approved work and report evidence.",
+          text: buildContinuationMessage(state),
           images: event?.images,
         };
       }
@@ -926,6 +986,12 @@ export default function (pi) {
       return { action: "continue" };
     }
 
+    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    if (acceptanceState === "awaiting" && text && !TRIVIAL_ACK.test(text)) {
+      handleRevise(ctx, "scenario-revision-followup");
+      return { action: "continue" };
+    }
+
     if (state.reviewGatesProposed && !state.approved && REVIEW_GATES_PUSHBACK_HINT.test(text)) {
       setState(
         {
@@ -944,13 +1010,7 @@ export default function (pi) {
       return { action: "continue" };
     }
 
-    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
-    if (acceptanceState === "awaiting" && text && !TRIVIAL_ACK.test(text)) {
-      handleRevise(ctx, "scenario-revision-followup");
-      return { action: "continue" };
-    }
-
-    if (state.approved && !state.approvalConsumed && text && !TRIVIAL_ACK.test(text)) {
+    if (state.approved && text && !TRIVIAL_ACK.test(text)) {
       invalidateForScopeChange(
         ctx,
         "user-followup-invalidated-approval",
@@ -980,7 +1040,7 @@ export default function (pi) {
           "review-gates-proposed",
           ctx,
           "info",
-          `Review gates proposed in plan (${parsedGates.length}). User can push back before approving mutation.`
+          `Review gates proposed in plan (${parsedGates.length}): ${parsedGates.map((gate) => gate.id).join(", ")}. User can push back before approving mutation.`
         );
       }
     }
@@ -1009,8 +1069,6 @@ export default function (pi) {
         setState(
           {
             approved: false,
-            approvalConsumed: false,
-            approvedScopeVersion: 0,
             acceptanceState: "awaiting",
             pendingScopeAdvance: true,
             currentReviewGateId: reachedGate ? reachedGate.id : String(state.currentReviewGateId || ""),
@@ -1098,27 +1156,17 @@ export default function (pi) {
     }
 
     if (state.approved) {
-      if (isMutatingCall && state.approvalConsumed) {
-        setState(
-          {
-            approvalConsumed: false,
-          },
-          "clear-stale-approval-consumed",
-          ctx
-        );
-      }
       return;
     }
 
     if (toolName === "edit" || toolName === "write") {
-      const reason = "Planforge gate blocked mutation: /pf approval is required for current checkpoint.";
+      const reason = buildMutationBlockReason(state, toolName);
       if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
       return { block: true, reason };
     }
 
     if (toolName === "bash" && !isAllowedPreApprovalBash(bashCommand)) {
-      const reason =
-        "Planforge gate blocked bash command before /pf. Allowed pre-approval commands: ls, rg, find, git status, git branch --show-current, pwd.";
+      const reason = buildBashBlockReason(state);
       if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
       return { block: true, reason };
     }

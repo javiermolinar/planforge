@@ -8,7 +8,7 @@ Planforge is opinionated:
 - prefer the simpler path
 - stay single-agent by default
 - suggest multiagent or worktrees only when worth the overhead
-- use supervised execution by default via `/skill:planforge` (propose one mutating checkpoint, wait approval, execute bounded checkpoint work)
+- use supervised execution by default via `/skill:planforge` (approve the first mutating scope, execute bounded work inside that scope, stop again at review gates or scope changes)
 
 ## Design philosophy
 
@@ -28,10 +28,10 @@ Use `docs/philosophy.md` as the source of truth for:
 Canonical mode matrix lives in `docs/modes.md`.
 
 - `planforge` (default): supervised mode for serious development workflows.
-  - one mutating checkpoint proposal at a time (phase/task boundary)
-  - explicit approval (`/pf`) before executing that checkpoint
-  - in supervised mutation flow, each `/pf` grants one mutating checkpoint (not per command)
-  - if a scenario result is awaiting acceptance, `/pf` records acceptance first
+  - propose explicit checkpoints and review boundaries so scope stays legible
+  - explicit approval (`/pf`) before the first mutating scope
+  - after approval, continue inside that scope until a review gate is reached
+  - if a scenario result is awaiting acceptance, `/pf` records acceptance first and may approve the next scope
   - scope changes trigger re-planning and re-approval
 - `planforge-fast`: unsupervised mode when speed is prioritized.
   - still requires scope approval before non-trivial mutation

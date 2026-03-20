@@ -61,8 +61,8 @@ Approval must be explicit from the user (`/pf` in supervised mode).
 2. Clarify unknowns
 3. Produce Plan Packet (per `../../docs/plan-packet.md`)
 4. Request explicit scope + review-gate approval
-5. Execute in supervised checkpoints
-6. Verify and report (explicitly: verified vs unverified)
+5. Execute within the approved mutating scope
+6. Verify and report at review boundaries (explicitly: verified vs unverified)
 
 ## Pre-mutation checklist
 
@@ -83,11 +83,12 @@ If any answer blocks mutation, stop and request approval.
 
 ## Supervised checkpoint loop
 
-After scope approval, request approval at mutating checkpoints:
+After scope approval, use checkpoints as reporting/review boundaries:
 
-- plan -> implementation transition
-- each implementation task boundary with mutations
-- any material scope/strategy change
+- request `/pf` before the first mutating scope
+- keep mutating work inside the approved scope until a review gate is reached
+- request `/pf` again after a reached review gate or any material scope/strategy change
+- still propose checkpoints at plan -> implementation and task boundaries so review slices stay explicit
 
 Checkpoint proposal format:
 

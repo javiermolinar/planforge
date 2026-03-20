@@ -54,7 +54,7 @@ Repository-level contract for agent behavior, mode expectations, and regression 
 
 | Mode | Start command | Execution mode | Expected behavior |
 |---|---|---|---|
-| `planforge` | `/skill:planforge` | `supervised` | Approval gate on. `/pf` required per mutating checkpoint. |
+| `planforge` | `/skill:planforge` | `supervised` | Approval gate on. `/pf` required for the first mutating scope, then again at review gates or scope changes. |
 | `planforge-fast` | `/skill:planforge-fast` | `fast` | One explicit scope approval, then unsupervised execution. |
 | `forge-investigate` | `/skill:forge-investigate` | `none` | Read-only investigation mode; mutating tools blocked by gate. |
 

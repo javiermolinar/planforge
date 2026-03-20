@@ -14,6 +14,7 @@ KEEP_WORKDIR="${PLANFORGE_KEEP_E2E_WORKDIR:-0}"
 trap 'status=$?; if [[ "$status" -ne 0 || "$KEEP_WORKDIR" == "1" ]]; then echo "pi e2e modes artifacts kept at: $WORKDIR"; else rm -rf "$WORKDIR"; fi' EXIT
 
 MAX_FAST_TURNS="${PLANFORGE_E2E_MAX_FAST_TURNS:-5}"
+MAX_SUPERVISED_TURNS="${PLANFORGE_E2E_MAX_SUPERVISED_TURNS:-2}"
 
 bootstrap_repo() {
   local dest="$1"
@@ -84,7 +85,8 @@ if tests_pass "$INV_REPO"; then
   exit 1
 fi
 
-# 2) Supervised mode should stay read-only before explicit /pf and request it in output
+# 2) Supervised mode should stay read-only before explicit /pf, request it in output,
+#    then record a gate-aware continuation message after approval.
 SUP_REPO="$WORKDIR/supervised"
 SUP_SESSION="$WORKDIR/supervised.session.jsonl"
 SUP_OUT0="$WORKDIR/supervised.turn0.txt"
@@ -101,6 +103,29 @@ fi
 
 if ! grep -qi '/pf' "$SUP_OUT0"; then
   echo 'FAIL: planforge supervised response did not request /pf approval'
+  exit 1
+fi
+
+if ! grep -qi 'Proposed Review Gates' "$SUP_OUT0"; then
+  echo 'FAIL: planforge supervised response did not propose review gates'
+  exit 1
+fi
+
+supervised_recorded=0
+for ((i=1; i<=MAX_SUPERVISED_TURNS; i++)); do
+  run_pi_turn "$SUP_REPO" "$SUP_SESSION" \
+    'pf' \
+    "$WORKDIR/supervised.turn${i}.txt"
+  if grep -q 'Continue with the approved checkpoint\. Scope v1 is approved\.' "$SUP_SESSION" \
+    && grep -q 'Review gates: G1, G2\.' "$SUP_SESSION" \
+    && grep -Eq 'Next review gate: G1 \([^)]+\)\.' "$SUP_SESSION"; then
+    supervised_recorded=1
+    break
+  fi
+done
+
+if [[ "$supervised_recorded" -ne 1 ]]; then
+  echo "FAIL: planforge supervised did not record the gate-aware continuation message within $MAX_SUPERVISED_TURNS approval turns"
   exit 1
 fi
 
