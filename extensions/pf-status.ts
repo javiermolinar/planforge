@@ -1,8 +1,8 @@
 let gateShared;
 try {
-  gateShared = require("./planforge-gate-shared.js");
+  gateShared = require("../lib/planforge-gate-shared.js");
 } catch {
-  gateShared = require("./extensions/planforge-gate-shared.js");
+  gateShared = require("./lib/planforge-gate-shared.js");
 }
 
 const {
@@ -11,6 +11,7 @@ const {
   resolveNextReviewGate,
   summarizeReviewGates,
   nextReviewGateLabel,
+  isPlanforgeActive,
   gateStatusLine,
 } = gateShared;
 
@@ -195,8 +196,19 @@ export default function (pi) {
   }
 
   async function openOverlay(ctx) {
-    if (!ctx?.hasUI) return;
     syncFromSession(ctx);
+
+    if (!isPlanforgeActive(gateState)) {
+      const message = "Planforge is not active in this session. Start with /skill:planforge, /skill:planforge-fast, or /skill:forge-investigate.";
+      if (!ctx?.hasUI) {
+        pi.sendUserMessage(message);
+        return;
+      }
+      ctx.ui.notify(message, "info");
+      return;
+    }
+
+    if (!ctx?.hasUI) return;
 
     await ctx.ui.custom(
       (tui, _theme, _keybindings, done) => buildOverlayComponent(tui, () => buildStatusLines(gateState), done),

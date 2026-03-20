@@ -1,8 +1,8 @@
 let gateShared;
 try {
-  gateShared = require("./planforge-gate-shared.js");
+  gateShared = require("../lib/planforge-gate-shared.js");
 } catch {
-  gateShared = require("./extensions/planforge-gate-shared.js");
+  gateShared = require("./lib/planforge-gate-shared.js");
 }
 
 const {
@@ -11,6 +11,7 @@ const {
   resolveNextReviewGate: resolveNextReviewGateBase,
   summarizeReviewGates,
   nextReviewGateLabel,
+  isPlanforgeActive,
   gateStatusLine: statusLine,
 } = gateShared;
 
@@ -522,6 +523,10 @@ export default function (pi) {
 
   function render(ctx) {
     if (!ctx?.hasUI) return;
+    if (!isPlanforgeActive(state)) {
+      ctx.ui.setStatus(STATUS_KEY, undefined);
+      return;
+    }
     ctx.ui.setStatus(STATUS_KEY, statusLine(state));
   }
 
@@ -535,6 +540,16 @@ export default function (pi) {
   }
 
   async function openStatusOverlay(ctx) {
+    if (!isPlanforgeActive(state)) {
+      const message = "Planforge is not active in this session. Start with /skill:planforge, /skill:planforge-fast, or /skill:forge-investigate.";
+      if (!ctx?.hasUI) {
+        pi.sendUserMessage(message);
+        return;
+      }
+      ctx.ui.notify(message, "info");
+      return;
+    }
+
     if (!ctx?.hasUI) {
       pi.sendUserMessage(`Planforge status: ${statusLine(state)}`);
       return;
