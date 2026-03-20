@@ -31,6 +31,8 @@ Stop and ask before continuing when any of these occur:
 - Read-only actions only until explicit scope approval.
 - For non-trivial work, produce the full Plan Packet from `../../docs/plan-packet.md` before any mutation.
 - Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval.
+- Extract repo obligations up front from local repo evidence (`AGENTS.md`, contributing docs, build files, generated-artifact workflows) and turn them into explicit checklist items.
+- When trailing work is predictable, declare a bounded **Closeout Scope** (for example: docs regen, mandated verification, commit, push, PR draft) instead of treating each closeout step as an implicit fresh re-plan.
 - Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
 - Keep explicit 80/20 tactical-to-strategic split.
 - Apply broken windows rule: fix one local issue now or log a concrete follow-up.
@@ -62,7 +64,8 @@ Approval must be explicit from the user (`/pf` in supervised mode).
 3. Produce Plan Packet (per `../../docs/plan-packet.md`)
 4. Request explicit scope + review-gate approval
 5. Execute within the approved mutating scope
-6. Verify and report at review boundaries (explicitly: verified vs unverified)
+6. Verify and report at review boundaries (explicitly: verified vs unverified, baseline unrelated failures vs new failures)
+7. If declared in the plan, use the approved closeout lane for bounded post-review follow-up without widening into new implementation scope
 
 ## Pre-mutation checklist
 
@@ -88,6 +91,7 @@ After scope approval, use checkpoints as reporting/review boundaries:
 - request `/pf` before the first mutating scope
 - keep mutating work inside the approved scope until a review gate is reached
 - request `/pf` again after a reached review gate or any material scope/strategy change
+- if the approved plan declared a bounded closeout lane, use it only for the listed closeout operations; source/code edits still require re-plan
 - still propose checkpoints at plan -> implementation and task boundaries so review slices stay explicit
 
 Checkpoint proposal format:

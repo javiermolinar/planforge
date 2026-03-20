@@ -31,6 +31,8 @@ Stop and ask before continuing when any of these occur:
 - Read-only actions only until explicit scope approval.
 - For non-trivial work, produce the full Plan Packet from `../../docs/plan-packet.md` before any mutation.
 - Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval.
+- Extract repo obligations up front from local repo evidence (`AGENTS.md`, contributing docs, build files, generated-artifact workflows) and turn them into explicit checklist items.
+- When trailing work is predictable, declare a bounded **Closeout Scope** (for example: docs regen, mandated verification, commit, push, PR draft) so fast mode can finish cleanly without surprise scope churn.
 - Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
 - Keep explicit 80/20 tactical-to-strategic split.
 - Apply broken windows rule: fix one local issue now or log a concrete follow-up.
@@ -59,7 +61,8 @@ If scope changes after approval, re-plan and re-request approval.
 3. Produce Plan Packet (per `../../docs/plan-packet.md`)
 4. Request explicit scope + review-gate approval
 5. Execute unsupervised
-6. Verify and report (explicitly: verified vs unverified)
+6. Verify and report (explicitly: verified vs unverified, baseline unrelated failures vs new failures)
+7. If declared in the plan, finish bounded closeout work inside the approved closeout lane without widening into new implementation scope
 
 ## Unsupervised execution mode
 
