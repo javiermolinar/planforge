@@ -8,6 +8,7 @@ Use this as the single source of truth for planning output across Planforge skil
 - Keep content concise but complete.
 - Do not request mutation/implementation approval until all required sections for the current scope are present.
 - If scope changes, re-issue the packet (at least updated Plan Summary + Test Table + Harness Check).
+- Extract repo obligations up front from local evidence such as `AGENTS.md`, contributing docs, build files, and obvious generated-artifact workflows.
 
 ## Required sections (all scopes)
 
@@ -48,9 +49,27 @@ Use this as the single source of truth for planning output across Planforge skil
 | Step ID | Goal | Planned evidence | User acceptance check | Status | Notes |
 |---|---|---|---|---|---|
 
+## Repo Obligations
+| Obligation | Source | Trigger | Planned handling | Status |
+|---|---|---|---|---|
+
 ## Test Table
 | Scenario | Test command/check | Expected result | Evidence |
 |---|---|---|---|
+
+## Baseline Verification Exceptions
+| Item | Category (baseline/new/unverified) | Evidence | Planned handling | Status |
+|---|---|---|---|---|
+
+## Generated Artifacts Policy
+| Artifact/file class | Generation source | Decision (include/isolate/exclude/investigate) | Rationale |
+|---|---|---|---|
+
+## Closeout Scope
+- Allowed trailing operations:
+- Allowed file classes / paths:
+- Invalidates closeout lane if:
+- Final closeout evidence to report:
 
 ## Proposed Review Gates
 | Gate ID | Trigger | Required evidence | Why this gate |
@@ -60,6 +79,7 @@ Rules:
 - Propose 1-3 review gates for the current scope.
 - Prefer meaningful review boundaries over per-command approvals.
 - Human may accept, remove, merge, or edit gates before mutation approval.
+- If closeout work is predictable (docs regen, mandated verification, commit, push, PR drafting), declare it here instead of forcing an implicit follow-up re-plan.
 
 ## Red Flags / Broken Windows
 - Relevant red flags from `docs/philosophy.md`:
@@ -155,7 +175,11 @@ Before asking implementation approval, require:
 - Architecture Justification + Tradeoff Highlights
 - Architecture/Tradeoff Rubric complete (no unresolved critical fail unless explicitly accepted by user)
 - Implementation Step Ledger
+- Repo Obligations
 - Test Table
+- Baseline Verification Exceptions
+- Generated Artifacts Policy when generated files or docs workflows are relevant
+- Closeout Scope when predictable trailing work exists
 - Proposed Review Gates
 - Harness Check
 - High-Risk Execution Checks when high-risk scope applies

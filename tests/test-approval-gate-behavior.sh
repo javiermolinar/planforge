@@ -132,6 +132,20 @@ async function emitReviewGateProposal(harness) {
   });
 }
 
+async function emitReviewGateProposalWithCloseout(harness) {
+  await harness.emit("message_end", {
+    message: {
+      role: "assistant",
+      content: [
+        {
+          type: "text",
+          text: "## Repo Obligations\n| Obligation | Source | Trigger | Planned handling | Status |\n|---|---|---|---|---|\n| make docs | Makefile | CLI/docs drift | run in closeout | planned |\n\n## Closeout Scope\n- Allowed trailing operations: regenerate docs, run mandated verification, commit, push, draft PR\n- Allowed file classes / paths: generated docs and markdown only\n- Invalidates closeout lane if: new source edits are needed\n- Final closeout evidence to report: docs regen + verification + commit/push/PR status\n\n## Proposed Review Gates\n| Gate ID | Trigger | Required evidence | Why this gate |\n|---|---|---|---|\n| RG1 | final review | verified vs unverified + diff summary | keep closeout bounded |",
+        },
+      ],
+    },
+  });
+}
+
 async function testInactiveStatusIsHiddenUntilPlanforgeStarts() {
   const harness = createHarness();
   installApprovalGate(harness.pi);
@@ -220,6 +234,12 @@ async function testCheckpointLifecycle() {
   });
   assert(allowedReadOnlyChain === undefined, "allowlisted read-only command chains should remain allowed before approval");
 
+  const allowedGitRemoteAndPrintf = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: 'git status --short && printf "remote" && git remote -v' },
+  });
+  assert(allowedGitRemoteAndPrintf === undefined, "semantic read-only command chains should remain allowed before approval");
+
   const blockedPreApprovalEdit = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
   assert(blockedPreApprovalEdit && blockedPreApprovalEdit.block === true, "pre-approval edit must be blocked");
   assert(
@@ -238,6 +258,10 @@ async function testCheckpointLifecycle() {
   assert(
     blockedPreApprovalMetaBash.reason.includes("RG1") && blockedPreApprovalMetaBash.reason.includes("/pf status"),
     "blocked bash reason should surface next review gate and status hint"
+  );
+  assert(
+    blockedPreApprovalMetaBash.reason.includes("Offending segment"),
+    "blocked bash reason should explain the offending segment"
   );
 
   await harness.runCommand("pf", {});
@@ -345,6 +369,53 @@ async function testReviewGatePushbackFlow() {
   );
 }
 
+async function testCloseoutLaneBehavior() {
+  const harness = createHarness();
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  await harness.emit("input", { text: "/skill:planforge" });
+  await emitReviewGateProposalWithCloseout(harness);
+
+  await harness.runCommand("pf", {});
+  let state = harness.getState();
+  assert(state && state.approved === true, "closeout plan should still require and accept initial approval");
+  assert(state.closeoutDeclared === true, "closeout scope should be parsed from the plan");
+
+  await harness.emit("message_end", {
+    message: {
+      role: "assistant",
+      content: [{ type: "text", text: "REVIEW_GATE_REACHED: RG1\nVerified vs unverified\nEvidence\n- build pass\n- smoke pass\n- negative-path pass" }],
+    },
+  });
+
+  await harness.runCommand("pf", {});
+  state = harness.getState();
+  assert(state.approved === true, "accepting the final review gate should approve the next scope");
+  assert(state.closeoutActive === true, "final review acceptance should enter closeout scope when declared");
+  assert(state.scopeKind === "closeout", "scope kind should record closeout activation");
+
+  await harness.emit("input", { text: "prepare the PR body, run make docs, and push it" });
+  state = harness.getState();
+  assert(state.approved === true, "minor closeout follow-up should not invalidate approval");
+  assert(state.scopeKind === "closeout", "closeout follow-up should stay inside closeout scope");
+
+  const allowedCloseoutBash = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: "make docs && git push origin HEAD && gh pr create --draft" },
+  });
+  assert(allowedCloseoutBash === undefined, "declared closeout commands should be allowed inside closeout scope");
+
+  const blockedSourceEdit = await harness.emit("tool_call", {
+    toolName: "edit",
+    input: { path: "extensions/planforge-approval-gate.ts" },
+  });
+  assert(blockedSourceEdit && blockedSourceEdit.block === true, "source edits should be blocked inside closeout scope");
+  state = harness.getState();
+  assert(state.approved === false, "blocked source edit should invalidate closeout approval");
+  assert(state.scopeKind === "replan", "blocked source edit should force replanning");
+}
+
 async function testHeadlessContinueBehavior() {
   const harness = createHarness(false);
   installApprovalGate(harness.pi);
@@ -400,6 +471,7 @@ async function testHeadlessContinueBehavior() {
   await testCheckpointLifecycle();
   await testBenchmarkProfile();
   await testReviewGatePushbackFlow();
+  await testCloseoutLaneBehavior();
   await testHeadlessContinueBehavior();
   console.log("approval gate behavior test: PASS");
 })().catch((error) => {

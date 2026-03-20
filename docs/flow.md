@@ -32,7 +32,8 @@ Canonical mode matrix lives in `docs/modes.md`.
   - explicit approval (`/pf`) before the first mutating scope
   - after approval, continue inside that scope until a review gate is reached
   - if a scenario result is awaiting acceptance, `/pf` records acceptance first and may approve the next scope
-  - scope changes trigger re-planning and re-approval
+  - if the approved plan declared a bounded closeout lane, final review acceptance may transition into a minor closeout scope for docs/verification/commit/push/PR work
+  - material scope changes still trigger re-planning and re-approval
 - `planforge-fast`: unsupervised mode when speed is prioritized.
   - still requires scope approval before non-trivial mutation
   - no checkpoint approval loop after scope approval

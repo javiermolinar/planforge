@@ -16,4 +16,5 @@ For machine-checkable mode contracts used in regression tests, see `AGENTS.md`.
 
 - `docs/philosophy.md` is mandatory across modes.
 - Non-trivial work in `planforge` and `planforge-fast` must use the Plan Packet from `docs/plan-packet.md`.
-- Scope changes invalidate prior approval and require re-planning/re-approval.
+- Plans should extract repo obligations explicitly and may declare a bounded closeout scope for predictable trailing work.
+- Material scope changes invalidate prior approval and require re-planning/re-approval; declared closeout work does not.

@@ -62,8 +62,10 @@ Planforge includes a lightweight stateful approval gate for Pi:
 - Auto-enables when you start with `/skill:planforge` or mutating `forge-*` workflows.
 - In supervised mode, use `/pf` to approve the current mutating scope; keep work inside that scope until a review gate or scope change requires another `/pf`.
 - Before first mutation approval in supervised mode, plans should include `## Proposed Review Gates` so humans can accept/edit review boundaries.
+- Plans should also extract repo obligations up front and may declare a bounded `## Closeout Scope` for predictable trailing work such as docs regen, mandated verification, commit, push, and PR drafting.
 - In supervised flow, `/pf` approves mutation scope and is reused at review gates (not per-command approvals).
 - If a review gate is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step.
+- When the final review gate is accepted and a closeout lane was declared, Planforge can enter an approved closeout scope instead of forcing a full re-plan.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
 - In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
 - Before `/pf`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`).

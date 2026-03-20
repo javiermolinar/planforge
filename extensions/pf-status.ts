@@ -8,6 +8,8 @@ try {
 const {
   normalizeExecutionMode,
   normalizeAcceptanceState,
+  normalizeScopeKind,
+  scopeKindLabel,
   resolveNextReviewGate,
   summarizeReviewGates,
   nextReviewGateLabel,
@@ -31,11 +33,18 @@ const DEFAULT_GATE_STATE = {
   reviewGateCursor: 0,
   currentReviewGateId: "",
   acceptedReviewGates: [],
+  scopeKind: "none",
+  scopeReason: "",
+  closeoutDeclared: false,
+  closeoutActive: false,
+  closeoutOperations: [],
+  updatedAt: 0,
 };
 
 function normalizeGateState(raw) {
   if (!raw || typeof raw !== "object") return { ...DEFAULT_GATE_STATE };
   const scopeVersion = Number.isFinite(raw.scopeVersion) ? Number(raw.scopeVersion) : 0;
+  const updatedAt = Number.isFinite(raw.updatedAt) ? Number(raw.updatedAt) : 0;
 
   return {
     enabled: Boolean(raw.enabled),
@@ -58,16 +67,26 @@ function normalizeGateState(raw) {
     acceptedReviewGates: Array.isArray(raw.acceptedReviewGates)
       ? raw.acceptedReviewGates.map((id) => String(id || "")).filter(Boolean)
       : [],
+    scopeKind: normalizeScopeKind(raw.scopeKind),
+    scopeReason: String(raw.scopeReason || "").trim(),
+    closeoutDeclared: Boolean(raw.closeoutDeclared),
+    closeoutActive: Boolean(raw.closeoutActive),
+    closeoutOperations: Array.isArray(raw.closeoutOperations)
+      ? raw.closeoutOperations.map((op) => String(op || "").trim()).filter(Boolean)
+      : [],
+    updatedAt,
   };
 }
 
 function buildStatusLines(gateState) {
-  const now = new Date().toISOString();
+  const updated = gateState.updatedAt ? new Date(gateState.updatedAt).toISOString() : new Date().toISOString();
   const lines = [
     "Planforge status",
     "",
     `State: ${gateStatusLine(gateState)}`,
     `Execution mode: ${normalizeExecutionMode(gateState.executionMode)}`,
+    `Scope kind: ${scopeKindLabel(gateState)}`,
+    `Scope reason: ${gateState.scopeReason || "(not recorded)"}`,
     `Benchmark profile: ${gateState.benchmarkMode ? "on" : "off"}`,
     `Review gates proposed: ${gateState.reviewGatesProposed ? "yes" : "no"}`,
     `Review gates approved: ${gateState.reviewGatesApproved ? "yes" : "no"}`,
@@ -76,7 +95,10 @@ function buildStatusLines(gateState) {
     `Next review gate: ${nextReviewGateLabel(gateState)}`,
     `Scope version: v${Math.max(1, gateState.scopeVersion || 1)}`,
     `Scenario acceptance: ${normalizeAcceptanceState(gateState.acceptanceState)}`,
-    `Updated: ${now}`,
+    `Closeout declared: ${gateState.closeoutDeclared ? "yes" : "no"}`,
+    `Closeout active: ${gateState.closeoutActive ? "yes" : "no"}`,
+    `Closeout ops: ${gateState.closeoutOperations.length > 0 ? gateState.closeoutOperations.join(", ") : "none parsed"}`,
+    `Updated: ${updated}`,
     "",
   ];
 
@@ -107,6 +129,7 @@ function buildStatusLines(gateState) {
     "- /pf status (open this panel)",
     "",
     "In supervised flow, /pf approves mutation scope and is re-used at review gates.",
+    "Declared closeout lanes allow bounded docs/verification/commit/push/PR follow-up after final review.",
     "If a review gate is awaiting acceptance, /pf marks it accepted (and may approve next scope).",
     "",
     "Task checklist commands were removed.",
