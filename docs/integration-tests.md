@@ -6,8 +6,9 @@ Planforge uses two layers of integration testing:
    - `tests/test-mode-contract.sh`
    - `tests/test-approval-gate-behavior.sh`
    - `tests/test-pi-package.sh`
-2. **Live Pi workflow test (manual run)**
+2. **Live Pi workflow tests (manual run)**
    - `tests/test-pi-e2e-modes.sh`
+   - `tests/test-pi-e2e-pushback.sh`
 
 ## Why two layers
 
@@ -30,17 +31,33 @@ Planforge uses two layers of integration testing:
    - starts with explicit scope approval in prompt
    - expects convergence without `/pf`
 
+## Live E2E: supervised pushback flow
+
+`tests/test-pi-e2e-pushback.sh` exercises a supervised workflow with two kinds of operator pushback against the same fixture:
+
+1. plan/review-gate pushback before approval
+   - asks for a revised plan
+   - narrows review gates to one final gate
+   - asserts repository remains unchanged before approval
+2. review-gate pushback after implementation evidence is presented
+   - asks for a revised review packet before acceptance
+   - asserts the session enters `revise_requested`
+   - asserts `/pf` accepts the revised gate and records acceptance
+
 ## Run locally
 
 ```bash
 bash tests/test-pi-e2e-modes.sh
+bash tests/test-pi-e2e-pushback.sh
 ```
 
 Optional controls:
 
 ```bash
 PLANFORGE_E2E_MAX_SUPERVISED_TURNS=12 PLANFORGE_E2E_MAX_FAST_TURNS=6 bash tests/test-pi-e2e-modes.sh
+PLANFORGE_E2E_MAX_PLAN_PUSHBACK_TURNS=2 PLANFORGE_E2E_MAX_APPROVAL_TURNS=4 bash tests/test-pi-e2e-pushback.sh
 PLANFORGE_KEEP_E2E_WORKDIR=1 bash tests/test-pi-e2e-modes.sh
+PLANFORGE_KEEP_E2E_WORKDIR=1 bash tests/test-pi-e2e-pushback.sh
 ```
 
 Notes:

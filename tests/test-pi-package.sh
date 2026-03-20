@@ -43,6 +43,7 @@ test -f AGENTS.md
 grep -q 'MODE_CONTRACT:BEGIN' AGENTS.md
 grep -q 'MODE_CONTRACT:END' AGENTS.md
 test -x tests/test-pi-e2e-modes.sh
+test -x tests/test-pi-e2e-pushback.sh
 
 test -f README.md
 grep -q '/skill:planforge' README.md

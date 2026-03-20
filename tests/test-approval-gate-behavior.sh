@@ -228,26 +228,26 @@ async function testCheckpointLifecycle() {
   assert(state.approved === false, "reaching review packet should pause mutation approval");
   assert(state.acceptanceState === "awaiting", "review gate should await acceptance");
   assert(typeof state.currentReviewGateId === "string" && state.currentReviewGateId.length > 0, "review gate should track current gate id when awaiting acceptance");
+  const awaitingGateId = state.currentReviewGateId;
+  const proposedGateCount = Array.isArray(state.reviewGates) ? state.reviewGates.length : 0;
+
+  await harness.emit("input", { text: "needs changes: before I accept this gate, include a diff summary with the evidence" });
+  state = harness.getState();
+  assert(state.acceptanceState === "revise_requested", "gate pushback should mark scenario revision requested");
+  assert(state.approved === false, "gate pushback should keep approval cleared");
+  assert(state.currentReviewGateId === awaitingGateId, "gate pushback should preserve the current review gate id");
+  assert(Array.isArray(state.reviewGates) && state.reviewGates.length === proposedGateCount, "gate pushback should not clear proposed review gates");
 
   await harness.runCommand("pf", {});
   state = harness.getState();
-  assert(state.acceptanceState === "accepted", "pf should accept review gate");
-  assert(state.approved === true, "pf should also approve next scope after review gate");
+  assert(state.acceptanceState === "accepted", "pf should accept revised review gate");
+  assert(state.approved === true, "pf should also approve next scope after revised review gate");
   assert(state.scopeVersion === scopeV1 + 1, "next scope should be advanced after accepted review gate");
   assert(Array.isArray(state.acceptedReviewGates) && state.acceptedReviewGates.length >= 1, "accepted review gates should be tracked");
 
   await harness.emit("tool_call", { toolName: "edit", input: { path: "docs/pi.md" } });
   state = harness.getState();
   assert(state.approved === true, "next mutation should be allowed after one continue");
-
-  await harness.emit("input", { text: "needs changes" });
-  state = harness.getState();
-  assert(state.acceptanceState === "revise_requested", "pushback should mark scenario revision requested");
-  assert(state.approved === false, "pushback should clear approval for further mutation");
-
-  await harness.runCommand("pf", {});
-  state = harness.getState();
-  assert(state.acceptanceState === "accepted", "pf should accept revised scenario once user is satisfied");
 }
 
 async function testBenchmarkProfile() {

@@ -986,6 +986,12 @@ export default function (pi) {
       return { action: "continue" };
     }
 
+    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    if (acceptanceState === "awaiting" && text && !TRIVIAL_ACK.test(text)) {
+      handleRevise(ctx, "scenario-revision-followup");
+      return { action: "continue" };
+    }
+
     if (state.reviewGatesProposed && !state.approved && REVIEW_GATES_PUSHBACK_HINT.test(text)) {
       setState(
         {
@@ -1001,12 +1007,6 @@ export default function (pi) {
         "info",
         "Review-gate pushback noted. Revise the plan's Proposed Review Gates section before approval."
       );
-      return { action: "continue" };
-    }
-
-    const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
-    if (acceptanceState === "awaiting" && text && !TRIVIAL_ACK.test(text)) {
-      handleRevise(ctx, "scenario-revision-followup");
       return { action: "continue" };
     }
 
