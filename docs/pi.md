@@ -64,12 +64,12 @@ Planforge includes a lightweight stateful approval gate for Pi:
 - Before first mutation approval in supervised mode, plans should include `## Proposed Review Gates` so humans can accept/edit review boundaries.
 - Plans should also extract repo obligations up front and may declare a bounded `## Closeout Scope` for predictable trailing work such as docs regen, mandated verification, commit, push, and PR drafting.
 - In supervised flow, `/pf` approves mutation scope and is reused at review gates (not per-command approvals).
-- If a review gate is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step.
+- If a review gate is awaiting acceptance, `/pf` records acceptance and can approve the next scope in one step. Brief affirmative replies such as “looks good, continue” may also count as acceptance.
 - When the final review gate is accepted and a closeout lane was declared, Planforge can enter an approved closeout scope instead of forcing a full re-plan.
 - In `/skill:planforge-fast`, the gate stays off (unsupervised mode) after explicit plan/scope acceptance.
 - In `/skill:forge-investigate`, checkpoint approvals stay off and a read-only guard blocks mutating tools (no `/pf` needed).
-- Before `/pf`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`). Strict read-only `curl` is allowed only for safe GET/HEAD-style requests; upload/data/output flags remain blocked.
-- Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval.
+- Before `/pf`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`). Strict read-only `curl` is allowed only for safe GET/HEAD-style requests; narrow read-only pipelines such as `git status | wc -l` are allowed, but upload/data/output flags and write-oriented shell patterns remain blocked.
+- Additional non-trivial follow-up prompts after approval are treated as scope changes and revoke approval, but Planforge preserves parsed review-gate context so replanning does not start from a blank state.
 - Use `/pf benchmark on` to enable benchmark-profile guidance (strict scope + minimum verification evidence), and `/pf benchmark off` to disable it.
 - Benchmark profile may auto-enable when prompts explicitly mention benchmark/evaluation/scorecard context.
 - Use `/pf status` for a right-side overlay panel with current state on demand (including parsed review gates and per-gate status).

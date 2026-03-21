@@ -61,8 +61,8 @@ Planforge should then:
 3. get explicit scope approval
 4. create a semantic branch if needed
 5. create a rolling plan
-6. propose one implementation checkpoint at a time and wait for `/pf`
-7. execute bounded work for that checkpoint and verify each meaningful step
+6. in supervised mode, propose only the meaningful review boundary/checkpoint(s) needed for the scope and wait for `/pf`
+7. execute bounded work for that scope and verify each meaningful step
 8. wait for explicit user acceptance before advancing to the next scenario/checkpoint
 9. suggest a fresh-context review before completion
 
@@ -83,6 +83,7 @@ Planforge should then:
 
 Notes:
 - Supervised plans must include review gates before first mutation approval.
+- For small low-risk work, one final review gate is usually enough.
 - Declared closeout work can continue after final review without a full re-plan.
 - Use `/pf status` to inspect current gate state.
 

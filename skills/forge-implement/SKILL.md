@@ -29,7 +29,7 @@ Use this after planning is approved and branch context is ready.
 
 When running under supervised mode, approve work by implementation task/checkpoint (not per command):
 
-1. Propose one implementation checkpoint with an id.
+1. Propose one meaningful implementation checkpoint with an id (or one final review gate for a small low-risk scope).
 2. Wait for explicit approval (`/pf`).
 3. Execute the bounded commands needed to complete that checkpoint.
 4. Report result with an updated implementation step ledger (and per-step TDD table when required), ask for user acceptance of the completed scenario, and only then propose the next checkpoint.

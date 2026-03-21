@@ -30,7 +30,7 @@ Stop and ask before continuing when any of these occur:
 
 - Read-only actions only until explicit scope approval.
 - For non-trivial work, produce the full Plan Packet from `../../docs/plan-packet.md` before any mutation.
-- Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval.
+- Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval. Prefer one final review gate for small, low-risk scopes.
 - Extract repo obligations up front from local repo evidence (`AGENTS.md`, contributing docs, build files, generated-artifact workflows) and turn them into explicit checklist items.
 - When trailing work is predictable, declare a bounded **Closeout Scope** (for example: docs regen, mandated verification, commit, push, PR draft) so fast mode can finish cleanly without surprise scope churn.
 - Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
