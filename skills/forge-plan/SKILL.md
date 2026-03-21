@@ -13,11 +13,13 @@ Use this when direction is clear and implementation is likely.
 - Follow `../../docs/philosophy.md` as mandatory policy.
 - Treat philosophy red flags as strict warnings.
 - Use the canonical Plan Packet from `../../docs/plan-packet.md`.
+- Default to the compact packet for small, low-risk scopes; expand only when risk/scope warrants it or the user asks.
 - Prefer the simplest acceptable plan shape; no silent scope widening.
 - Keep explicit 80/20 tactical-to-strategic split.
 - Apply broken windows rule: fix one local issue now or log concrete follow-up.
 - If scope changes, publish revised Plan Summary + updated Test Table before proceeding.
 - Planning must propose explicit review gates and invite user pushback before mutation approval.
+- In compact mode, offer optional numbered follow-up detail (for example: architecture, complexity, files, verification, red flags, full plan) instead of front-loading every section.
 - If TDD is required (user request or reproducible bug-fix scope), plan starts with failing-test evidence.
 
 ## Approval and mutation boundaries
@@ -38,15 +40,16 @@ Prohibited before approval:
 
 1. Understand scope and constraints
 2. Clarify unknowns
-3. Produce full Plan Packet (see `../../docs/plan-packet.md`)
+3. Produce Plan Packet (compact by default; expand when needed — see `../../docs/plan-packet.md`)
 4. Request approval
 5. On pushback, revise same plan and re-request approval
 
 ## Approval gates (before asking implementation approval)
 
-Require all applicable sections from `../../docs/plan-packet.md`:
+Require the applicable plan information from `../../docs/plan-packet.md`:
 
-- Always: Plan Summary, File Touch Map, Assumptions, Architecture Justification, Tradeoff Highlights, Rubric, Step Ledger, Test Table, Proposed Review Gates, Red Flags/Broken Windows, Harness Check, Next-skill handoff
+- Small / low-risk scopes: compact Plan + Files + Verify + Red Flags (if any) + Proposed Review Gates + Harness Check + Next-skill handoff
+- Larger / higher-risk scopes: Plan Summary, File Touch Map, Assumptions, Architecture Justification, Tradeoff Highlights, Rubric, Step Ledger, Test Table, Proposed Review Gates, Red Flags/Broken Windows, Harness Check, Next-skill handoff
 - If high-risk scope: High-Risk Execution Checks
 - If TDD scope: TDD Test Table + failing-test-first command
 - If write-path scope: write-path semantics + lifecycle safety + negative test matrix

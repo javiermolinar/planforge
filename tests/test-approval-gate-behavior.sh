@@ -407,6 +407,36 @@ async function testBenchmarkProfile() {
   assert(state && state.benchmarkMode === true, "input command /pf benchmark on should enable benchmark profile");
 }
 
+async function testCompactPlanningGuidanceInjected() {
+  const harness = createHarness();
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  await harness.emit("input", { text: "/skill:planforge" });
+
+  const beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
+  assert(
+    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("Keep plan/review output compact by default"),
+    "before_agent_start should inject compact planning guidance"
+  );
+  assert(
+    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("Want more detail? Reply with a number:"),
+    "compact planning guidance should include the numbered follow-up menu"
+  );
+  assert(
+    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("5. Red flags 6. Full plan"),
+    "compact planning guidance should include red-flag follow-up detail"
+  );
+  assert(
+    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("Surface Red Flags only when they are real and actionable"),
+    "compact planning guidance should require red flags to stay signal-only"
+  );
+  assert(
+    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("At review gates, prefer a short Summary, Diff, Verify, and optional Red Flags block"),
+    "compact planning guidance should also include compact review-gate summary guidance"
+  );
+}
+
 async function testReviewGatePushbackFlow() {
   const harness = createHarness();
   installApprovalGate(harness.pi);
@@ -563,6 +593,7 @@ async function testHeadlessContinueBehavior() {
   await testCheckpointLifecycle();
   await testNaturalLanguageAcceptanceAndScopeReplan();
   await testBenchmarkProfile();
+  await testCompactPlanningGuidanceInjected();
   await testReviewGatePushbackFlow();
   await testBranchPolicyEnforcement();
   await testCloseoutLaneBehavior();

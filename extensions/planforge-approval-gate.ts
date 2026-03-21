@@ -1607,8 +1607,11 @@ export default function (pi) {
       ? `Declared closeout lane: ${state.closeoutOperations.join(", ") || "docs/verification/commit/push/PR"}. New source edits invalidate it.`
       : "";
 
+    const compactPlanNote =
+      "Keep plan/review output compact by default for small or low-risk scopes: prefer short Plan, Files, Verify, and Proposed Review Gates sections over giant tables. Surface Red Flags only when they are real and actionable. At review gates, prefer a short Summary, Diff, Verify, and optional Red Flags block before any detailed ledger. Offer numbered follow-up detail when useful: 'Want more detail? Reply with a number: 1. Architecture 2. Complexity 3. Files 4. Verification 5. Red flags 6. Full plan.'";
+
     return {
-      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}${branchNote ? `\n${branchNote}` : ""}\n${acceptanceNote}\n${reviewGateSummary}\n${reviewGateNote}${closeoutNote ? `\n${closeoutNote}` : ""}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.${benchmarkNote ? `\n\n${benchmarkNote}` : ""}`,
+      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}${branchNote ? `\n${branchNote}` : ""}\n${acceptanceNote}\n${reviewGateSummary}\n${reviewGateNote}${closeoutNote ? `\n${closeoutNote}` : ""}\n${compactPlanNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.${benchmarkNote ? `\n\n${benchmarkNote}` : ""}`,
     };
   });
 
