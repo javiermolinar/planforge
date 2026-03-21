@@ -29,8 +29,10 @@ Stop and ask before continuing when any of these occur:
 ## Core contract (always on)
 
 - Read-only actions only until explicit scope approval.
-- For non-trivial work, produce the full Plan Packet from `../../docs/plan-packet.md` before any mutation.
+- For non-trivial work, produce the Plan Packet from `../../docs/plan-packet.md` before any mutation.
+- Use the compact default for small, low-risk scopes; expand to the full packet only when risk/scope warrants it or the user asks.
 - Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval.
+- In compact mode, offer optional numbered follow-up detail (for example: architecture, complexity, files, verification, red flags, full plan) instead of front-loading every section.
 - Extract repo obligations up front from local repo evidence (`AGENTS.md`, contributing docs, build files, generated-artifact workflows) and turn them into explicit checklist items.
 - When trailing work is predictable, declare a bounded **Closeout Scope** (for example: docs regen, mandated verification, commit, push, PR draft) instead of treating each closeout step as an implicit fresh re-plan.
 - Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
@@ -61,7 +63,7 @@ Approval must be explicit from the user (`/pf` in supervised mode).
 
 1. Understand task
 2. Clarify unknowns
-3. Produce Plan Packet (per `../../docs/plan-packet.md`)
+3. Produce Plan Packet (compact by default per `../../docs/plan-packet.md`; expand only when needed)
 4. Request explicit scope + review-gate approval
 5. Execute within the approved mutating scope
 6. Verify and report at review boundaries (explicitly: verified vs unverified, baseline unrelated failures vs new failures)

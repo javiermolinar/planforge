@@ -71,7 +71,33 @@ For write-path changes, implementation must preserve and report semantics from t
 
 ## Checkpoint reporting contract (mandatory)
 
-After each implementation checkpoint, include an updated ledger:
+After each implementation checkpoint, include an updated ledger.
+For small, low-risk review gates, prefer a compact review packet before any detailed tables:
+
+```md
+REVIEW_GATE_REACHED: <Gate ID>
+## Summary
+- 1-3 bullets on what changed
+
+## Diff
+- short file list or terse diff summary
+
+## Verify
+- 1-3 checks with pass/fail status
+
+## Red Flags (only if any)
+- short bullets for meaningful risks, ambiguities, or complexity traps
+
+Want more detail? Reply with a number:
+1. Architecture
+2. Complexity
+3. Files / diff
+4. Verification
+5. Red flags
+6. Full review
+```
+
+Then include an updated ledger:
 
 | Step ID | Goal | Planned evidence | Actual evidence | User acceptance check | Status | Notes |
 |---|---|---|---|---|---|---|
@@ -109,6 +135,7 @@ Do not move to the next scenario while the current one is `awaiting_user_accepta
 - execution mode (`supervised` or `unsupervised`)
 - change made
 - verification attempted
+- compact review packet first for small/low-risk review gates
 - updated implementation step ledger
 - updated per-step TDD table (when required)
 - scenario acceptance status (accepted / awaiting feedback / revise requested)

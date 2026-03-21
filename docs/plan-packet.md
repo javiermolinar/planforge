@@ -6,12 +6,57 @@ Use this as the single source of truth for planning output across Planforge skil
 
 - Always follow `docs/philosophy.md` when filling this packet.
 - Keep content concise but complete.
-- For small or obvious scopes, keep each section terse rather than verbose ceremony.
-- Do not request mutation/implementation approval until all required sections for the current scope are present.
+- Default to the smallest plan shape that still keeps scope, verification, and approval boundaries explicit.
+- For small or obvious scopes, prefer the compact packet below instead of verbose tables.
+- Do not request mutation/implementation approval until all required information for the current scope is present.
 - If scope changes, re-issue the packet (at least updated Plan Summary + Test Table + Harness Check).
 - Extract repo obligations up front from local evidence such as `AGENTS.md`, contributing docs, build files, and obvious generated-artifact workflows.
 
-## Required sections (all scopes)
+## Compact default (small / low-risk scopes)
+
+Use this by default when the work is small, local, and low-risk.
+
+```md
+## Plan
+- 2-4 bullets on what will be done / not done
+
+## Files
+- short list of exact files, or likely areas when exact paths are not known yet
+
+## Verify
+- 1-3 concrete checks
+
+## Red Flags (only if any)
+- short bullets for meaningful risks, ambiguities, or complexity traps
+
+## Proposed Review Gates
+| Gate ID | Trigger | Required evidence | Why this gate |
+|---|---|---|---|
+
+## Harness Check
+- Philosophy loaded from `docs/philosophy.md`: yes/no
+- Principles driving this plan (2-3):
+- Next allowed action: <read-only | mutate after approval>
+- Scope approval required now: yes/no
+- TDD required for this scope: yes/no
+
+Want more detail? Reply with a number:
+1. Architecture
+2. Complexity
+3. Files
+4. Verification
+5. Red flags
+6. Full plan
+```
+
+Rules:
+- Keep the default response short; do not dump the full packet unless risk/scope warrants it or the user asks.
+- If a decision is non-obvious, include a terse architecture/complexity note inline or expand on request.
+- Surface red flags in compact mode only when they are real and actionable; omit the section when there are none.
+- Keep Proposed Review Gates explicit even in compact mode.
+- Use one final review gate by default for small, low-risk scopes.
+
+## Full packet sections (use when scope/risk warrants)
 
 ```md
 ## Plan Summary
@@ -173,6 +218,8 @@ Rules:
 
 Before asking implementation approval, require:
 
+- For small / low-risk scopes: compact Plan + Files + Verify + Red Flags (if any) + Proposed Review Gates + Harness Check
+- For larger / higher-risk scopes: the applicable full-packet sections below
 - Plan Summary + File Touch Map + Assumptions
 - Architecture Justification + Tradeoff Highlights
 - Architecture/Tradeoff Rubric complete (no unresolved critical fail unless explicitly accepted by user)
