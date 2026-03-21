@@ -224,7 +224,7 @@ const DEFAULT_STATE = {
 const PF_COMMAND = /^\s*\/?pf(?:\s+(.+?))?\s*[.!]*\s*$/i;
 const REQUEST_REVISION = /^\s*(needs? changes?|revise|not right|fix this)\s*[.!]*\s*$/i;
 const TRIVIAL_ACK =
-  /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|pf)\s*[.!]*\s*$/i;
+  /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|pf|continue|go ahead|proceed|carry on|keep going|approved|lgtm|ship it|looks good)\s*[.!]*\s*$/i;
 
 const PLANFORGE_SUPERVISED_SKILL_CMD = /^\s*\/skill:planforge\b/i;
 const PLANFORGE_FAST_SKILL_CMD = /^\s*\/skill:planforge-fast\b/i;
@@ -239,6 +239,24 @@ const REVIEW_GATES_PUSHBACK_HINT = /\b(review\s+gate|gates?)\b.*\b(change|revise
 const REVIEW_PACKET_HINT = /\bverified\s+vs\s+unverified\b/i;
 const REVIEW_PACKET_EVIDENCE_HINT = /\bevidence\b|\bbuild\b|\bsmoke\b|\bnegative[- ]path\b/i;
 const CLOSEOUT_FOLLOWUP_HINT = /\b(doc(?:s|umentation)?|generate|regenerate|fmt|format|lint|vet|test|verify|verification|commit|push|pull\s+request|\bpr\b|changelog)\b/i;
+
+function isNaturalAcceptance(text) {
+  const normalized = String(text || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[.!]+$/g, "");
+
+  return normalized === "looks good"
+    || normalized === "looks good, continue"
+    || normalized === "lgtm"
+    || normalized === "approved"
+    || normalized === "ship it"
+    || normalized === "continue"
+    || normalized === "go ahead"
+    || normalized === "proceed"
+    || normalized === "carry on"
+    || normalized === "keep going";
+}
 
 function scanShell(command, visitor) {
   const text = String(command || "");
@@ -305,6 +323,24 @@ function splitCommandSegments(command) {
   return segments;
 }
 
+function splitPipelineSegments(segment) {
+  const segments = [];
+  let start = 0;
+
+  scanShell(segment, (ch, index, state) => {
+    if (state.quote) return;
+    if (ch === "|" && state.next !== "|") {
+      const nextSegment = String(segment || "").slice(start, index).trim();
+      if (nextSegment) segments.push(nextSegment);
+      start = index + 1;
+    }
+  });
+
+  const tail = String(segment || "").slice(start).trim();
+  if (tail) segments.push(tail);
+  return segments;
+}
+
 function tokenizeShellWords(segment) {
   const tokens = [];
   let current = "";
@@ -360,6 +396,34 @@ function hasBlockedShellMeta(segment) {
   });
 
   return blocked || scanResult.unclosedQuote || scanResult.trailingEscape;
+}
+
+function isAllowedReadOnlyFilterSegment(tokens) {
+  const [cmd] = Array.isArray(tokens) ? tokens : [];
+  if (!cmd) return false;
+  return cmd === "wc"
+    || cmd === "head"
+    || cmd === "tail"
+    || cmd === "sort"
+    || cmd === "uniq"
+    || cmd === "cut"
+    || cmd === "tr"
+    || cmd === "grep"
+    || cmd === "rg";
+}
+
+function isAllowedReadOnlyPipeline(segment) {
+  const parts = splitPipelineSegments(segment);
+  if (parts.length < 2) return false;
+
+  const [first, ...rest] = parts;
+  if (!isAllowedPreApprovalSegment(first)) return false;
+
+  return rest.every((part) => {
+    if (hasBlockedShellMeta(part)) return false;
+    const tokens = tokenizeShellWords(part);
+    return Array.isArray(tokens) && tokens.length > 0 && isAllowedReadOnlyFilterSegment(tokens);
+  });
 }
 
 function detectCurrentBranch() {
@@ -485,6 +549,7 @@ function isAllowedReadOnlyCurlSegment(tokens) {
 function isAllowedPreApprovalSegment(segment) {
   const trimmed = String(segment || "").trim();
   if (!trimmed) return true;
+  if (splitPipelineSegments(trimmed).length > 1) return isAllowedReadOnlyPipeline(trimmed);
   if (hasBlockedShellMeta(trimmed)) return false;
 
   const tokens = tokenizeShellWords(trimmed);
@@ -677,7 +742,8 @@ function resolveNextReviewGate(state) {
 function buildContinuationMessage(gateState) {
   const scope = Math.max(1, gateState?.scopeVersion || 1);
   const scopeDescriptor = gateState?.closeoutActive ? "closeout checkpoint" : "checkpoint";
-  return `Continue with the approved ${scopeDescriptor}. Scope v${scope} is approved (${normalizeScopeKind(gateState?.scopeKind) || "implementation"}). Review gates: ${summarizeReviewGates(gateState)}. Next review gate: ${nextReviewGateLabel(gateState)}. Execute only currently approved work and report evidence.`;
+  const scopeKind = normalizeScopeKind(gateState?.scopeKind) || "implementation";
+  return `Continue with the approved ${scopeDescriptor}. Scope v${scope} is approved. Scope kind: ${scopeKind}. Review gates: ${summarizeReviewGates(gateState)}. Next review gate: ${nextReviewGateLabel(gateState)}. Execute only currently approved work and report evidence.`;
 }
 
 function buildPreApprovalGateHint(gateState) {
@@ -904,23 +970,25 @@ export default function (pi) {
   }
 
   function invalidateForScopeChange(ctx, reason, message) {
-    const nextScope = Math.max(1, state.scopeVersion || 1) + 1;
+    const currentScope = Math.max(1, state.scopeVersion || 1);
     setState(
       {
         enabled: true,
         approved: false,
-        scopeVersion: nextScope,
+        scopeVersion: currentScope,
         acceptanceState: "none",
-        pendingScopeAdvance: false,
-        reviewGatesProposed: false,
+        pendingScopeAdvance: true,
+        reviewGatesProposed: state.reviewGatesProposed,
         reviewGatesApproved: false,
-        reviewGates: [],
-        reviewGateCursor: 0,
+        reviewGates: Array.isArray(state.reviewGates) ? state.reviewGates : [],
+        reviewGateCursor: Number.isFinite(state.reviewGateCursor) ? state.reviewGateCursor : 0,
         currentReviewGateId: "",
-        acceptedReviewGates: [],
+        acceptedReviewGates: Array.isArray(state.acceptedReviewGates) ? state.acceptedReviewGates : [],
         scopeKind: "replan",
         scopeReason: message || "Scope changed and requires a revised plan.",
+        closeoutDeclared: state.closeoutDeclared,
         closeoutActive: false,
+        closeoutOperations: Array.isArray(state.closeoutOperations) ? state.closeoutOperations : [],
       },
       reason,
       ctx,
@@ -1338,6 +1406,18 @@ export default function (pi) {
     }
 
     const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
+    if ((acceptanceState === "awaiting" || acceptanceState === "revise_requested") && isNaturalAcceptance(text)) {
+      handleContinue(ctx);
+      if (shouldAutoContinueAfterApproval()) {
+        return {
+          action: "transform",
+          text: buildContinuationMessage(state),
+          images: event?.images,
+        };
+      }
+      return { action: "handled" };
+    }
+
     if (acceptanceState === "awaiting" && text && !TRIVIAL_ACK.test(text)) {
       handleRevise(ctx, "scenario-revision-followup");
       return { action: "continue" };
@@ -1496,8 +1576,10 @@ export default function (pi) {
           : "";
 
     const currentBranch = detectCurrentBranch();
-    const branchNote = state.approved && !state.closeoutActive && isTrunkLikeBranch(currentBranch)
-      ? `Current branch is '${currentBranch}'. Before implementation edits, create or switch to a task branch.`
+    const branchNote = !state.closeoutActive && isTrunkLikeBranch(currentBranch)
+      ? state.approved
+        ? `Current branch is '${currentBranch}'. Before implementation edits, create or switch to a task branch.`
+        : `Current branch is '${currentBranch}'. After scope approval and before implementation edits, create or switch to a task branch.`
       : "";
 
     const gateNote = state.approved

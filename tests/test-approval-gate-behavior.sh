@@ -196,11 +196,11 @@ async function testInvestigateModeIsReadOnly() {
   });
   assert(blockedMetaBash && blockedMetaBash.block === true, "redirection bypass attempts must be blocked in investigate mode");
 
-  const blockedPipeBash = await harness.emit("tool_call", {
+  const allowedPipeBash = await harness.emit("tool_call", {
     toolName: "bash",
     input: { command: "git status | wc -l" },
   });
-  assert(blockedPipeBash && blockedPipeBash.block === true, "pipe-based commands must be blocked in investigate mode");
+  assert(allowedPipeBash === undefined, "safe read-only pipelines should remain allowed in investigate mode");
 
   const allowedReadOnlyBash = await harness.emit("tool_call", { toolName: "bash", input: { command: "ls -la" } });
   assert(allowedReadOnlyBash === undefined, "read-only bash should remain allowed in investigate mode");
@@ -241,6 +241,12 @@ async function testCheckpointLifecycle() {
     input: { command: 'git status --short && printf "remote" && git remote -v' },
   });
   assert(allowedGitRemoteAndPrintf === undefined, "semantic read-only command chains should remain allowed before approval");
+
+  const allowedReadOnlyPipeline = await harness.emit("tool_call", {
+    toolName: "bash",
+    input: { command: 'git status | wc -l && rg -n "bash|zsh|completion" . | head -n 5' },
+  });
+  assert(allowedReadOnlyPipeline === undefined, "safe read-only pipelines should remain allowed before approval");
 
   const allowedReadOnlyCurl = await harness.emit("tool_call", {
     toolName: "bash",
@@ -325,6 +331,47 @@ async function testCheckpointLifecycle() {
   assert(state.approved === true, "next mutation should be allowed after one continue");
 }
 
+async function testNaturalLanguageAcceptanceAndScopeReplan() {
+  const harness = createHarness();
+  installApprovalGate(harness.pi);
+
+  await harness.emit("session_start", {});
+  await harness.emit("input", { text: "/skill:planforge" });
+  await emitReviewGateProposal(harness);
+  await harness.runCommand("pf", {});
+
+  let state = harness.getState();
+  const scopeV1 = state.scopeVersion;
+
+  await harness.emit("message_end", {
+    message: {
+      role: "assistant",
+      content: [{ type: "text", text: "REVIEW_GATE_REACHED: RG1\nEvidence\nVerified vs unverified\n- build\n- smoke\n- negative path" }],
+    },
+  });
+
+  state = harness.getState();
+  assert(state.approved === false && state.acceptanceState === "awaiting", "review gate should await acceptance before natural-language confirmation");
+
+  const acceptResult = await harness.emit("input", { text: "looks good, continue" });
+  assert(acceptResult && acceptResult.action === "transform", "natural-language acceptance should transform into a continuation prompt");
+
+  state = harness.getState();
+  assert(state.acceptanceState === "accepted", "natural-language acceptance should mark the scenario accepted");
+  assert(state.approved === true, "natural-language acceptance should approve the next scope");
+  assert(state.scopeVersion === scopeV1 + 1, "natural-language acceptance should advance scope only when the new scope is approved");
+  assert(Array.isArray(state.acceptedReviewGates) && state.acceptedReviewGates.includes("RG1"), "accepted review gates should be retained after natural-language acceptance");
+
+  await harness.emit("input", { text: "also keep the review packet compact and stay within the same fix scope" });
+  state = harness.getState();
+  assert(state.approved === false, "non-trivial follow-up should still invalidate prior approval");
+  assert(state.scopeVersion === scopeV1 + 1, "scope version should not bump until the revised scope is actually approved");
+  assert(state.pendingScopeAdvance === true, "scope invalidation should stage the next scope advance instead of bumping immediately");
+  assert(state.reviewGatesProposed === true, "scope invalidation should preserve parsed review-gate context for replanning");
+  assert(Array.isArray(state.reviewGates) && state.reviewGates.length === 1 && state.reviewGates[0].id === "RG1", "scope invalidation should retain parsed review gates instead of forgetting them");
+  assert(Array.isArray(state.acceptedReviewGates) && state.acceptedReviewGates.includes("RG1"), "scope invalidation should preserve accepted review gate history");
+}
+
 async function testBenchmarkProfile() {
   const harness = createHarness();
   installApprovalGate(harness.pi);
@@ -389,6 +436,13 @@ async function testBranchPolicyEnforcement() {
 
   await harness.emit("session_start", {});
   await harness.emit("input", { text: "/skill:planforge" });
+
+  const beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
+  assert(
+    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("Current branch is 'main'") && beforeStart.systemPrompt.includes("After scope approval and before implementation edits"),
+    "branch hygiene should be surfaced before the first blocked edit on trunk"
+  );
+
   await emitReviewGateProposal(harness);
   await harness.runCommand("pf", {});
 
@@ -507,6 +561,7 @@ async function testHeadlessContinueBehavior() {
   await testInactiveStatusIsHiddenUntilPlanforgeStarts();
   await testInvestigateModeIsReadOnly();
   await testCheckpointLifecycle();
+  await testNaturalLanguageAcceptanceAndScopeReplan();
   await testBenchmarkProfile();
   await testReviewGatePushbackFlow();
   await testBranchPolicyEnforcement();

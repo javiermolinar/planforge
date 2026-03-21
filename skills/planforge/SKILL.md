@@ -69,7 +69,7 @@ Approval must be explicit from the user (`/pf` in supervised mode).
 
 ## Pre-mutation checklist
 
-Print before each mutating checkpoint:
+Confirm before each mutating checkpoint:
 
 ```md
 Pre-mutation gate:
@@ -82,7 +82,7 @@ Pre-mutation gate:
 - Next checkpoint includes repo mutation? [yes/no]
 ```
 
-If any answer blocks mutation, stop and request approval.
+Only print the checklist when it adds clarity or explains a block. If any answer blocks mutation, stop and request approval.
 
 ## Supervised checkpoint loop
 
@@ -91,8 +91,9 @@ After scope approval, use checkpoints as reporting/review boundaries:
 - request `/pf` before the first mutating scope
 - keep mutating work inside the approved scope until a review gate is reached
 - request `/pf` again after a reached review gate or any material scope/strategy change
+- brief affirmative acceptance such as “looks good, continue” may count when a review gate is awaiting acceptance
 - if the approved plan declared a bounded closeout lane, use it only for the listed closeout operations; source/code edits still require re-plan
-- still propose checkpoints at plan -> implementation and task boundaries so review slices stay explicit
+- prefer the lightest review shape that keeps scope legible; for small low-risk work, one final review gate is often enough
 
 Checkpoint proposal format:
 

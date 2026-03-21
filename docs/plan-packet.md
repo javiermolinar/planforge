@@ -6,6 +6,7 @@ Use this as the single source of truth for planning output across Planforge skil
 
 - Always follow `docs/philosophy.md` when filling this packet.
 - Keep content concise but complete.
+- For small or obvious scopes, keep each section terse rather than verbose ceremony.
 - Do not request mutation/implementation approval until all required sections for the current scope are present.
 - If scope changes, re-issue the packet (at least updated Plan Summary + Test Table + Harness Check).
 - Extract repo obligations up front from local evidence such as `AGENTS.md`, contributing docs, build files, and obvious generated-artifact workflows.
@@ -78,6 +79,7 @@ Use this as the single source of truth for planning output across Planforge skil
 Rules:
 - Propose 1-3 review gates for the current scope.
 - Prefer meaningful review boundaries over per-command approvals.
+- For small, low-risk scopes, prefer a single final review gate unless the work clearly benefits from more slicing.
 - Human may accept, remove, merge, or edit gates before mutation approval.
 - If closeout work is predictable (docs regen, mandated verification, commit, push, PR drafting), declare it here instead of forcing an implicit follow-up re-plan.
 
