@@ -9,99 +9,67 @@
 
 ![Planforge](./forge.png)
 
-Planforge is a lightweight workflow for the **Pi agent harness** built for serious software development. It favors discipline over vibes: plan first, verify claims, review with fresh eyes, and ship code worthy of Olympus.
+Planforge is an opinionated workflow for the **Pi agent harness**.
 
-Planforge is the middle path between YOLO vibecoding and heavyweight spec ritual: less chaos, less ceremony, more engineering judgment.
+It optimizes for long-term software quality over short-term momentum: plan first, challenge unnecessary complexity, verify claims honestly, and require explicit acceptance before advancing.
 
-It favors:
-- short, explicit planning before implementation
-- firm pushback against unnecessary complexity
-- single-agent execution by default
-- best-effort verification with honest reporting
-- fresh-context review for riskier work
-- lightweight rolling plans instead of heavyweight specs
+If you want a looser flow, prompt directly. If you want the harness to stay disciplined, use Planforge.
 
-Check its philosophy: [`docs/philosophy.md`](docs/philosophy.md)
-
-## Zen of Planforge
-
-1. Compose small interfaces, keep modules deep.
-2. Be explicit: surface contracts, dependencies, and unknowns.
-3. Prefer one obvious path over clever alternatives.
-4. Fail loudly, verify claims, and never hide ambiguity.
-5. Ship tactically, improve strategically.
-
-This is baked from years of real engineering tradeoffs, and from hard-won lessons shared by people like **Rob Pike, Ken Thompson, Brian Kernighan, John Ousterhout, and Rich Hickey**.
-
-> “Simplicity is prerequisite for reliability.” — Edsger W. Dijkstra
-
-## Why it feels different
-
-Most agent workflows worship momentum. Planforge serves judgment.
-
-It would rather slow the hand than ship the wrong thing quickly. It pushes back when the plan grows bloated, cuts away ornamental complexity, and treats verification as steel, not smoke. When the work turns risky, it calls for fresh eyes instead of crowning the builder with a hollow victory speech.
-
-Exploration is welcome. But delivery runs through explicit checkpoints, hard tradeoffs, verification evidence, and human acceptance before advancing. In quiet runs with no pushback, `/skill:planforge-fast` and `/skill:planforge` should often converge to similar code. The true power of supervised mode appears when seasoned judgment enters the fire
-
+Start with the philosophy: [`docs/philosophy.md`](docs/philosophy.md)
 
 ## Quickstart
-Global install from git (available in all repos):
+
+Global install from git:
 
 ```bash
 pi install git:github.com/javiermolinar/planforge
 ```
 
+Run Planforge:
+
 ```text
 /skill:planforge Build a small read-only Hacker News CLI. Keep it minimal, plan first, and challenge unnecessary complexity.
 ```
 
-Planforge should then:
-1. clarify the scope
-2. produce a short plan and test table
-3. get explicit scope approval
-4. create a semantic branch if needed
-5. create a rolling plan
-6. in supervised mode, propose only the meaningful review boundary/checkpoint(s) needed for the scope and wait for `/pf`
-7. execute bounded work for that scope and verify each meaningful step
-8. wait for explicit user acceptance before advancing to the next scenario/checkpoint
-9. suggest a fresh-context review before completion
+Approve the first mutating scope with `/pf`.
 
-### Modes
+## Workflow in one minute
 
-| Mode | Start command | Best for | Behavior |
-|---|---|---|---|
-| Supervised (default) | `/skill:planforge` | serious/high-risk work | Approve the first mutating scope with `/pf`, then keep work inside that approved scope until a review gate or scope change requires another `/pf` |
-| Unsupervised (fast) | `/skill:planforge-fast` | faster iteration with less oversight | Executes without checkpoint approvals after scope approval |
+Planforge has one public entrypoint:
 
-### Approval gate
+- `/skill:planforge`
 
-| Mode | Behavior |
-|---|---|
-| `/skill:planforge` | Supervised: `/pf` approves mutation scope, then again at review gates or scope changes |
-| `/skill:planforge-fast` | Fast: one scope approval, then unsupervised |
-| `/skill:forge-investigate` | Read-only investigation; no `/pf` |
+In practice, Planforge should:
+1. clarify scope
+2. investigate only as much as needed
+3. produce a compact approval-ready plan packet
+4. request approval before mutation
+5. execute in bounded checkpoints
+6. report verified vs unverified honestly
+7. wait for explicit user acceptance before advancing
 
-Notes:
-- Supervised plans must include review gates before first mutation approval.
-- For small low-risk work, one final review gate is usually enough.
-- Declared closeout work can continue after final review without a full re-plan.
-- Use `/pf status` to inspect current gate state.
+If extra detail would help, Planforge should suggest short optional follow-ups instead of front-loading more ceremony.
 
-Use `/skill:forge-investigate` when the first task is discovery (understanding code reality, tracing dependencies, or reducing unknown unknowns) before implementation.
+## Canonical docs
 
-Use `/skill:forge-resume` to continue deferred follow-up plans from the shared next queue.
-
-### Scope
-
-For now, the forge is built around **Pi**. The docs, extension behavior, and workflow examples assume Pi semantics.
+- Philosophy: [`docs/philosophy.md`](docs/philosophy.md)
+- Workflow: [`docs/flow.md`](docs/flow.md)
+- Pi usage: [`docs/pi.md`](docs/pi.md)
+- Planning packet: [`docs/plan-packet.md`](docs/plan-packet.md)
+- Tooling: [`docs/tooling.md`](docs/tooling.md)
+- Machine contract: [`AGENTS.md`](AGENTS.md)
 
 ## Rolling plans
 
-Each working branch carries its own rolling plan. It is born after approval and updated at meaningful checkpoints so work stays resumable without collapsing into a bloated spec ritual.
+Planforge keeps a lightweight rolling plan per branch under `~/.planforge/` by default.
 
-When work ships, `plan-ship` can mark the plan as `shipped` and append a compact shipment footer (token usage + explicit end line).
+When work ships, `plan-ship` can mark the plan as `shipped` and append a compact shipment footer.
 
-By default, Planforge stores state under `~/.planforge/`. To override that location, set `PLANFORGE_HOME`.
+To override the state location:
+
+```bash
+export PLANFORGE_HOME=/some/other/location
+```
 
 ## Benchmark scoreboard (HN CLI)
 

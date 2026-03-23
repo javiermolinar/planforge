@@ -23,18 +23,6 @@ const STATE_ENTRY_TYPE = "planforge-approval-gate-state";
 
 const STATUS_KEY = "planforge-gate";
 
-function inferBenchmarkModeFromInput(text) {
-  return BENCHMARK_HINT.test(String(text || ""));
-}
-
-function parseBenchmarkToggle(value, fallback) {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (!normalized) return fallback;
-  if (normalized === "on" || normalized === "enable" || normalized === "true" || normalized === "1") return true;
-  if (normalized === "off" || normalized === "disable" || normalized === "false" || normalized === "0") return false;
-  return fallback;
-}
-
 function parsePfArgs(rawArgs) {
   const raw = String(rawArgs || "").trim();
   if (!raw) return { type: "advance" };
@@ -42,20 +30,11 @@ function parsePfArgs(rawArgs) {
   const tokens = raw.split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return { type: "advance" };
 
-  const [first, second] = tokens;
+  const [first] = tokens;
   const sub = String(first || "").toLowerCase();
-
-  if (sub === "benchmark") {
-    return { type: "benchmark", value: String(second || "") };
-  }
 
   if (sub === "status") {
     return { type: "status" };
-  }
-
-  const benchmarkDirect = parseBenchmarkToggle(sub, null);
-  if (benchmarkDirect !== null) {
-    return { type: "benchmark", value: sub };
   }
 
   if (sub === "go" || sub === "continue" || sub === "approve" || sub === "open") {
@@ -78,35 +57,20 @@ function hasReviewGateProposal(text) {
   return REVIEW_GATES_SECTION_HINT.test(normalized) || REVIEW_GATES_TABLE_HINT.test(normalized);
 }
 
+function hasApprovalReadyPlanPacket(text) {
+  const normalized = String(text || "");
+  const hasFullPlanPacket = PLAN_SUMMARY_SECTION_HINT.test(normalized)
+    && TEST_TABLE_SECTION_HINT.test(normalized);
+  const hasCompactPlanPacket = COMPACT_PLAN_SECTION_HINT.test(normalized)
+    && COMPACT_FILES_SECTION_HINT.test(normalized)
+    && COMPACT_VERIFY_SECTION_HINT.test(normalized)
+    && HARNESS_CHECK_SECTION_HINT.test(normalized);
+  return hasReviewGateProposal(normalized) && (hasFullPlanPacket || hasCompactPlanPacket);
+}
+
 function hasReviewPacket(text) {
   const normalized = String(text || "");
   return REVIEW_PACKET_HINT.test(normalized) && REVIEW_PACKET_EVIDENCE_HINT.test(normalized);
-}
-
-function extractMarkdownSection(text, headingPattern) {
-  const normalized = String(text || "");
-  const match = normalized.match(headingPattern);
-  if (!match || match.index == null) return "";
-
-  const rest = normalized.slice(match.index);
-  const nextHeaderIndex = rest.slice(1).search(/\n##\s+/);
-  if (nextHeaderIndex < 0) return rest;
-  return rest.slice(0, nextHeaderIndex + 1);
-}
-
-function parseCloseoutScope(text) {
-  const section = extractMarkdownSection(text, CLOSEOUT_SECTION_HINT);
-  const normalized = String(section || "").toLowerCase();
-  if (!normalized.trim()) return { declared: false, operations: [] };
-
-  const operations = [];
-  if (/doc|generate|regenerate|artifact/.test(normalized)) operations.push("generated-docs");
-  if (/fmt|format|lint|vet|test|verify|verification|smoke|build/.test(normalized)) operations.push("verification");
-  if (/commit/.test(normalized)) operations.push("commit");
-  if (/push/.test(normalized)) operations.push("push");
-  if (/pull request|\bpr\b/.test(normalized)) operations.push("pr");
-
-  return { declared: true, operations: Array.from(new Set(operations)) };
 }
 
 function splitMarkdownRow(line) {
@@ -205,7 +169,7 @@ const DEFAULT_STATE = {
   executionMode: "auto",
   acceptanceState: "none",
   pendingScopeAdvance: false,
-  benchmarkMode: false,
+  revisedPlanRequired: false,
   reviewGatesProposed: false,
   reviewGatesApproved: false,
   reviewGates: [],
@@ -214,9 +178,6 @@ const DEFAULT_STATE = {
   acceptedReviewGates: [],
   scopeKind: "none",
   scopeReason: "",
-  closeoutDeclared: false,
-  closeoutActive: false,
-  closeoutOperations: [],
   updatedAt: 0,
   lastReason: "init",
 };
@@ -227,18 +188,18 @@ const TRIVIAL_ACK =
   /^\s*(ok|okay|k|thanks|thank you|got it|roger|understood|sounds good|great|nice|pf|continue|go ahead|proceed|carry on|keep going|approved|lgtm|ship it|looks good)\s*[.!]*\s*$/i;
 
 const PLANFORGE_SUPERVISED_SKILL_CMD = /^\s*\/skill:planforge\b/i;
-const PLANFORGE_FAST_SKILL_CMD = /^\s*\/skill:planforge-fast\b/i;
-const PLANFORGE_INVESTIGATE_SKILL_CMD = /^\s*\/skill:forge-investigate\b/i;
-const FORGE_SKILL_CMD = /^\s*\/skill:forge-[a-z0-9-]+\b/i;
 const CONTROL_COMMAND = /^\s*\/[a-z0-9:-]+\b/i;
-const BENCHMARK_HINT = /\b(benchmark|scorecard|evaluation|leaderboard)\b/i;
+const COMPACT_PLAN_SECTION_HINT = /(^|\n)##\s*Plan\s*(\n|$)/i;
+const COMPACT_FILES_SECTION_HINT = /(^|\n)##\s*Files\s*(\n|$)/i;
+const COMPACT_VERIFY_SECTION_HINT = /(^|\n)##\s*Verify\s*(\n|$)/i;
+const HARNESS_CHECK_SECTION_HINT = /##\s*Harness\s*Check/i;
+const PLAN_SUMMARY_SECTION_HINT = /##\s*Plan\s*Summary/i;
+const TEST_TABLE_SECTION_HINT = /##\s*Test\s*Table/i;
 const REVIEW_GATES_SECTION_HINT = /##\s*Proposed\s*Review\s*Gates/i;
 const REVIEW_GATES_TABLE_HINT = /\|\s*Gate\s*ID\s*\|\s*Trigger\s*\|\s*Required\s*evidence\s*\|/i;
-const CLOSEOUT_SECTION_HINT = /##\s*Closeout\s*Scope/i;
 const REVIEW_GATES_PUSHBACK_HINT = /\b(review\s+gate|gates?)\b.*\b(change|revise|remove|drop|adjust|one|single|final|only)\b|\b(change|revise|remove|drop|adjust)\b.*\b(review\s+gate|gates?)\b/i;
 const REVIEW_PACKET_HINT = /\bverified\s+vs\s+unverified\b/i;
 const REVIEW_PACKET_EVIDENCE_HINT = /\bevidence\b|\bbuild\b|\bsmoke\b|\bnegative[- ]path\b/i;
-const CLOSEOUT_FOLLOWUP_HINT = /\b(doc(?:s|umentation)?|generate|regenerate|fmt|format|lint|vet|test|verify|verification|commit|push|pull\s+request|\bpr\b|changelog)\b/i;
 
 function isNaturalAcceptance(text) {
   const normalized = String(text || "")
@@ -592,68 +553,6 @@ function isAllowedPreApprovalBash(command) {
   return !analysis.blockedSegment;
 }
 
-function isAllowedCloseoutGitSegment(tokens) {
-  const [, subcmd, third] = tokens;
-  if (isAllowedReadOnlyGitSegment(tokens)) return true;
-  if (subcmd === "add" || subcmd === "commit" || subcmd === "push") return true;
-  if (subcmd === "remote" && (third === "-v" || third === "show")) return true;
-  return false;
-}
-
-function isAllowedCloseoutVerificationSegment(tokens) {
-  const [cmd, subcmd, third] = tokens;
-  const allowedTargets = new Set(["docs", "fmt", "format", "lint", "vet", "test", "build", "check", "verify"]);
-
-  if (cmd === "make") {
-    const targets = tokens.slice(1).filter((token) => token && !token.startsWith("-"));
-    return targets.length > 0 && targets.every((target) => allowedTargets.has(target));
-  }
-
-  if (cmd === "go") return subcmd === "test" || subcmd === "vet" || subcmd === "fmt" || subcmd === "build";
-  if (cmd === "gofmt") return true;
-  if (cmd === "cargo") return subcmd === "test" || subcmd === "fmt" || subcmd === "clippy" || subcmd === "build";
-  if (cmd === "pytest") return true;
-  if (cmd === "python" && subcmd === "-m" && third === "pytest") return true;
-  if (cmd === "uv" && subcmd === "run" && third === "pytest") return true;
-  if ((cmd === "bash" || cmd === "sh") && String(subcmd || "").startsWith("tests/")) return true;
-
-  if (cmd === "npm" || cmd === "pnpm" || cmd === "yarn" || cmd === "bun") {
-    if (subcmd === "test") return true;
-    if (subcmd === "run" || subcmd === "exec") {
-      return tokens.some((token) => allowedTargets.has(token));
-    }
-  }
-
-  return false;
-}
-
-function isAllowedCloseoutSegment(segment) {
-  const trimmed = String(segment || "").trim();
-  if (!trimmed) return true;
-  if (hasBlockedShellMeta(trimmed)) return false;
-
-  const tokens = tokenizeShellWords(trimmed);
-  if (!tokens || tokens.length === 0) return true;
-
-  const [cmd, subcmd] = tokens;
-  if (isAllowedPreApprovalSegment(trimmed)) return true;
-  if (cmd === "git") return isAllowedCloseoutGitSegment(tokens);
-  if (isAllowedCloseoutVerificationSegment(tokens)) return true;
-  if (cmd === "gh" && subcmd === "pr") return true;
-  return false;
-}
-
-function isAllowedCloseoutBash(command) {
-  const analysis = analyzeCommandSegments(command, isAllowedCloseoutSegment);
-  return !analysis.blockedSegment;
-}
-
-function isAllowedCloseoutEditPath(pathValue) {
-  const normalized = String(pathValue || "").trim();
-  if (!normalized) return false;
-  return normalized.endsWith(".md") || normalized.startsWith("docs/") || normalized.startsWith(".github/");
-}
-
 function isAllowedBranchBootstrapSegment(segment) {
   const trimmed = String(segment || "").trim();
   if (!trimmed) return true;
@@ -702,7 +601,7 @@ function normalizeState(raw) {
     executionMode: normalizeExecutionMode(state.executionMode),
     acceptanceState: normalizeAcceptanceState(state.acceptanceState),
     pendingScopeAdvance: Boolean(state.pendingScopeAdvance),
-    benchmarkMode: Boolean(state.benchmarkMode),
+    revisedPlanRequired: Boolean(state.revisedPlanRequired),
     reviewGatesProposed: Boolean(state.reviewGatesProposed),
     reviewGatesApproved: Boolean(state.reviewGatesApproved),
     reviewGates: Array.isArray(state.reviewGates)
@@ -722,11 +621,6 @@ function normalizeState(raw) {
       : [],
     scopeKind: normalizeScopeKind(state.scopeKind),
     scopeReason: String(state.scopeReason || "").trim(),
-    closeoutDeclared: Boolean(state.closeoutDeclared),
-    closeoutActive: Boolean(state.closeoutActive),
-    closeoutOperations: Array.isArray(state.closeoutOperations)
-      ? state.closeoutOperations.map((op) => String(op || "").trim()).filter(Boolean)
-      : [],
     updatedAt: Number.isFinite(state.updatedAt) ? Number(state.updatedAt) : 0,
     lastReason: typeof state.lastReason === "string" ? state.lastReason : "restored",
   };
@@ -741,12 +635,14 @@ function resolveNextReviewGate(state) {
 
 function buildContinuationMessage(gateState) {
   const scope = Math.max(1, gateState?.scopeVersion || 1);
-  const scopeDescriptor = gateState?.closeoutActive ? "closeout checkpoint" : "checkpoint";
   const scopeKind = normalizeScopeKind(gateState?.scopeKind) || "implementation";
-  return `Continue with the approved ${scopeDescriptor}. Scope v${scope} is approved. Scope kind: ${scopeKind}. Review gates: ${summarizeReviewGates(gateState)}. Next review gate: ${nextReviewGateLabel(gateState)}. Execute only currently approved work and report evidence.`;
+  return `Continue with the approved checkpoint. Scope v${scope} is approved. Scope kind: ${scopeKind}. Review gates: ${summarizeReviewGates(gateState)}. Next review gate: ${nextReviewGateLabel(gateState)}. Execute only currently approved work and report evidence.`;
 }
 
 function buildPreApprovalGateHint(gateState) {
+  if (gateState?.revisedPlanRequired) {
+    return "A revised plan is required before /pf can approve mutation. Re-post the updated Plan Packet with Proposed Review Gates, then use /pf. Use /pf status for details.";
+  }
   if (!gateState?.reviewGatesProposed || !Array.isArray(gateState?.reviewGates) || gateState.reviewGates.length === 0) {
     return "No review gates parsed yet. Post the Plan Packet with Proposed Review Gates, then use /pf. Use /pf status for details.";
   }
@@ -771,15 +667,6 @@ function buildBashBlockReason(gateState, command) {
   return parts.join(" ");
 }
 
-function buildCloseoutBlockReason(state, detail) {
-  const scope = Math.max(1, state?.scopeVersion || 1);
-  return `Planforge closeout scope v${scope} only allows declared closeout work (docs/generated artifacts, mandated verification, commit, push, PR prep). ${detail} Re-plan and request /pf again before new implementation edits.`;
-}
-
-function isMinorCloseoutFollowup(text) {
-  return CLOSEOUT_FOLLOWUP_HINT.test(String(text || ""));
-}
-
 function buildOverlayLines(state) {
   const gates = Array.isArray(state.reviewGates) ? state.reviewGates : [];
   const accepted = new Set(Array.isArray(state.acceptedReviewGates) ? state.acceptedReviewGates : []);
@@ -791,14 +678,11 @@ function buildOverlayLines(state) {
     `Execution mode: ${normalizeExecutionMode(state.executionMode)}`,
     `Scope kind: ${normalizeScopeKind(state.scopeKind) || "none"}`,
     `Scope reason: ${state.scopeReason || "(not recorded)"}`,
-    `Benchmark profile: ${state.benchmarkMode ? "on" : "off"}`,
+    `Revised plan required: ${state.revisedPlanRequired ? "yes" : "no"}`,
     `Review gates proposed: ${state.reviewGatesProposed ? "yes" : "no"}`,
     `Review gates approved: ${state.reviewGatesApproved ? "yes" : "no"}`,
     `Scope version: v${Math.max(1, state.scopeVersion || 1)}`,
     `Scenario acceptance: ${normalizeAcceptanceState(state.acceptanceState)}`,
-    `Closeout declared: ${state.closeoutDeclared ? "yes" : "no"}`,
-    `Closeout active: ${state.closeoutActive ? "yes" : "no"}`,
-    `Closeout ops: ${Array.isArray(state.closeoutOperations) && state.closeoutOperations.length > 0 ? state.closeoutOperations.join(", ") : "none parsed"}`,
     "",
     "Review gates:",
   ];
@@ -820,10 +704,8 @@ function buildOverlayLines(state) {
     "",
     "Commands:",
     "- /pf",
-    "- /pf benchmark [on|off]",
     "- /pf status",
     "",
-    "Declared closeout lanes allow bounded docs/verification/commit/push/PR follow-up after final review.",
     "Esc / Enter / q to close"
   );
 
@@ -895,9 +777,13 @@ export default function (pi) {
     }
   }
 
+  function inactivePlanforgeMessage() {
+    return "Planforge is not active in this session. Start with /skill:planforge.";
+  }
+
   async function openStatusOverlay(ctx) {
     if (!isPlanforgeActive(state)) {
-      const message = "Planforge is not active in this session. Start with /skill:planforge, /skill:planforge-fast, or /skill:forge-investigate.";
+      const message = inactivePlanforgeMessage();
       if (!ctx?.hasUI) {
         pi.sendUserMessage(message);
         return;
@@ -936,13 +822,11 @@ export default function (pi) {
       scopeVersion: scope,
       acceptanceState: "accepted",
       pendingScopeAdvance: false,
+      revisedPlanRequired: false,
       reviewGatesApproved: Boolean(state.reviewGatesProposed),
       currentReviewGateId: "",
       scopeKind: overrides.scopeKind || state.scopeKind || "implementation",
       scopeReason: overrides.scopeReason || state.scopeReason || "Approved current scope.",
-      closeoutActive: Boolean(overrides.closeoutActive),
-      closeoutDeclared: overrides.closeoutDeclared ?? state.closeoutDeclared,
-      closeoutOperations: Array.isArray(overrides.closeoutOperations) ? overrides.closeoutOperations : state.closeoutOperations,
     };
     setState(
       nextState,
@@ -978,6 +862,7 @@ export default function (pi) {
         scopeVersion: currentScope,
         acceptanceState: "none",
         pendingScopeAdvance: true,
+        revisedPlanRequired: true,
         reviewGatesProposed: state.reviewGatesProposed,
         reviewGatesApproved: false,
         reviewGates: Array.isArray(state.reviewGates) ? state.reviewGates : [],
@@ -986,9 +871,6 @@ export default function (pi) {
         acceptedReviewGates: Array.isArray(state.acceptedReviewGates) ? state.acceptedReviewGates : [],
         scopeKind: "replan",
         scopeReason: message || "Scope changed and requires a revised plan.",
-        closeoutDeclared: state.closeoutDeclared,
-        closeoutActive: false,
-        closeoutOperations: Array.isArray(state.closeoutOperations) ? state.closeoutOperations : [],
       },
       reason,
       ctx,
@@ -1011,9 +893,7 @@ export default function (pi) {
       "scenario-accepted",
       ctx,
       "success",
-      state.closeoutDeclared
-        ? "Scenario accepted. /pf can now approve the next implementation or declared closeout scope."
-        : "Scenario accepted. Ask for the next checkpoint, then use /pf again to approve mutation."
+      "Scenario accepted. Ask for the next checkpoint, then use /pf again to approve mutation."
     );
   }
 
@@ -1030,49 +910,10 @@ export default function (pi) {
     );
   }
 
-  function handleBenchmarkCommand(ctx, explicitValue, viaInput = false) {
-    const nextValue = parseBenchmarkToggle(explicitValue, true);
-    if (state.benchmarkMode === nextValue) {
-      if (ctx?.hasUI) {
-        ctx.ui.notify(
-          `Planforge benchmark profile is already ${nextValue ? "on" : "off"}.`,
-          "info"
-        );
-      }
-      return;
-    }
-
-    setState(
-      {
-        benchmarkMode: nextValue,
-      },
-      viaInput ? "benchmark-command-input" : "benchmark-command",
-      ctx,
-      "info",
-      `Planforge benchmark profile ${nextValue ? "enabled" : "disabled"}.`
-    );
-  }
-
   function handleContinue(ctx) {
     const mode = normalizeExecutionMode(state.executionMode);
 
-    if (mode === "none") {
-      ctx.ui.notify(
-        "Planforge is in investigation mode. /pf is not needed for read-only investigation.",
-        "info"
-      );
-      return;
-    }
-
     if (!state.enabled) {
-      if (mode === "fast") {
-        ctx.ui.notify(
-          "Planforge is in fast mode. Switch to /skill:planforge if you want supervised approvals.",
-          "info"
-        );
-        return;
-      }
-
       setState(
         {
           enabled: true,
@@ -1081,6 +922,7 @@ export default function (pi) {
           executionMode: mode === "auto" ? "supervised" : mode,
           acceptanceState: "accepted",
           pendingScopeAdvance: false,
+          revisedPlanRequired: false,
           reviewGatesProposed: false,
           reviewGatesApproved: false,
           reviewGates: [],
@@ -1089,7 +931,6 @@ export default function (pi) {
           acceptedReviewGates: [],
           scopeKind: "implementation",
           scopeReason: "Awaiting first supervised approval.",
-          closeoutActive: false,
         },
         "continue-auto-enable",
         ctx,
@@ -1108,7 +949,6 @@ export default function (pi) {
         const currentGateId = String(state.currentReviewGateId || "");
         if (currentGateId) accepted.add(currentGateId);
         const nextGate = resolveNextReviewGate({ ...state, acceptedReviewGates: Array.from(accepted) });
-        const enteringCloseout = !nextGate.gate && state.closeoutDeclared;
         setState(
           {
             enabled: true,
@@ -1116,21 +956,17 @@ export default function (pi) {
             scopeVersion: nextScope,
             acceptanceState: "accepted",
             pendingScopeAdvance: false,
+            revisedPlanRequired: false,
             currentReviewGateId: "",
             acceptedReviewGates: Array.from(accepted),
             reviewGateCursor: nextGate.index >= 0 ? nextGate.index : Math.max(0, state.reviewGates.length),
-            scopeKind: enteringCloseout ? "closeout" : "implementation",
-            scopeReason: enteringCloseout
-              ? "Accepted final review gate; entered declared closeout scope."
-              : `Accepted review gate${currentGateId ? ` ${currentGateId}` : ""}; next implementation scope approved.`,
-            closeoutActive: enteringCloseout,
+            scopeKind: "implementation",
+            scopeReason: `Accepted review gate${currentGateId ? ` ${currentGateId}` : ""}; next implementation scope approved.`,
           },
-          enteringCloseout ? "continue-closeout-scope" : "continue-next-review-gate",
+          "continue-next-review-gate",
           ctx,
           "success",
-          enteringCloseout
-            ? `Review accepted and closeout scope approved (v${nextScope}).`
-            : `Review accepted and next scope approved (v${nextScope}).`
+          `Review accepted and next scope approved (v${nextScope}).`
         );
       }
       return;
@@ -1144,21 +980,20 @@ export default function (pi) {
     approveCurrentScope(ctx, "continue-command", true, {
       scopeKind: "implementation",
       scopeReason: state.scopeReason || "Approved implementation scope.",
-      closeoutActive: false,
     });
   }
 
   function shouldAutoContinueAfterApproval() {
-    const mode = normalizeExecutionMode(state.executionMode);
     const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
-    if (mode === "none") return false;
     return state.enabled && state.approved && acceptanceState === "accepted";
   }
 
   function isReviewGateProposalRequiredForApproval() {
-    const mode = normalizeExecutionMode(state.executionMode);
-    if (mode === "none") return false;
     return state.enabled && !state.approved && (!state.reviewGatesProposed || !Array.isArray(state.reviewGates) || state.reviewGates.length === 0);
+  }
+
+  function isRevisedPlanRequiredForApproval() {
+    return state.enabled && !state.approved && Boolean(state.revisedPlanRequired);
   }
 
   function triggerAutoContinueFromExtension() {
@@ -1175,24 +1010,37 @@ export default function (pi) {
   });
 
   pi.registerCommand("pf", {
-    description: "Planforge control command: advance gate (/pf), toggle benchmark (/pf benchmark on|off), or check usage",
+    description: "Planforge control command: advance gate (/pf) or inspect status (/pf status)",
     handler: async (args, ctx) => {
       const raw = String(args?.raw || args?.text || args?.input || "").trim();
       const parsed = parsePfArgs(raw);
-
-      if (parsed.type === "benchmark") {
-        handleBenchmarkCommand(ctx, parsed.value, false);
-        return;
-      }
 
       if (parsed.type === "status") {
         await openStatusOverlay(ctx);
         return;
       }
 
+      if (!isPlanforgeActive(state)) {
+        const message = inactivePlanforgeMessage();
+        if (ctx?.hasUI) ctx.ui.notify(message, "warning");
+        else pi.sendUserMessage(message);
+        return;
+      }
+
       if (parsed.type === "unknown") {
         if (ctx?.hasUI) {
-          ctx.ui.notify("Unknown /pf subcommand. Use /pf, /pf benchmark on|off, or /pf status.", "warning");
+          ctx.ui.notify("Unknown /pf subcommand. Use /pf or /pf status.", "warning");
+        }
+        return;
+      }
+
+      if (isRevisedPlanRequiredForApproval()) {
+        const message =
+          "A revised plan is required. Re-post the updated Plan Packet and Proposed Review Gates before approving mutation.";
+        if (ctx?.hasUI) {
+          ctx.ui.notify(message, "warning");
+        } else {
+          pi.sendUserMessage("Please re-post the updated Plan Packet with a fresh '## Proposed Review Gates' section before requesting /pf again.");
         }
         return;
       }
@@ -1220,36 +1068,6 @@ export default function (pi) {
       return { action: "continue" };
     }
 
-    if (PLANFORGE_FAST_SKILL_CMD.test(text)) {
-      setState(
-        {
-          enabled: false,
-          approved: false,
-          scopeVersion: 0,
-          executionMode: "fast",
-          acceptanceState: "none",
-          pendingScopeAdvance: false,
-          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
-          reviewGatesProposed: false,
-          reviewGatesApproved: false,
-          reviewGates: [],
-          reviewGateCursor: 0,
-          currentReviewGateId: "",
-          acceptedReviewGates: [],
-          scopeKind: "none",
-          scopeReason: "Fast mode active.",
-          closeoutDeclared: false,
-          closeoutActive: false,
-          closeoutOperations: [],
-        },
-        "switch-planforge-fast",
-        ctx,
-        "info",
-        "Planforge fast mode detected. Approval gate is off."
-      );
-      return { action: "continue" };
-    }
-
     if (PLANFORGE_SUPERVISED_SKILL_CMD.test(text)) {
       setState(
         {
@@ -1259,7 +1077,7 @@ export default function (pi) {
           executionMode: "supervised",
           acceptanceState: "accepted",
           pendingScopeAdvance: false,
-          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
+          revisedPlanRequired: false,
           reviewGatesProposed: false,
           reviewGatesApproved: false,
           reviewGates: [],
@@ -1268,9 +1086,6 @@ export default function (pi) {
           acceptedReviewGates: [],
           scopeKind: "implementation",
           scopeReason: "Awaiting supervised approval.",
-          closeoutDeclared: false,
-          closeoutActive: false,
-          closeoutOperations: [],
         },
         "switch-planforge-supervised",
         ctx,
@@ -1280,83 +1095,35 @@ export default function (pi) {
       return { action: "continue" };
     }
 
-    if (PLANFORGE_INVESTIGATE_SKILL_CMD.test(text)) {
-      setState(
-        {
-          enabled: false,
-          approved: false,
-          scopeVersion: 0,
-          executionMode: "none",
-          acceptanceState: "none",
-          pendingScopeAdvance: false,
-          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
-          reviewGatesProposed: false,
-          reviewGatesApproved: false,
-          reviewGates: [],
-          reviewGateCursor: 0,
-          currentReviewGateId: "",
-          acceptedReviewGates: [],
-          scopeKind: "none",
-          scopeReason: "Investigation mode is read-only.",
-          closeoutDeclared: false,
-          closeoutActive: false,
-          closeoutOperations: [],
-        },
-        "switch-forge-investigate",
-        ctx,
-        "info",
-        "Investigation mode detected. Read-only guard is active; mutation requires switching skills."
-      );
-      return { action: "continue" };
-    }
-
-    if (!state.enabled && FORGE_SKILL_CMD.test(text) && normalizeExecutionMode(state.executionMode) !== "fast") {
-      setState(
-        {
-          enabled: true,
-          approved: false,
-          scopeVersion: 1,
-          executionMode: "supervised",
-          acceptanceState: "accepted",
-          pendingScopeAdvance: false,
-          benchmarkMode: inferBenchmarkModeFromInput(text) || state.benchmarkMode,
-          reviewGatesProposed: false,
-          reviewGatesApproved: false,
-          reviewGates: [],
-          reviewGateCursor: 0,
-          currentReviewGateId: "",
-          acceptedReviewGates: [],
-          scopeKind: "implementation",
-          scopeReason: "Awaiting supervised approval.",
-          closeoutDeclared: false,
-          closeoutActive: false,
-          closeoutOperations: [],
-        },
-        "auto-enable-forge-skill",
-        ctx,
-        "info",
-        "Planforge gate enabled for this session. Awaiting /pf before mutation."
-      );
-    }
-
     const pfMatch = text.match(PF_COMMAND);
     if (pfMatch) {
       const parsed = parsePfArgs(pfMatch[1]);
-
-      if (parsed.type === "benchmark") {
-        handleBenchmarkCommand(ctx, parsed.value, true);
-        return { action: "continue" };
-      }
 
       if (parsed.type === "status") {
         await openStatusOverlay(ctx);
         return { action: "handled" };
       }
 
+      if (!isPlanforgeActive(state)) {
+        return {
+          action: "transform",
+          text: inactivePlanforgeMessage(),
+          images: event?.images,
+        };
+      }
+
       if (parsed.type === "unknown") {
         return {
           action: "transform",
-          text: "Unknown /pf subcommand. Use /pf, /pf benchmark on|off, or /pf status.",
+          text: "Unknown /pf subcommand. Use /pf or /pf status.",
+          images: event?.images,
+        };
+      }
+
+      if (isRevisedPlanRequiredForApproval()) {
+        return {
+          action: "transform",
+          text: "Before approving mutation, re-post the updated Plan Packet with a fresh '## Proposed Review Gates' section.",
           images: event?.images,
         };
       }
@@ -1378,18 +1145,6 @@ export default function (pi) {
         };
       }
       return { action: "handled" };
-    }
-
-    if (!state.benchmarkMode && inferBenchmarkModeFromInput(text) && !CONTROL_COMMAND.test(text)) {
-      setState(
-        {
-          benchmarkMode: true,
-        },
-        "benchmark-auto-detected",
-        ctx,
-        "info",
-        "Planforge benchmark profile enabled from prompt context."
-      );
     }
 
     if (!state.enabled) {
@@ -1432,9 +1187,6 @@ export default function (pi) {
           reviewGateCursor: 0,
           currentReviewGateId: "",
           acceptedReviewGates: [],
-          closeoutDeclared: false,
-          closeoutActive: false,
-          closeoutOperations: [],
         },
         "review-gates-pushback",
         ctx,
@@ -1445,26 +1197,11 @@ export default function (pi) {
     }
 
     if (state.approved && text && !TRIVIAL_ACK.test(text)) {
-      if (state.closeoutActive && isMinorCloseoutFollowup(text)) {
-        setState(
-          {
-            scopeKind: "closeout",
-            scopeReason: `Closeout follow-up accepted: ${text}`,
-          },
-          "closeout-followup-allowed",
-          ctx,
-          "info",
-          "Closeout follow-up accepted inside the approved closeout scope."
-        );
-      } else {
-        invalidateForScopeChange(
-          ctx,
-          "user-followup-invalidated-approval",
-          state.closeoutActive
-            ? "Planforge gate: requested follow-up is outside the declared closeout scope. Re-plan + request explicit re-approval before mutation."
-            : "Planforge gate: user follow-up invalidated prior approval. Re-plan + request explicit re-approval before mutation."
-        );
-      }
+      invalidateForScopeChange(
+        ctx,
+        "user-followup-invalidated-approval",
+        "Planforge gate: user follow-up invalidated prior approval. Re-plan + request explicit re-approval before mutation."
+      );
     }
 
     return { action: "continue" };
@@ -1476,28 +1213,29 @@ export default function (pi) {
 
     if (hasReviewGateProposal(assistantText)) {
       const parsedGates = parseReviewGates(assistantText);
-      const closeout = parseCloseoutScope(assistantText);
+      const approvalReadyPlanPacket = hasApprovalReadyPlanPacket(assistantText);
+      const revisedPlanStillRequired = Boolean(state.revisedPlanRequired) && !approvalReadyPlanPacket;
       if (parsedGates.length > 0) {
         setState(
           {
             reviewGatesProposed: true,
             reviewGatesApproved: false,
+            revisedPlanRequired: revisedPlanStillRequired,
             reviewGates: parsedGates,
             reviewGateCursor: 0,
             currentReviewGateId: "",
             acceptedReviewGates: [],
-            closeoutDeclared: closeout.declared,
-            closeoutActive: false,
-            closeoutOperations: closeout.operations,
             scopeKind: "implementation",
-            scopeReason: closeout.declared
-              ? "Plan proposed with declared closeout scope."
+            scopeReason: revisedPlanStillRequired
+              ? "Review gates updated, but a revised plan packet is still required before approval."
               : "Plan proposed and awaiting approval.",
           },
-          "review-gates-proposed",
+          approvalReadyPlanPacket ? "review-gates-proposed" : "review-gates-updated-without-plan-packet",
           ctx,
           "info",
-          `Review gates proposed in plan (${parsedGates.length}): ${parsedGates.map((gate) => gate.id).join(", ")}.${closeout.declared ? ` Closeout scope declared: ${closeout.operations.join(", ") || "none parsed"}.` : ""} User can push back before approving mutation.`
+          revisedPlanStillRequired
+            ? `Review gates updated (${parsedGates.map((gate) => gate.id).join(", ")}), but a revised Plan Packet is still required before approval.`
+            : `Review gates proposed in plan (${parsedGates.length}): ${parsedGates.map((gate) => gate.id).join(", ")}. User can push back before approving mutation.`
         );
       }
     }
@@ -1534,7 +1272,6 @@ export default function (pi) {
             scopeReason: reachedGate
               ? `Review gate ${reachedGate.id} reached and awaiting acceptance.`
               : "Review packet reached and awaiting acceptance.",
-            closeoutActive: false,
           },
           "review-gate-reached",
           ctx,
@@ -1550,21 +1287,8 @@ export default function (pi) {
   pi.on("before_agent_start", async (event, ctx) => {
     const mode = normalizeExecutionMode(state.executionMode);
 
-    if (mode === "none") {
-      return {
-        systemPrompt: `${event.systemPrompt}\n\n[Planforge investigation mode]\nRead-only investigation is active. Do not call mutating tools (edit/write/mutating bash). If implementation is needed, ask to switch skills first.`,
-      };
-    }
-
-    const benchmarkNote = state.benchmarkMode
-      ? "[Planforge benchmark profile]\nBenchmark mode is ON. Keep scope strict and avoid unrequested docs churn. Do not claim completion until you report: (1) build/test command result, (2) functional smoke command result, and (3) one negative-path check result. End with explicit verified vs unverified evidence."
-      : "";
-
     if (!state.enabled) {
-      if (!benchmarkNote) return;
-      return {
-        systemPrompt: `${event.systemPrompt}\n\n${benchmarkNote}`,
-      };
+      return;
     }
 
     const acceptanceState = normalizeAcceptanceState(state.acceptanceState);
@@ -1576,16 +1300,14 @@ export default function (pi) {
           : "";
 
     const currentBranch = detectCurrentBranch();
-    const branchNote = !state.closeoutActive && isTrunkLikeBranch(currentBranch)
+    const branchNote = isTrunkLikeBranch(currentBranch)
       ? state.approved
         ? `Current branch is '${currentBranch}'. Before implementation edits, create or switch to a task branch.`
         : `Current branch is '${currentBranch}'. After scope approval and before implementation edits, create or switch to a task branch.`
       : "";
 
     const gateNote = state.approved
-      ? state.closeoutActive
-        ? `Current approved closeout scope (v${state.scopeVersion}) is active. Stay inside declared closeout work only: ${state.closeoutOperations.join(", ") || "docs/verification/commit/push/PR"}.`
-        : `Current approved scope (v${state.scopeVersion}) is active. Mutating tools are allowed until the next review gate is reached.`
+      ? `Current approved scope (v${state.scopeVersion}) is active. Mutating tools are allowed until the next review gate is reached.`
       : `Current mutating scope (v${Math.max(1, state.scopeVersion || 1)}) is NOT approved. Request /pf before calling mutating tools.`;
 
     const nextGate = resolveNextReviewGate(state).gate;
@@ -1594,24 +1316,15 @@ export default function (pi) {
       : "Review gates: none parsed yet.";
 
     const reviewGateNote = !state.reviewGatesProposed && !state.approved
-      ? "Before requesting /pf for first mutation, include a '## Proposed Review Gates' section with Gate ID, Trigger, Required evidence, and Why this gate. Also extract repo obligations and declare a bounded '## Closeout Scope' when trailing work is predictable."
+      ? "Before requesting /pf for first mutation, include a '## Proposed Review Gates' section with Gate ID, Trigger, Required evidence, and Why this gate. Also extract repo obligations up front."
       : state.reviewGatesProposed && !state.reviewGatesApproved && !state.approved
         ? "Review gates are proposed but not yet approved. Ask the user to accept or adjust them before mutating work."
         : nextGate
           ? `Next review gate: ${nextGate.id}. When presenting the review packet for this gate, include line 'REVIEW_GATE_REACHED: ${nextGate.id}'.`
-          : state.closeoutDeclared
-            ? `No further review gates remain. If final acceptance is granted, the declared closeout lane may handle: ${state.closeoutOperations.join(", ") || "docs/verification/commit/push/PR"}.`
-            : "";
-
-    const closeoutNote = state.closeoutDeclared
-      ? `Declared closeout lane: ${state.closeoutOperations.join(", ") || "docs/verification/commit/push/PR"}. New source edits invalidate it.`
-      : "";
-
-    const compactPlanNote =
-      "Keep plan/review output compact by default for small or low-risk scopes: prefer short Plan, Files, Verify, and Proposed Review Gates sections over giant tables. Surface Red Flags only when they are real and actionable. At review gates, prefer a short Summary, Diff, Verify, and optional Red Flags block before any detailed ledger. Offer numbered follow-up detail when useful: 'Want more detail? Reply with a number: 1. Architecture 2. Complexity 3. Files 4. Verification 5. Red flags 6. Full plan.'";
+          : "";
 
     return {
-      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}${branchNote ? `\n${branchNote}` : ""}\n${acceptanceNote}\n${reviewGateSummary}\n${reviewGateNote}${closeoutNote ? `\n${closeoutNote}` : ""}\n${compactPlanNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.${benchmarkNote ? `\n\n${benchmarkNote}` : ""}`,
+      systemPrompt: `${event.systemPrompt}\n\n[Planforge approval gate]\n${gateNote}${branchNote ? `\n${branchNote}` : ""}\n${acceptanceNote}\n${reviewGateSummary}\n${reviewGateNote}\nIf scope changes or the user pushes back, re-post a revised plan summary + updated tests and request re-approval before mutating actions.`,
     };
   });
 
@@ -1621,44 +1334,19 @@ export default function (pi) {
     const bashCommand = String(event?.input?.command || "");
     const isMutatingCall = isMutatingToolCall(event);
 
-    if (mode === "none") {
-      if (isMutatingCall) {
-        const reason =
-          "Planforge investigate mode is read-only. Switch to /skill:planforge or /skill:planforge-fast before mutating tools.";
-        if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
-        return { block: true, reason };
-      }
-      return;
-    }
-
     if (!state.enabled) {
       return;
     }
 
     if (state.approved) {
-      if (!state.closeoutActive) {
-        const currentBranch = detectCurrentBranch();
-        if (isTrunkLikeBranch(currentBranch)) {
-          if (toolName === "bash" && isAllowedBranchBootstrapBash(bashCommand)) {
-            return;
-          }
-          if (toolName === "edit" || toolName === "write" || (toolName === "bash" && isMutatingCall)) {
-            const reason = buildBranchPolicyBlockReason(currentBranch);
-            if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
-            return { block: true, reason };
-          }
+      const currentBranch = detectCurrentBranch();
+      if (isTrunkLikeBranch(currentBranch)) {
+        if (toolName === "bash" && isAllowedBranchBootstrapBash(bashCommand)) {
+          return;
         }
-      }
-
-      if (state.closeoutActive) {
-        if ((toolName === "edit" || toolName === "write") && !isAllowedCloseoutEditPath(event?.input?.path)) {
-          const reason = buildCloseoutBlockReason(state, `Blocked ${toolName} on non-doc path '${String(event?.input?.path || "")}'.`);
-          invalidateForScopeChange(ctx, "closeout-source-edit-blocked", reason);
-          return { block: true, reason };
-        }
-        if (toolName === "bash" && !isAllowedCloseoutBash(bashCommand)) {
-          const reason = buildCloseoutBlockReason(state, `Blocked bash segment outside closeout lane.`);
-          invalidateForScopeChange(ctx, "closeout-bash-blocked", reason);
+        if (toolName === "edit" || toolName === "write" || (toolName === "bash" && isMutatingCall)) {
+          const reason = buildBranchPolicyBlockReason(currentBranch);
+          if (ctx?.hasUI) ctx.ui.notify(reason, "warning");
           return { block: true, reason };
         }
       }

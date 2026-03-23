@@ -15,21 +15,16 @@ Planforge uses two layers of integration testing:
 - Deterministic tests catch structural regressions quickly and cheaply.
 - Live Pi tests catch orchestration drift across skills, extension state, prompts, and tool behavior.
 
-## Live E2E: 3-mode iteration
+## Live E2E: supervised iteration
 
-`tests/test-pi-e2e-modes.sh` runs three scenarios against a non-trivial fixture (`tests/fixtures/nontrivial-calc`):
+`tests/test-pi-e2e-modes.sh` runs a supervised scenario against a non-trivial fixture (`tests/fixtures/nontrivial-calc`):
 
-1. `forge-investigate` (read-only)
-   - asks for implementation anyway
-   - asserts repository remains unchanged
-2. `planforge` (supervised)
+1. `planforge`
    - asserts no mutation before `/pf`
    - asserts response explicitly requests `/pf`
    - asserts review gates are proposed before approval
    - asserts the approved continuation message records scope + review-gate context after `/pf`
-3. `planforge-fast` (unsupervised)
-   - starts with explicit scope approval in prompt
-   - expects convergence without `/pf`
+   - continues the supervised loop to passing tests without drifting into the review-revision path
 
 ## Live E2E: supervised pushback flow
 
@@ -54,7 +49,7 @@ bash tests/test-pi-e2e-pushback.sh
 Optional controls:
 
 ```bash
-PLANFORGE_E2E_MAX_SUPERVISED_TURNS=12 PLANFORGE_E2E_MAX_FAST_TURNS=6 bash tests/test-pi-e2e-modes.sh
+PLANFORGE_E2E_MAX_SUPERVISED_TURNS=12 PLANFORGE_E2E_MAX_SUPERVISED_WORK_TURNS=8 bash tests/test-pi-e2e-modes.sh
 PLANFORGE_E2E_MAX_PLAN_PUSHBACK_TURNS=2 PLANFORGE_E2E_MAX_APPROVAL_TURNS=4 bash tests/test-pi-e2e-pushback.sh
 PLANFORGE_KEEP_E2E_WORKDIR=1 bash tests/test-pi-e2e-modes.sh
 PLANFORGE_KEEP_E2E_WORKDIR=1 bash tests/test-pi-e2e-pushback.sh

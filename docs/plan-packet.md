@@ -5,164 +5,82 @@ Use this as the single source of truth for planning output across Planforge skil
 ## How to use
 
 - Always follow `docs/philosophy.md` when filling this packet.
-- Keep content concise but complete.
-- Default to the smallest plan shape that still keeps scope, verification, and approval boundaries explicit.
-- For small or obvious scopes, prefer the compact packet below instead of verbose tables.
-- Do not request mutation/implementation approval until all required information for the current scope is present.
-- If scope changes, re-issue the packet (at least updated Plan Summary + Test Table + Harness Check).
+- Keep content concise and approval-ready.
+- Start with the compact packet below for all non-trivial work.
+- Offer optional numbered follow-up detail when it would help, but do not force expanded ceremony for ordinary scopes.
+- If scope changes, re-issue the packet with updated plan, files, verify steps, and review gates.
+- If the work is materially risky, ambiguous, or crosses tricky boundaries, expand the packet before asking for approval.
 - Extract repo obligations up front from local evidence such as `AGENTS.md`, contributing docs, build files, and obvious generated-artifact workflows.
+- TDD belongs to implementation, not to the packet. Mention it only as an implementation note when it would materially help.
 
-## Compact default (small / low-risk scopes)
+## Compact default (approval-ready)
 
-Use this by default when the work is small, local, and low-risk.
+Use this by default.
 
 ```md
 ## Plan
-- 2-4 bullets on what will be done / not done
+- short bullets on the intended change
+- step order if useful
 
 ## Files
-- short list of exact files, or likely areas when exact paths are not known yet
+- exact files or likely touch points
 
 ## Verify
-- 1-3 concrete checks
+- concrete checks / commands
+- expected result
 
-## Red Flags (only if any)
-- short bullets for meaningful risks, ambiguities, or complexity traps
+## Assumptions / Risks
+- only include this section when there is something real to say
 
 ## Proposed Review Gates
 | Gate ID | Trigger | Required evidence | Why this gate |
 |---|---|---|---|
 
-## Harness Check
-- Philosophy loaded from `docs/philosophy.md`: yes/no
-- Principles driving this plan (2-3):
-- Next allowed action: <read-only | mutate after approval>
-- Scope approval required now: yes/no
-- TDD required for this scope: yes/no
-
-Want more detail? Reply with a number:
+Want more detail? Reply with:
 1. Architecture
-2. Complexity
-3. Files
-4. Verification
-5. Red flags
-6. Full plan
+2. Risks / assumptions
+3. File touch map
+4. Verification details
+5. Full expanded plan
 ```
 
 Rules:
-- Keep the default response short; do not dump the full packet unless risk/scope warrants it or the user asks.
-- If a decision is non-obvious, include a terse architecture/complexity note inline or expand on request.
-- Surface red flags in compact mode only when they are real and actionable; omit the section when there are none.
-- Keep Proposed Review Gates explicit even in compact mode.
-- Use one final review gate by default for small, low-risk scopes.
+- The compact packet must be enough for approval on normal low-risk work.
+- Omit `## Assumptions / Risks` when there are no meaningful assumptions or risks.
+- Prefer 1-3 meaningful review gates.
+- Prefer a single final gate for small, low-risk work.
+- Avoid per-command approvals.
 
-## Full packet sections (use when scope/risk warrants)
+## Expand when needed
+
+Add detail before approval when the task is materially risky, ambiguous, or crosses tricky boundaries.
+
+Useful expansions include:
 
 ```md
-## Plan Summary
-- What I will do:
-- What I will not do:
-- Step order (1..N):
+## Architecture / Tradeoffs
+- options considered
+- chosen approach
+- why this is the simplest acceptable path now
 
 ## File Touch Map
-| Path | Action (create/modify/test/docs) | Responsibility | Interface/contract impact |
+| Path | Action | Responsibility | Interface/contract impact |
 |---|---|---|---|
-
-## Assumptions
-| Assumption | Category | Evidence | Risk if wrong | Validation plan | Status |
-|---|---|---|---|---|---|
-
-## Architecture Justification
-| Decision area | Options considered | Chosen option | Why this choice now | Impact |
-|---|---|---|---|---|
-
-## Tradeoff Highlights
-| Tradeoff | Option favored | Benefit | Cost | Why acceptable now |
-|---|---|---|---|---|
-
-## Architecture/Tradeoff Quality Rubric
-| Check | Pass/Fail | Evidence |
-|---|---|---|
-| Architectural boundaries are explicit |  |  |
-| Data flow is explicit across touched components |  |  |
-| Error-handling at boundaries is explicit |  |  |
-| At least two alternatives considered for major decisions |  |  |
-| Tradeoffs include benefits and costs |  |  |
-| Time-horizon rationale is explicit (why now) |  |  |
-| Red-flag exposure mapped to mitigation |  |  |
-
-## Implementation Step Ledger
-| Step ID | Goal | Planned evidence | User acceptance check | Status | Notes |
-|---|---|---|---|---|---|
 
 ## Repo Obligations
 | Obligation | Source | Trigger | Planned handling | Status |
 |---|---|---|---|---|
 
-## Test Table
+## Verification Details
 | Scenario | Test command/check | Expected result | Evidence |
 |---|---|---|---|
 
 ## Baseline Verification Exceptions
 | Item | Category (baseline/new/unverified) | Evidence | Planned handling | Status |
 |---|---|---|---|---|
-
-## Generated Artifacts Policy
-| Artifact/file class | Generation source | Decision (include/isolate/exclude/investigate) | Rationale |
-|---|---|---|---|
-
-## Closeout Scope
-- Allowed trailing operations:
-- Allowed file classes / paths:
-- Invalidates closeout lane if:
-- Final closeout evidence to report:
-
-## Proposed Review Gates
-| Gate ID | Trigger | Required evidence | Why this gate |
-|---|---|---|---|
-
-Rules:
-- Propose 1-3 review gates for the current scope.
-- Prefer meaningful review boundaries over per-command approvals.
-- For small, low-risk scopes, prefer a single final review gate unless the work clearly benefits from more slicing.
-- Human may accept, remove, merge, or edit gates before mutation approval.
-- If closeout work is predictable (docs regen, mandated verification, commit, push, PR drafting), declare it here instead of forcing an implicit follow-up re-plan.
-
-## Red Flags / Broken Windows
-- Relevant red flags from `docs/philosophy.md`:
-- One local cleanup now OR explicit follow-up log:
-
-### Broken Windows Table (if applicable)
-| Location | Broken window | Severity | Decision (fix-now/log) | Rationale | Follow-up |
-|---|---|---|---|---|---|
-
-## Complexity and Risk Snapshot
-| Metric | Value | Method | Notes |
-|---|---:|---|---|
-| Complexity score (0-10) |  | philosophy dimensions |  |
-| Risk score (0-10) |  | operational factors |  |
-
-## Tactical vs Strategic Split
-- Tactical (~80%):
-- Strategic (~20%):
-
-## Dependencies and Unknowns
-- Internal/external dependencies and why justified:
-- Obscurity/unknowns to make explicit:
-- Likely failure modes and planned checks:
-
-## Harness Check
-- Philosophy loaded from `docs/philosophy.md`: yes/no
-- Principles driving this plan (2-3):
-- Current step: <N>/<total>
-- Next allowed action: <read-only | mutate after approval>
-- Scope approval required now: yes/no
-- TDD required for this scope: yes/no
-
-## Next skill handoff
-Next skill: <forge-test|forge-implement|forge-investigate|forge-debug|...>
-Reason: <one sentence>
 ```
+
+Only add the sections that materially improve clarity.
 
 ## Conditional sections
 
@@ -177,19 +95,6 @@ Reason: <one sentence>
 Rules:
 - Include only high-signal checks for risky steps (target: <= 3 rows).
 - Use executable commands/checks with clear expected signals.
-
-### When TDD is required (user request or reproducible bug fix)
-
-```md
-## TDD Test Table
-| Test | Fails before change | Minimal code change | Pass criteria |
-|---|---|---|---|
-```
-
-Rules:
-- First executable item must be a failing test and command.
-- Route to `forge-test` before implementation.
-- Do not allow implementation without failing-test evidence.
 
 ### When write-path/ingestion is touched
 
@@ -218,19 +123,9 @@ Rules:
 
 Before asking implementation approval, require:
 
-- For small / low-risk scopes: compact Plan + Files + Verify + Red Flags (if any) + Proposed Review Gates + Harness Check
-- For larger / higher-risk scopes: the applicable full-packet sections below
-- Plan Summary + File Touch Map + Assumptions
-- Architecture Justification + Tradeoff Highlights
-- Architecture/Tradeoff Rubric complete (no unresolved critical fail unless explicitly accepted by user)
-- Implementation Step Ledger
-- Repo Obligations
-- Test Table
-- Baseline Verification Exceptions
-- Generated Artifacts Policy when generated files or docs workflows are relevant
-- Closeout Scope when predictable trailing work exists
-- Proposed Review Gates
-- Harness Check
-- High-Risk Execution Checks when high-risk scope applies
-- TDD sections when TDD scope applies
-- Write-path sections when write-path scope applies
+- compact `Plan` + `Files` + `Verify`
+- `Proposed Review Gates`
+- any real `Assumptions / Risks` worth surfacing
+- expanded sections only when scope/risk actually warrants them
+- `High-Risk Execution Checks` when high-risk scope applies
+- write-path sections when write-path scope applies

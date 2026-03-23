@@ -2,13 +2,12 @@
 
 This directory is for optional scorecard output files produced during benchmark runs.
 
-Use `scorecard-init <task-slug>` to create an optional scorecard output file for the current repository under `benchmarks/results/`.
+If you want a durable record for a run, copy `docs/scorecard-template.md` into `benchmarks/results/<date>-<task>.md` and fill it out.
 
-Examples:
+Example:
 
 ```bash
-scorecard-init api-cli
-scorecard-init bugfix
+cp docs/scorecard-template.md benchmarks/results/$(date +%F)-api-cli.md
 ```
 
 These result files are useful when you want a durable record of a run. They are optional by design so Planforge can stay lightweight.

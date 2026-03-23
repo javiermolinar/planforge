@@ -120,7 +120,21 @@ function createHarness(hasUI = true, currentBranch = "feat/test-harness") {
 const extensionPath = path.join(process.cwd(), "extensions", "planforge-approval-gate.ts");
 const installApprovalGate = loadExtension(extensionPath);
 
-async function emitReviewGateProposal(harness) {
+async function emitPlanPacketWithReviewGates(harness) {
+  await harness.emit("message_end", {
+    message: {
+      role: "assistant",
+      content: [
+        {
+          type: "text",
+          text: "## Plan Summary\n- What I will do: implement the scoped fix\n- What I will not do: unrelated refactors\n- Step order (1..2): patch, then verify\n\n## Test Table\n| Scenario | Test command/check | Expected result | Evidence |\n|---|---|---|---|\n| scoped fix | npm test | passes | pending |\n\n## Proposed Review Gates\n| Gate ID | Trigger | Required evidence | Why this gate |\n|---|---|---|---|\n| RG1 | before mutation | build + smoke | keep drift low |",
+        },
+      ],
+    },
+  });
+}
+
+async function emitReviewGatesOnly(harness) {
   await harness.emit("message_end", {
     message: {
       role: "assistant",
@@ -128,20 +142,6 @@ async function emitReviewGateProposal(harness) {
         {
           type: "text",
           text: "## Proposed Review Gates\n| Gate ID | Trigger | Required evidence | Why this gate |\n|---|---|---|---|\n| RG1 | before mutation | build + smoke | keep drift low |",
-        },
-      ],
-    },
-  });
-}
-
-async function emitReviewGateProposalWithCloseout(harness) {
-  await harness.emit("message_end", {
-    message: {
-      role: "assistant",
-      content: [
-        {
-          type: "text",
-          text: "## Repo Obligations\n| Obligation | Source | Trigger | Planned handling | Status |\n|---|---|---|---|---|\n| make docs | Makefile | CLI/docs drift | run in closeout | planned |\n\n## Closeout Scope\n- Allowed trailing operations: regenerate docs, run mandated verification, commit, push, draft PR\n- Allowed file classes / paths: generated docs and markdown only\n- Invalidates closeout lane if: new source edits are needed\n- Final closeout evidence to report: docs regen + verification + commit/push/PR status\n\n## Proposed Review Gates\n| Gate ID | Trigger | Required evidence | Why this gate |\n|---|---|---|---|\n| RG1 | final review | verified vs unverified + diff summary | keep closeout bounded |",
         },
       ],
     },
@@ -169,46 +169,17 @@ async function testInactiveStatusIsHiddenUntilPlanforgeStarts() {
     headlessHarness.getSentUserMessages().some((m) => String(m).includes("Planforge is not active in this session")),
     "pf status should explain how to activate Planforge when inactive"
   );
-}
 
-async function testInvestigateModeIsReadOnly() {
-  const harness = createHarness();
-  installApprovalGate(harness.pi);
-
-  await harness.emit("session_start", {});
-  await harness.emit("input", { text: "/skill:forge-investigate" });
-
-  const state = harness.getState();
-  assert(state && state.executionMode === "none", "forge-investigate should switch to mode 'none'");
-
-  const blockedEdit = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
-  assert(blockedEdit && blockedEdit.block === true, "edit must be blocked in investigate mode");
-
-  const blockedMutatingBash = await harness.emit("tool_call", {
-    toolName: "bash",
-    input: { command: "echo x > /tmp/planforge-test" },
-  });
-  assert(blockedMutatingBash && blockedMutatingBash.block === true, "mutating bash must be blocked in investigate mode");
-
-  const blockedMetaBash = await harness.emit("tool_call", {
-    toolName: "bash",
-    input: { command: "ls > /tmp/planforge-bypass" },
-  });
-  assert(blockedMetaBash && blockedMetaBash.block === true, "redirection bypass attempts must be blocked in investigate mode");
-
-  const allowedPipeBash = await harness.emit("tool_call", {
-    toolName: "bash",
-    input: { command: "git status | wc -l" },
-  });
-  assert(allowedPipeBash === undefined, "safe read-only pipelines should remain allowed in investigate mode");
-
-  const allowedReadOnlyBash = await harness.emit("tool_call", { toolName: "bash", input: { command: "ls -la" } });
-  assert(allowedReadOnlyBash === undefined, "read-only bash should remain allowed in investigate mode");
-
-  const beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
+  await headlessHarness.runCommand("pf", {});
   assert(
-    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("[Planforge investigation mode]"),
-    "before_agent_start should inject investigate-mode read-only prompt"
+    headlessHarness.getSentUserMessages().some((m) => String(m).includes("Start with /skill:planforge")),
+    "bare pf should be rejected when Planforge is inactive"
+  );
+
+  const inactiveInputResult = await headlessHarness.emit("input", { text: "pf" });
+  assert(
+    inactiveInputResult && inactiveInputResult.action === "transform" && inactiveInputResult.text.includes("Start with /skill:planforge"),
+    "pf input should be rejected when Planforge is inactive"
   );
 }
 
@@ -218,7 +189,7 @@ async function testCheckpointLifecycle() {
 
   await harness.emit("session_start", {});
   await harness.emit("input", { text: "/skill:planforge" });
-  await emitReviewGateProposal(harness);
+  await emitPlanPacketWithReviewGates(harness);
 
   let state = harness.getState();
   assert(state && state.reviewGatesProposed === true, "review gate proposal should be captured from assistant message");
@@ -337,7 +308,7 @@ async function testNaturalLanguageAcceptanceAndScopeReplan() {
 
   await harness.emit("session_start", {});
   await harness.emit("input", { text: "/skill:planforge" });
-  await emitReviewGateProposal(harness);
+  await emitPlanPacketWithReviewGates(harness);
   await harness.runCommand("pf", {});
 
   let state = harness.getState();
@@ -367,74 +338,28 @@ async function testNaturalLanguageAcceptanceAndScopeReplan() {
   assert(state.approved === false, "non-trivial follow-up should still invalidate prior approval");
   assert(state.scopeVersion === scopeV1 + 1, "scope version should not bump until the revised scope is actually approved");
   assert(state.pendingScopeAdvance === true, "scope invalidation should stage the next scope advance instead of bumping immediately");
+  assert(state.revisedPlanRequired === true, "scope invalidation should require a revised plan before re-approval");
   assert(state.reviewGatesProposed === true, "scope invalidation should preserve parsed review-gate context for replanning");
   assert(Array.isArray(state.reviewGates) && state.reviewGates.length === 1 && state.reviewGates[0].id === "RG1", "scope invalidation should retain parsed review gates instead of forgetting them");
   assert(Array.isArray(state.acceptedReviewGates) && state.acceptedReviewGates.includes("RG1"), "scope invalidation should preserve accepted review gate history");
-}
 
-async function testBenchmarkProfile() {
-  const harness = createHarness();
-  installApprovalGate(harness.pi);
-
-  await harness.emit("session_start", {});
-  await harness.emit("input", {
-    text: "/skill:planforge-fast I explicitly approve scope for mutation. Run benchmark: build a tiny CLI and scorecard.",
-  });
-
-  let state = harness.getState();
-  assert(state && state.benchmarkMode === true, "benchmark hints in prompt should auto-enable benchmark profile");
-
-  let beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
+  const blockedReapproval = await harness.emit("input", { text: "pf" });
   assert(
-    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("[Planforge benchmark profile]"),
-    "before_agent_start should inject benchmark profile guidance when enabled"
+    blockedReapproval && blockedReapproval.action === "transform" && blockedReapproval.text.includes("re-post the updated Plan Packet"),
+    "stale review gates should not allow re-approval before a revised plan is posted"
   );
 
-  await harness.runCommand("pf", { raw: "benchmark off" });
+  await emitReviewGatesOnly(harness);
   state = harness.getState();
-  assert(state && state.benchmarkMode === false, "pf benchmark off should disable benchmark profile");
+  assert(state.revisedPlanRequired === true, "review gates alone should not clear the revised-plan requirement");
 
-  beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
-  assert(
-    beforeStart === undefined ||
-      (typeof beforeStart?.systemPrompt === "string" &&
-        !beforeStart.systemPrompt.includes("[Planforge benchmark profile]")),
-    "benchmark profile guidance should be omitted when disabled"
-  );
-
-  await harness.emit("input", { text: "/pf benchmark on" });
+  await emitPlanPacketWithReviewGates(harness);
   state = harness.getState();
-  assert(state && state.benchmarkMode === true, "input command /pf benchmark on should enable benchmark profile");
-}
+  assert(state.revisedPlanRequired === false, "posting a revised plan should clear the revised-plan requirement");
 
-async function testCompactPlanningGuidanceInjected() {
-  const harness = createHarness();
-  installApprovalGate(harness.pi);
-
-  await harness.emit("session_start", {});
-  await harness.emit("input", { text: "/skill:planforge" });
-
-  const beforeStart = await harness.emit("before_agent_start", { systemPrompt: "SYSTEM" });
-  assert(
-    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("Keep plan/review output compact by default"),
-    "before_agent_start should inject compact planning guidance"
-  );
-  assert(
-    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("Want more detail? Reply with a number:"),
-    "compact planning guidance should include the numbered follow-up menu"
-  );
-  assert(
-    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("5. Red flags 6. Full plan"),
-    "compact planning guidance should include red-flag follow-up detail"
-  );
-  assert(
-    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("Surface Red Flags only when they are real and actionable"),
-    "compact planning guidance should require red flags to stay signal-only"
-  );
-  assert(
-    typeof beforeStart?.systemPrompt === "string" && beforeStart.systemPrompt.includes("At review gates, prefer a short Summary, Diff, Verify, and optional Red Flags block"),
-    "compact planning guidance should also include compact review-gate summary guidance"
-  );
+  await harness.runCommand("pf", {});
+  state = harness.getState();
+  assert(state.approved === true, "pf should approve again after a revised plan is posted");
 }
 
 async function testReviewGatePushbackFlow() {
@@ -443,7 +368,7 @@ async function testReviewGatePushbackFlow() {
 
   await harness.emit("session_start", {});
   await harness.emit("input", { text: "/skill:planforge" });
-  await emitReviewGateProposal(harness);
+  await emitPlanPacketWithReviewGates(harness);
 
   let state = harness.getState();
   assert(state && state.reviewGatesProposed === true, "review gates should be proposed before pushback");
@@ -473,7 +398,7 @@ async function testBranchPolicyEnforcement() {
     "branch hygiene should be surfaced before the first blocked edit on trunk"
   );
 
-  await emitReviewGateProposal(harness);
+  await emitPlanPacketWithReviewGates(harness);
   await harness.runCommand("pf", {});
 
   let blockedEdit = await harness.emit("tool_call", { toolName: "edit", input: { path: "README.md" } });
@@ -491,53 +416,6 @@ async function testBranchPolicyEnforcement() {
   assert(allowedEdit === undefined, "edits should proceed after switching to a task branch");
 }
 
-async function testCloseoutLaneBehavior() {
-  const harness = createHarness();
-  installApprovalGate(harness.pi);
-
-  await harness.emit("session_start", {});
-  await harness.emit("input", { text: "/skill:planforge" });
-  await emitReviewGateProposalWithCloseout(harness);
-
-  await harness.runCommand("pf", {});
-  let state = harness.getState();
-  assert(state && state.approved === true, "closeout plan should still require and accept initial approval");
-  assert(state.closeoutDeclared === true, "closeout scope should be parsed from the plan");
-
-  await harness.emit("message_end", {
-    message: {
-      role: "assistant",
-      content: [{ type: "text", text: "REVIEW_GATE_REACHED: RG1\nVerified vs unverified\nEvidence\n- build pass\n- smoke pass\n- negative-path pass" }],
-    },
-  });
-
-  await harness.runCommand("pf", {});
-  state = harness.getState();
-  assert(state.approved === true, "accepting the final review gate should approve the next scope");
-  assert(state.closeoutActive === true, "final review acceptance should enter closeout scope when declared");
-  assert(state.scopeKind === "closeout", "scope kind should record closeout activation");
-
-  await harness.emit("input", { text: "prepare the PR body, run make docs, and push it" });
-  state = harness.getState();
-  assert(state.approved === true, "minor closeout follow-up should not invalidate approval");
-  assert(state.scopeKind === "closeout", "closeout follow-up should stay inside closeout scope");
-
-  const allowedCloseoutBash = await harness.emit("tool_call", {
-    toolName: "bash",
-    input: { command: "make docs && git push origin HEAD && gh pr create --draft" },
-  });
-  assert(allowedCloseoutBash === undefined, "declared closeout commands should be allowed inside closeout scope");
-
-  const blockedSourceEdit = await harness.emit("tool_call", {
-    toolName: "edit",
-    input: { path: "extensions/planforge-approval-gate.ts" },
-  });
-  assert(blockedSourceEdit && blockedSourceEdit.block === true, "source edits should be blocked inside closeout scope");
-  state = harness.getState();
-  assert(state.approved === false, "blocked source edit should invalidate closeout approval");
-  assert(state.scopeKind === "replan", "blocked source edit should force replanning");
-}
-
 async function testHeadlessContinueBehavior() {
   const harness = createHarness(false);
   installApprovalGate(harness.pi);
@@ -553,7 +431,7 @@ async function testHeadlessContinueBehavior() {
     "missing review-gate proposal should trigger guidance message"
   );
 
-  await emitReviewGateProposal(harness);
+  await emitPlanPacketWithReviewGates(harness);
   await harness.runCommand("pf", {});
   state = harness.getState();
   assert(state && state.approved === true, "headless pf should approve after review gates are proposed");
@@ -589,14 +467,10 @@ async function testHeadlessContinueBehavior() {
 
 (async () => {
   await testInactiveStatusIsHiddenUntilPlanforgeStarts();
-  await testInvestigateModeIsReadOnly();
   await testCheckpointLifecycle();
   await testNaturalLanguageAcceptanceAndScopeReplan();
-  await testBenchmarkProfile();
-  await testCompactPlanningGuidanceInjected();
   await testReviewGatePushbackFlow();
   await testBranchPolicyEnforcement();
-  await testCloseoutLaneBehavior();
   await testHeadlessContinueBehavior();
   console.log("approval gate behavior test: PASS");
 })().catch((error) => {

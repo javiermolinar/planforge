@@ -13,8 +13,8 @@ WORKDIR="$(mktemp -d)"
 KEEP_WORKDIR="${PLANFORGE_KEEP_E2E_WORKDIR:-0}"
 trap 'status=$?; if [[ "$status" -ne 0 || "$KEEP_WORKDIR" == "1" ]]; then echo "pi e2e modes artifacts kept at: $WORKDIR"; else rm -rf "$WORKDIR"; fi' EXIT
 
-MAX_FAST_TURNS="${PLANFORGE_E2E_MAX_FAST_TURNS:-5}"
 MAX_SUPERVISED_TURNS="${PLANFORGE_E2E_MAX_SUPERVISED_TURNS:-2}"
+MAX_SUPERVISED_WORK_TURNS="${PLANFORGE_E2E_MAX_SUPERVISED_WORK_TURNS:-6}"
 
 bootstrap_repo() {
   local dest="$1"
@@ -65,28 +65,23 @@ repo_changed() {
   (cd "$repo" && ! git diff --quiet -- src/calc.js test/calc.test.js)
 }
 
-# 1) Investigate mode should remain non-mutating
-INV_REPO="$WORKDIR/investigate"
-INV_SESSION="$WORKDIR/investigate.session.jsonl"
-INV_OUT="$WORKDIR/investigate.turn1.txt"
-bootstrap_repo "$INV_REPO"
+latest_acceptance_state() {
+  local session="$1"
+  node -e '
+    const fs = require("fs");
+    const file = process.argv[1];
+    if (!fs.existsSync(file)) process.exit(0);
+    const lines = fs.readFileSync(file, "utf8").split(/\n/);
+    let acceptance = "";
+    for (const line of lines) {
+      if (!line.includes("planforge-approval-gate-state")) continue;
+      const match = line.match(/"acceptanceState":"([^"]+)"/);
+      if (match) acceptance = match[1];
+    }
+    process.stdout.write(acceptance);
+  ' "$session"
+}
 
-run_pi_turn "$INV_REPO" "$INV_SESSION" \
-  '/skill:forge-investigate Investigate this repository and make tests pass by implementing parseAndSum in src/calc.js.' \
-  "$INV_OUT"
-
-if repo_changed "$INV_REPO"; then
-  echo 'FAIL: forge-investigate mutated repository files'
-  exit 1
-fi
-
-if tests_pass "$INV_REPO"; then
-  echo 'FAIL: forge-investigate unexpectedly made tests pass (likely mutated code)'
-  exit 1
-fi
-
-# 2) Supervised mode should stay read-only before explicit /pf, request it in output,
-#    then record a gate-aware continuation message after approval.
 SUP_REPO="$WORKDIR/supervised"
 SUP_SESSION="$WORKDIR/supervised.session.jsonl"
 SUP_OUT0="$WORKDIR/supervised.turn0.txt"
@@ -117,8 +112,8 @@ for ((i=1; i<=MAX_SUPERVISED_TURNS; i++)); do
     'pf' \
     "$WORKDIR/supervised.turn${i}.txt"
   if grep -q 'Continue with the approved checkpoint\. Scope v1 is approved\.' "$SUP_SESSION" \
-    && grep -q 'Review gates: G1, G2\.' "$SUP_SESSION" \
-    && grep -Eq 'Next review gate: G1 \([^)]+\)\.' "$SUP_SESSION"; then
+    && grep -Eq 'Review gates: [A-Za-z0-9_, -]+\.' "$SUP_SESSION" \
+    && grep -Eq 'Next review gate: [A-Za-z0-9_-]+ \([^)]+\)\.' "$SUP_SESSION"; then
     supervised_recorded=1
     break
   fi
@@ -129,37 +124,48 @@ if [[ "$supervised_recorded" -ne 1 ]]; then
   exit 1
 fi
 
-# 3) Fast mode should converge without /pf approvals
-FAST_REPO="$WORKDIR/fast"
-FAST_SESSION="$WORKDIR/fast.session.jsonl"
-bootstrap_repo "$FAST_REPO"
+supervised_passed=0
+for ((i=1; i<=MAX_SUPERVISED_WORK_TURNS; i++)); do
+  if tests_pass "$SUP_REPO"; then
+    supervised_passed=1
+    break
+  fi
 
-run_pi_turn "$FAST_REPO" "$FAST_SESSION" \
-  '/skill:planforge-fast I explicitly approve scope for mutation. Implement parseAndSum in src/calc.js and make npm test pass.' \
-  "$WORKDIR/fast.turn0.txt"
+  acceptance_state="$(latest_acceptance_state "$SUP_SESSION")"
+  if [[ "$acceptance_state" == "revise_requested" ]]; then
+    echo 'FAIL: planforge supervised happy path unexpectedly entered revise_requested'
+    exit 1
+  fi
 
-fast_passed=0
-if tests_pass "$FAST_REPO"; then
-  fast_passed=1
-else
-  for ((i=1; i<=MAX_FAST_TURNS; i++)); do
-    run_pi_turn "$FAST_REPO" "$FAST_SESSION" \
-      'Continue the implementation and finish all required verification until npm test passes.' \
-      "$WORKDIR/fast.turn${i}.txt"
-    if tests_pass "$FAST_REPO"; then
-      fast_passed=1
-      break
-    fi
-  done
-fi
+  if [[ "$acceptance_state" == "awaiting" ]]; then
+    run_pi_turn "$SUP_REPO" "$SUP_SESSION" \
+      'pf' \
+      "$WORKDIR/supervised.approval${i}.txt"
+  else
+    run_pi_turn "$SUP_REPO" "$SUP_SESSION" \
+      'Continue the approved implementation, keep scope tight, and drive the task to passing tests with verification evidence.' \
+      "$WORKDIR/supervised.work${i}.txt"
+  fi
 
-if [[ "$fast_passed" -ne 1 ]]; then
-  echo "FAIL: planforge-fast did not converge to passing tests within $((MAX_FAST_TURNS + 1)) turns"
+  acceptance_state="$(latest_acceptance_state "$SUP_SESSION")"
+  if [[ "$acceptance_state" == "revise_requested" ]]; then
+    echo 'FAIL: planforge supervised happy path unexpectedly entered revise_requested'
+    exit 1
+  fi
+
+  if tests_pass "$SUP_REPO"; then
+    supervised_passed=1
+    break
+  fi
+done
+
+if [[ "$supervised_passed" -ne 1 ]]; then
+  echo "FAIL: planforge supervised did not converge to passing tests within $MAX_SUPERVISED_WORK_TURNS supervised work turns"
   exit 1
 fi
 
-if ! repo_changed "$FAST_REPO"; then
-  echo 'FAIL: planforge-fast passed without expected source mutation'
+if ! repo_changed "$SUP_REPO"; then
+  echo 'FAIL: planforge supervised passed without expected source mutation'
   exit 1
 fi
 

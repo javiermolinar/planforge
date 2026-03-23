@@ -92,7 +92,7 @@ A score should be backed by evidence from:
 
 1. Pick a benchmark task.
 2. Run it with Planforge.
-3. Optionally run `scorecard-init <task-slug>` to create a durable scorecard file in the benchmark repository.
+3. If you want a durable record, copy `docs/scorecard-template.md` into `benchmarks/results/<date>-<task>.md` in the benchmark repository.
 4. Fill out the scorecard template.
 5. Record hard evidence for each score.
 6. Add enhancement ideas for the harness itself.

@@ -31,18 +31,15 @@ try {
 }
 
 assert(contract && Array.isArray(contract.modes), 'AGENTS.md MODE_CONTRACT must define modes[]');
-assert(contract.modes.length >= 3, 'MODE_CONTRACT must contain at least 3 modes');
+assert(contract.modes.length === 1, 'MODE_CONTRACT must contain exactly 1 mode');
 
 const expectedExecution = {
   planforge: 'supervised',
-  'planforge-fast': 'fast',
-  'forge-investigate': 'none',
 };
 
 for (const mode of contract.modes) {
   assert(mode.id && mode.startCommand && mode.skillFile && mode.executionMode, `Invalid mode entry: ${JSON.stringify(mode)}`);
 
-  // docs/modes.md should reflect AGENTS mode contract
   const tableNeedle = `| \`${mode.id}\` | \`${mode.startCommand}\` | \`${mode.executionMode}\` |`;
   assert(
     modesDoc.includes(tableNeedle),
@@ -65,34 +62,20 @@ for (const mode of contract.modes) {
     );
   }
 
-  if (mode.readOnlyUntilScopeApproval && mode.id !== 'forge-investigate') {
+  if (mode.readOnlyUntilScopeApproval) {
     assert(
       /Read-only actions only until explicit scope approval\./.test(skill),
       `${mode.skillFile} must enforce read-only until explicit scope approval`
     );
   }
-
-  if (mode.id === 'forge-investigate') {
-    assert(
-      /read-only|non-mutating/i.test(skill),
-      'skills/forge-investigate/SKILL.md must remain read-only/non-mutating'
-    );
-  }
 }
 
-// Hard guard: canonical mode->executionMode mapping in extension
 assert(/PLANFORGE_SUPERVISED_SKILL_CMD/.test(gateExtension), 'approval gate missing supervised skill command matcher');
-assert(/PLANFORGE_FAST_SKILL_CMD/.test(gateExtension), 'approval gate missing fast skill command matcher');
-assert(/PLANFORGE_INVESTIGATE_SKILL_CMD/.test(gateExtension), 'approval gate missing investigate skill command matcher');
+assert(!/PLANFORGE_FAST_SKILL_CMD/.test(gateExtension), 'approval gate should not keep fast skill command matcher');
+assert(!/PLANFORGE_INVESTIGATE_SKILL_CMD/.test(gateExtension), 'approval gate should not keep investigate command matcher');
 
 for (const [id, executionMode] of Object.entries(expectedExecution)) {
-  const skillConst =
-    id === 'planforge'
-      ? 'PLANFORGE_SUPERVISED_SKILL_CMD'
-      : id === 'planforge-fast'
-        ? 'PLANFORGE_FAST_SKILL_CMD'
-        : 'PLANFORGE_INVESTIGATE_SKILL_CMD';
-
+  const skillConst = 'PLANFORGE_SUPERVISED_SKILL_CMD';
   const mappingRegex = new RegExp(`${skillConst}[\\s\\S]*?executionMode: \"${executionMode}\"`);
   assert(mappingRegex.test(gateExtension), `approval gate mapping drift for ${id} -> ${executionMode}`);
 }

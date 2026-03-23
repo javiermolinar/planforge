@@ -27,7 +27,7 @@ This directory defines repeatable benchmark tasks for evaluating Planforge.
 
 ## Results
 
-Benchmark result persistence is optional. If you want a durable record for a run, use `scorecard-init <task-slug>` to create an optional scorecard output file under `benchmarks/results/` in the current repository.
+Benchmark result persistence is optional. If you want a durable record for a run, copy `docs/scorecard-template.md` into `benchmarks/results/<date>-<task>.md` in the current repository and fill it out.
 
 ## Review guidance
 

@@ -1,137 +1,45 @@
 ---
 name: planforge
-description: Supervised-by-default front door for implementation work. Plans first, enforces philosophy/harness rules, and requires explicit approval at mutating checkpoints.
+description: Opinionated front door for delivery work. Plan first, then execute with explicit approval gates.
 ---
 
-# Orchestrator (Supervised Default)
+# Planforge
 
-Use this skill for normal build/change/fix work when safety and operator control matter.
+Use this skill when you want the harness to stay opinionated and supervised.
 
-## Mission and done criteria
-
-Mission:
-- Deliver approved scope with minimal complexity and explicit evidence.
-
-Definition of done:
-- Requested behavior is implemented within approved scope.
-- Verification evidence is captured and reported (verified vs unverified).
-- Plan/ledger/checkpoint state is updated to reflect current reality.
-- User acceptance is explicit before advancing scenarios/checkpoints.
-
-## Stop-and-ask triggers
-
-Stop and ask before continuing when any of these occur:
-- scope drift or conflicting requirements
-- policy/runtime gate denies mutation
-- evidence contradicts prior assumptions or plan
-- risk increases materially versus approved plan
-
-## Core contract (always on)
+## Core contract
 
 - Read-only actions only until explicit scope approval.
-- For non-trivial work, produce the Plan Packet from `../../docs/plan-packet.md` before any mutation.
-- Use the compact default for small, low-risk scopes; expand to the full packet only when risk/scope warrants it or the user asks.
-- Plan Packet must include **Proposed Review Gates**; user may push back and edit gates before approval.
-- In compact mode, offer optional numbered follow-up detail (for example: architecture, complexity, files, verification, red flags, full plan) instead of front-loading every section.
-- Extract repo obligations up front from local repo evidence (`AGENTS.md`, contributing docs, build files, generated-artifact workflows) and turn them into explicit checklist items.
-- When trailing work is predictable, declare a bounded **Closeout Scope** (for example: docs regen, mandated verification, commit, push, PR draft) instead of treating each closeout step as an implicit fresh re-plan.
-- Follow `../../docs/philosophy.md` as mandatory policy; treat its red flags as strict warnings.
-- Keep explicit 80/20 tactical-to-strategic split.
-- Apply broken windows rule: fix one local issue now or log a concrete follow-up.
-- Prefer the simplest acceptable path; do not silently widen scope.
-- If requirements/constraints change, re-plan and re-request approval.
-- If TDD is required (user asks, or reproducible bug fix), show failing-test evidence before production edits.
-- If a policy gate blocks mutation, stop and ask.
+- Follow `../../docs/philosophy.md` as mandatory policy.
+- For non-trivial work, produce the Plan Packet from `../../docs/plan-packet.md` before mutation.
+- Plans must include `## Proposed Review Gates` before first mutation approval.
+- Keep scope explicit, prefer the simplest acceptable path, and stop on material drift.
+- Verification and user acceptance must be explicit before advancing.
 
-## Scope approval gate (non-negotiable)
+## Planning default
 
-Before explicit scope approval, only read-only actions are allowed:
+- Start with the compact approval-ready packet from `../../docs/plan-packet.md`.
+- Offer optional numbered follow-up detail when it would help, but do not make extra detail a prerequisite for approval.
+- If the work is materially risky, ambiguous, or crosses tricky boundaries, expand the packet before asking for approval.
 
-- `read`
-- non-mutating `bash` (for example: `ls`, `rg`, `find`, `git status`, `git branch --show-current`)
+## Implementation guidance
 
-Prohibited before scope approval:
+- Execute only approved work with supervised checkpoints.
+- Keep changes tight and re-plan on material drift.
+- TDD is an implementation tactic, not a planning artifact.
+- Suggest TDD once at the end of planning only when it would materially reduce ambiguity or de-risk a reproducible bug/regression.
+- Do not turn TDD into a gate prompt and do not repeat it at every review gate.
+- If the user requests TDD, or the bug/regression is best pinned down with a failing test first, show that failing-test evidence before production edits.
 
-- `edit`, `write`
-- branch creation/switching
-- mutating scripts/commands (including redirection `>`/`>>`, `tee`, `sed -i`, write-mode fixers)
-- any command that changes files, git state, or environment
+## Verification guidance
 
-Approval must be explicit from the user (`/pf` in supervised mode).
+- Report verified vs unverified.
+- State remaining uncertainty honestly.
+- Do not advance while user acceptance is unresolved.
 
-## Required flow
-
-1. Understand task
-2. Clarify unknowns
-3. Produce Plan Packet (compact by default per `../../docs/plan-packet.md`; expand only when needed)
-4. Request explicit scope + review-gate approval
-5. Execute within the approved mutating scope
-6. Verify and report at review boundaries (explicitly: verified vs unverified, baseline unrelated failures vs new failures)
-7. If declared in the plan, use the approved closeout lane for bounded post-review follow-up without widening into new implementation scope
-
-## Pre-mutation checklist
-
-Confirm before each mutating checkpoint:
-
-```md
-Pre-mutation gate:
-- Scope changed since last approval? [yes/no]
-- Plan updated after latest scope change? [yes/no]
-- Explicit approval received for current plan? [yes/no]
-- Runtime/harness gate allows mutation now? [yes/no]
-- TDD required for this scope? [yes/no]
-- If TDD required: failing test reproduced before production edits? [yes/no]
-- Next checkpoint includes repo mutation? [yes/no]
-```
-
-Only print the checklist when it adds clarity or explains a block. If any answer blocks mutation, stop and request approval.
-
-## Supervised checkpoint loop
-
-After scope approval, use checkpoints as reporting/review boundaries:
+## Checkpoint loop
 
 - request `/pf` before the first mutating scope
-- keep mutating work inside the approved scope until a review gate is reached
-- request `/pf` again after a reached review gate or any material scope/strategy change
-- brief affirmative acceptance such as “looks good, continue” may count when a review gate is awaiting acceptance
-- if the approved plan declared a bounded closeout lane, use it only for the listed closeout operations; source/code edits still require re-plan
-- prefer the lightest review shape that keeps scope legible; for small low-risk work, one final review gate is often enough
-
-Checkpoint proposal format:
-
-```md
-Proposed checkpoint: C<n>
-- Phase/Task:
-- Mutating: <yes/no>
-- Planned operations:
-- Purpose:
-- Expected outcome:
-```
-
-Do not bundle unrelated tasks into one checkpoint. If user rejects, revise and re-propose. If user pushback indicates dissatisfaction, stay on same scenario and correct it before advancing.
-
-## Skill handoff and routing
-
-Before implementation, emit:
-
-```md
-Next skill: <forge-plan|forge-investigate|forge-debug|...>
-Reason: <one sentence>
-```
-
-Routing defaults:
-- uncertain codebase/shape -> `forge-investigate`
-- clear implementation direction -> `forge-plan`
-- TDD-required scope -> `forge-test` first
-- concrete failure/regression -> `forge-debug`
-- confidence boost -> `forge-test`
-- before final confidence claim -> `forge-verify`
-- external/networked tasks -> suggest `forge-review`
-- user wants speed over supervision -> switch to `planforge-fast`
-
-## Branch and commit policy
-
-- On trunk-like or unrelated branches: create/switch to a task branch after approval.
-- Use `<type>/<slug>` when possible (`feat|fix|refactor|docs|chore|test`).
-- Use `../../scripts/plan-branch-name` when helpful.
-- Do not commit automatically; suggest semantic commit points/messages.
+- keep work inside the approved checkpoint until a review gate or scope change
+- request `/pf` again after a reached review gate or material scope change
+- do not advance while user acceptance is still unresolved
