@@ -1,11 +1,10 @@
 {
   "name": "planforge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Pi agent harness workflow skills and rolling plan tooling for serious development",
+  "description": "Prompt-driven engineering skills for Pi built on a shared philosophy and investigation core",
   "keywords": ["pi-package"],
   "pi": {
-    "skills": ["./skills"],
-    "extensions": ["./extensions"]
+    "skills": ["./skills"]
   }
 }

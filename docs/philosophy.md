@@ -1,188 +1,106 @@
 # Planforge philosophy
 
-Planforge is optimized for long-term software quality, not just short-term velocity.
+Planforge optimizes engineering work for long-term software quality without turning discipline into ceremony.
 
-## Zen of Planforge (5)
+The philosophy applies to every skill in the suite. Skills may specialize the workflow, but they must not weaken these principles.
 
-1. Compose small interfaces, keep modules deep.
-2. Be explicit: surface contracts, dependencies, and unknowns.
-3. Prefer one obvious path over clever alternatives.
-4. Fail loudly, verify claims, and never hide ambiguity.
-5. Ship tactically, improve strategically.
-
-Each principle below uses the same structure:
-- **Statement** — the rule
-- **Intent** — why it exists
-- **Operational rule** — how to apply it in practice
-- **Red flags** — signs you are violating it
-
-## 1) Complexity is the enemy
+## 1. Complexity is the enemy
 
 **Statement**
-- Reduce change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns.
 
-**Intent**
-- Keep future changes cheaper and safer.
+Reduce change amplification, cognitive load, dependency surface, obscurity, and unknown unknowns.
 
 **Operational rule**
-- In planning and review, assess each complexity dimension with low/medium/high plus one mitigation.
+
+Choose the smallest design that satisfies the requirement. Treat additional files, layers, dependencies, and control flow as costs that need evidence.
 
 **Red flags**
-- behavior spread across too many files
-- hidden control flow
-- unknown unknowns left unstated
 
-## 2) Compose small interfaces, keep modules deep
+- one behavior spread across unrelated places
+- hidden ownership or control flow
+- new abstractions without current leverage
+- uncertainty presented as confidence
+
+## 2. Keep interfaces small and modules deep
 
 **Statement**
-- Prefer deep modules over shallow modules.
 
-**Intent**
-- Hide implementation complexity behind simple interfaces.
+Hide substantial behavior behind small, stable interfaces.
 
 **Operational rule**
-- Keep interfaces small relative to the functionality provided.
-- Merge shallow wrappers that add indirection but little value.
+
+Prefer cohesive modules over shallow wrappers. Callers should not need representation details or orchestration knowledge.
 
 **Red flags**
-- complicated interface with little functionality
-- tiny pass-through wrappers everywhere
-- callers needing internal implementation knowledge
 
-## 3) Ship tactically, improve strategically
+- pass-through layers
+- callers coupled to internals
+- broad interfaces with little functionality
+- changes that ripple through many consumers
+
+## 3. Facts before decisions
 
 **Statement**
-- Use a pragmatic 80/20 tactical-to-strategic split.
 
-**Intent**
-- Deliver requested behavior while reducing future complexity.
+The agent owns discoverable facts. The user owns material decisions.
 
 **Operational rule**
-- Tactical (~80%): implement the requested behavior.
-- Strategic (~20%): local, high-leverage maintainability improvements.
+
+Investigate the repository before asking questions. Ask the user only when the answer changes scope, behavior, interfaces, risk, or verification and cannot be established from available evidence.
 
 **Red flags**
-- only tactical shipping with no quality improvement
-- strategic rewrite that explodes scope
 
-## 4) Broken windows are fixed or logged
+- asking the user where code lives
+- guessing about repository behavior
+- silently choosing product behavior
+- presenting reversible implementation details as major decisions
+
+## 4. Prefer simple, data-first designs
 
 **Statement**
-- If you touch visible local quality debt, fix one small issue now or log it explicitly.
 
-**Intent**
-- Prevent slow quality decay in touched areas.
+Shape data ownership and boundaries before reaching for clever algorithms or architecture.
 
 **Operational rule**
-- During planning/implementation, identify one local cleanup opportunity and either:
-  - implement it safely now, or
-  - record it with a concrete follow-up in backlog/checkpoints.
+
+Start with the simplest implementation that meets the requirement. Optimize only when measurement identifies a real bottleneck.
 
 **Red flags**
-- stepping over obvious local debt silently
-- repeatedly touching the same messy area without any cleanup or tracking
 
-## 5) Explicitness over guesswork
+- speculative optimization
+- complicated algorithms for unmeasured problems
+- repeated conversions caused by weak data boundaries
+- architecture designed for hypothetical scale
+
+## 5. Ship tactically and improve strategically
 
 **Statement**
-- Surface contracts, dependencies, and ambiguity explicitly.
 
-**Intent**
-- Make behavior understandable and reviewable.
+Deliver the requested behavior while leaving touched code slightly easier to change.
 
 **Operational rule**
-- In ambiguous situations, ask or record assumptions; do not guess silently.
-- Verification should state what is verified vs unverified.
+
+Keep most effort on the requested outcome. Fix one small local problem when safe, or report it as a concrete follow-up. Do not turn local improvement into a rewrite.
 
 **Red flags**
-- silent assumptions
-- vague ownership
-- confidence claims without evidence
 
-## 6) Keep it simple
+- unrelated cleanup hidden inside the change
+- repeatedly stepping over visible local debt
+- strategic rewrites that dominate the requested work
+
+## 6. Verify claims and honor scope
 
 **Statement**
-- Prefer simple algorithms and simple structures over cleverness.
 
-**Intent**
-- Reduce bugs, cognitive load, and implementation risk.
+Evidence supports completion claims. One informed user decision authorizes the agreed scope.
 
 **Operational rule**
-- Start with the simplest implementation that satisfies the requirement.
-- Introduce fancier algorithms only when measured evidence justifies them.
+
+State what was verified, what was not, and what remains uncertain. Continue through the agreed work without artificial checkpoints. Return to the user only when scope changes materially, an assumption fails, or a destructive or external action becomes necessary.
 
 **Red flags**
-- hard-to-explain algorithmic complexity for small or unknown `n`
-- clever implementations that are difficult to test or reason about
-- optimization work that increases obscurity without proven benefit
 
-## 7) Data first
-
-**Statement**
-- Design the right data abstractions first; let algorithms follow from data shape.
-
-**Intent**
-- Improve clarity, reduce change amplification, and make behavior self-evident.
-
-**Operational rule**
-- Spend design effort on data ownership, boundaries, and interfaces before algorithmic tuning.
-- Prefer interfaces that hide representation details from callers.
-
-**Red flags**
-- logic spread across modules compensating for weak data modeling
-- caller code depending on internal representation details
-- repeated conversions or ad-hoc mappings due to poor abstraction boundaries
-
-## 8) Measure before optimize
-
-**Statement**
-- Avoid premature optimization; optimize only with measurement evidence.
-
-**Intent**
-- Prevent speculative complexity and focus effort on real bottlenecks.
-
-**Operational rule**
-- Do not tune for speed until profiling or measurement identifies a dominant hotspot.
-- Keep optimization scope local and verify impact after changes.
-
-**Red flags**
-- speed hacks added without benchmark/profiling evidence
-- micro-optimizations in non-dominant code paths
-- complexity introduced for hypothetical performance concerns
-
-## 9) Progress requires explicit acceptance
-
-**Statement**
-- Do not advance incremental delivery steps without explicit user acceptance.
-
-**Intent**
-- Prevent silent drift and ensure each increment matches user intent before moving forward.
-
-**Operational rule**
-- After each step/scenario result, request explicit acceptance.
-- If the user pushes back, revise the same step and re-validate before advancing.
-- Treat "accepted" as a completion criterion alongside technical verification.
-
-**Red flags**
-- advancing to the next step while feedback is unresolved
-- interpreting silence as approval
-- bundling multiple uncertain steps to avoid acceptance checks
-
-## Linux interface example
-
-The Linux file interface is a good deep-module mental model: a small set of core calls provides access to substantial implementation complexity. The interface remains comparatively simple while complexity is hidden behind it.
-
-## Red flags
-
-Treat these as strict warnings in planning, implementation, and review:
-
-- shallow module decomposition
-- one behavior spread across too many places without boundary benefit
-- dependency growth without clear leverage
-- hidden control flow or unclear ownership
-- unknown unknowns left unstated
-- silent broken windows in touched areas
-- premature optimization without measurement evidence
-- fancy algorithmic complexity where simpler code would suffice
-- weak data abstractions that leak internals to callers
-- advancing checkpoints without explicit user acceptance
+- claiming success without fresh evidence
+- treating silence as a product decision
+- repeated approval prompts inside unchanged scope
+- continuing after material drift

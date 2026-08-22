@@ -1,53 +1,47 @@
 # AGENTS
 
-Repository-level contract for agent behavior, mode expectations, and regression test invariants.
+Repository contract for the Planforge engineering skill suite.
 
 ## Canonical sources
 
-- Philosophy (mandatory): `docs/philosophy.md`
-- Plan Packet template (mandatory for non-trivial implementation planning): `docs/plan-packet.md`
-- Human mode matrix: `docs/modes.md`
+- Philosophy: `docs/philosophy.md`
+- Shared core: `docs/core.md`
+- Public skills: `docs/skills.md`
 
-## Mode contract (machine-readable)
+## Suite contract
 
-<!-- MODE_CONTRACT:BEGIN -->
+<!-- SUITE_CONTRACT:BEGIN -->
 ```json
 {
-  "version": 3,
-  "modes": [
+  "version": 4,
+  "suite": "planforge",
+  "coreFiles": [
+    "docs/philosophy.md",
+    "docs/core.md"
+  ],
+  "skills": [
     {
-      "id": "planforge",
-      "startCommand": "/skill:planforge",
-      "skillFile": "skills/planforge/SKILL.md",
-      "executionMode": "supervised",
-      "readOnlyUntilScopeApproval": true,
-      "requiresPlanPacket": true,
-      "requiresPhilosophy": true,
-      "checkpointApprovals": "required"
+      "id": "forge",
+      "startCommand": "/skill:forge",
+      "skillFile": "skills/forge/SKILL.md",
+      "userInvoked": true,
+      "readOnlyUntilDecision": true,
+      "decisionOptions": [
+        "implement",
+        "revise",
+        "split",
+        "stop"
+      ]
     }
   ]
 }
 ```
-<!-- MODE_CONTRACT:END -->
+<!-- SUITE_CONTRACT:END -->
 
 ## Human summary
 
-| Mode | Start command | Execution mode | Expected behavior |
-|---|---|---|---|
-| `planforge` | `/skill:planforge` | `supervised` | Approval gate on. `/pf` required for the first mutating scope, then again at review gates or scope changes. |
+| Skill | Start command | Behavior |
+|---|---|---|
+| `forge` | `/skill:forge` | Investigate cheaply, resolve material decisions, present a sized summary, then implement only when the user chooses it. |
 
-## Regression expectations
-
-Deterministic contract gate:
-- `tests/test-mode-contract.sh` must fail if any of the following regress.
-
-Live workflow gate (optional):
-- `tests/test-pi-e2e-modes.sh` validates supervised behavior with Pi + LLM on a non-trivial fixture when `PLANFORGE_RUN_PI_E2E=1`.
-
-`tests/test-mode-contract.sh` must fail if any of the following regress:
-
-- `AGENTS.md` machine contract is missing or malformed.
-- `docs/modes.md` no longer reflects the mode contract.
-- Mode skills stop referencing `docs/philosophy.md` when required.
-- Mode skills requiring Plan Packet stop referencing `docs/plan-packet.md`.
-- Approval gate extension loses command-to-execution-mode mappings.
+Planforge has no runtime approval extension, special approval command, or persistent workflow state.
