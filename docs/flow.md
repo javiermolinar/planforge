@@ -1,74 +1,59 @@
-# Planforge flow
+# Forge flow
 
-This is the canonical human-facing workflow document.
+This is the canonical human-facing workflow for the Forge skill.
 
-For principles, see `docs/philosophy.md`.
-For the machine-checkable contract, see `AGENTS.md`.
+For shared policy, see `docs/philosophy.md` and `docs/core.md`.
 
-## Default behavior
+## 1. Investigate
 
-Planforge is opinionated:
-- always plan before non-trivial implementation
-- prefer the simpler path
-- challenge overengineering firmly
-- stay single-agent by default
-- use supervised execution via `/skill:planforge`
-- require explicit approval before mutation
-- require explicit user acceptance before advancing
+Forge starts with a cheap, read-only investigation. It discovers applicable repository instructions, current behavior, likely change surfaces, relevant tests, and verification obligations.
 
-## Default workflow
+It does not ask permission to inspect and does not ask the user for facts available in the repository.
 
-- understand the task
-- investigate only as needed
-- produce the compact approval-ready Plan Packet from `docs/plan-packet.md`
-- propose review gates before first mutation approval
-- offer optional extra detail only when helpful or when risk demands expansion
-- execute only approved work and keep checkpoints legible
-- keep changes scoped and re-plan when scope changes materially
-- treat TDD as an implementation tactic, not a planning requirement
-- suggest TDD once during planning only when it would materially reduce ambiguity or de-risk a reproducible bug/regression
-- report exactly what was run
-- distinguish verified vs unverified
-- state remaining uncertainty honestly
-- require explicit user acceptance before advancing after a review gate
+The initial pass avoids dependency installation, network access, full builds, full test suites, and commands expected to change the working tree.
 
-## Approval loop
+## 2. Clarify
 
-Use `/pf` to move the supervised workflow forward.
+Forge asks only material decisions that cannot be resolved from repository evidence.
 
-- before the first mutating scope, `/pf` approves mutation
-- when a review gate is reached, `/pf` can record acceptance and approve the next scope
-- if the user pushes back or scope changes, approval is invalidated and work returns to planning
+Questions follow the current dependency-free frontier:
 
-## Review gates
+- each round contains independent decisions
+- every question includes a recommended answer
+- later rounds are recomputed from earlier answers
+- reversible implementation details receive disclosed defaults
 
-Review gates are the main supervision boundary.
+If the frontier remains broad, Forge marks the work Large and recommends splitting it rather than extending the interview indefinitely.
 
-- propose 1-3 meaningful review gates in the plan
-- prefer one final gate for small, low-risk work
-- avoid per-command approvals
-- keep the gate evidence concrete and testable
+## 3. Summarize
 
-## Branch policy
+Forge presents a compact decision summary containing:
 
-- on `main` / `master` / trunk-like branches, non-trivial implementation should move to a task branch after approval
-- the gate should block first implementation edits on trunk until a task branch exists
-- use semantic branch names when practical (`feat/`, `fix/`, `refactor/`, `docs/`, `chore/`, `test/`)
+- goal
+- current behavior and repository evidence
+- scope and non-goals
+- approach and important boundaries
+- likely change surface
+- Small, Medium, or Large change size
+- material risks or unknowns
+- verification
+- suggested slices for Large work
 
-## Rolling plans
+The user chooses **implement**, **revise**, **split**, or **stop** in ordinary language.
 
-Each branch has a lightweight rolling plan.
+## 4. Implement
 
-Typical contents:
-- current goal
-- tasks checklist
-- test table
-- backlog
-- checkpoints
-- shipment footer
+Forge remains read-only until the user chooses implementation. That decision authorizes the described scope.
 
-Planforge uses helper scripts to keep these updates deterministic and cheap. See `docs/tooling.md`.
+Forge then works through implementation and verification without intermediate approval gates. It pauses only when scope changes materially, a key assumption fails, destructive or external action becomes necessary, or the work is substantially larger than described.
 
-## Scope rule
+## 5. Report
 
-If you want a looser or faster flow, prompt directly instead of asking Planforge to behave less like itself.
+Forge reports:
+
+- what changed
+- verification performed and its result
+- checks not run
+- remaining uncertainty
+
+Completion is an evidence claim, not a confidence statement.

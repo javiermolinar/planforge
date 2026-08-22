@@ -8,55 +8,46 @@ Global install from git:
 pi install git:github.com/javiermolinar/planforge
 ```
 
-Or from a local checkout while developing:
+Or install a local checkout while developing:
 
 ```bash
 pi install /absolute/path/to/planforge
 ```
 
-`git:` sources are cached clones managed by Pi. If you want Pi to use your existing checkout directly, install by local path.
+Git sources are cached clones managed by Pi. Install by local path when Pi should use an existing checkout directly.
 
 ## Use
 
-Once installed, start with:
+Start Forge with:
 
 ```text
-/skill:planforge
+/skill:forge <engineering task>
 ```
 
-Planforge is supervised by default:
-- it stays read-only until approval
-- it expects a compact approval-ready plan packet with review gates before first mutation approval
-- use `/pf` to approve the first mutating scope
-- use `/pf` again at review gates or after scope changes
-- use `/pf status` to inspect current gate state
+Pi exposes skill commands as `/skill:<name>`. Planforge does not register a plain `/forge` alias.
 
-For workflow semantics, see `docs/flow.md`.
+Forge is user-invoked and follows this sequence:
 
-## Package management
+1. cheap automatic investigation
+2. material clarification when needed
+3. a sized decision summary
+4. an ordinary-language user decision
+5. scoped implementation and verification
 
-- `pi list` shows installed packages
-- `pi config` enables or disables package resources
-- `pi update` updates non-pinned installs
+There is no runtime approval extension, special approval command, status overlay, or persistent gate state.
 
-## Notes
+## Repository instructions
 
-- Planforge ships as a Pi package with skills under `skills/` and an approval-gate extension under `extensions/`.
-- Helper scripts live under `scripts/`.
-- Rolling plans are written under `${PLANFORGE_HOME:-~/.planforge}/plans/`.
-- For external API or benchmark work, prefer a fresh-context verification/review pass before final completion claims.
+Pi loads `AGENTS.md` or `CLAUDE.md` from the current directory and its ancestors. It does not recursively load instructions from every descendant directory.
 
-## Approval gate extension
+Forge therefore maps nested `AGENTS.md`, `AGENTS.override.md`, and `CLAUDE.md` files during investigation and reads the ones applicable to likely change paths.
 
-Planforge includes a lightweight stateful approval gate:
+## Package shape
 
-- auto-enables when you start with `/skill:planforge`
-- blocks mutating tool calls before approval
-- expects `## Proposed Review Gates` before first mutation approval
-- preserves parsed review-gate context when replanning
+Planforge ships skills under `skills/`. Shared behavior lives in `docs/philosophy.md` and `docs/core.md`, which public skills load explicitly.
 
-Before `/pf`, mutating tool calls are blocked (`edit`, `write`, and non-allowlisted `bash`). Strict read-only `curl` is allowed only for safe GET/HEAD-style requests; narrow read-only pipelines such as `git status | wc -l` are allowed, but upload/data/output flags and write-oriented shell patterns remain blocked.
+Use standard Pi package commands:
 
-## Publishing later
-
-For a public release, keep `keywords: ["pi-package"]` in `package.json` and install from git or npm once you are ready to publish.
+- `pi list`
+- `pi config`
+- `pi update --extensions`
