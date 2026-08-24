@@ -9,16 +9,17 @@ For machine-checkable package expectations, see `AGENTS.md`.
 | Skill | Invocation | Purpose |
 |---|---|---|
 | Forge | `/skill:forge` | Take an engineering task through cheap investigation, material decisions, implementation, and verification. |
+| Forge Investigate | `/skill:forge-investigate` | Answer a bounded repository question from local evidence without modifying the repository. |
 
-Forge is user-invoked. It does not activate implicitly for ordinary prompts.
+Both skills are user-invoked. They do not activate implicitly for ordinary prompts. Forge Investigate remains read-only for its entire run.
 
 ## Shared contract
 
 Every Planforge skill must:
 
 - follow `docs/philosophy.md`
-- use the investigation and decision rules in `docs/core.md`
+- use the investigation and applicable decision rules in `docs/core.md`
 - remain independent of runtime gate state
-- expose its own purpose, decision point, and completion evidence
+- expose its own purpose, stopping point, and completion evidence
 
 Future review, design, and debugging skills should reuse the core directly rather than invoking Forge or creating another orchestration layer.

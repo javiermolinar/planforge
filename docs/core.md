@@ -28,9 +28,11 @@ A normal orientation pass checks:
 - top-level structure and relevant manifests
 - likely entry points, symbols, and behavior paths
 - adjacent tests and documentation
-- build, test, generated-artifact, and CI obligations relevant to the likely change
+- build, test, generated-artifact, and CI obligations relevant to the task or likely change
 
-Follow the primary behavior path until its interfaces and verification path are clear. Deepen only when a material decision depends on more evidence.
+Follow the primary behavior path until its relevant interfaces and evidence or verification path are clear. Deepen only when a material conclusion or decision depends on more evidence.
+
+Resolve upstream decisions before investigating downstream implementation details. Do not inspect alternate toolchains, dependency caches, or detailed verification setup while an unsettled decision could make that work irrelevant. Deepen there only when feasibility is the current material decision.
 
 During the automatic pass, do not:
 
@@ -49,16 +51,16 @@ Facts available from files, tools, or existing behavior are the agent's responsi
 A question is material when different answers would change at least one of:
 
 - user-visible behavior or scope
-- public interfaces or compatibility
+- public interfaces, user-facing identifiers or invocation commands, and compatibility
 - data ownership or persistence
 - security, external effects, or operational risk
 - verification and acceptance criteria
 
-Use a sensible default for reversible implementation details and disclose that default in the summary.
+Use a sensible default for reversible implementation details and disclose that default in the skill's output. When the user has not supplied a public name and multiple plausible names would create different user-facing contracts, ask instead of choosing silently.
 
 ## 4. Ask the material decision frontier
 
-Model unresolved decisions as a dependency tree. The frontier contains decisions whose prerequisites are settled.
+When the task contains unresolved material decisions, model them as a dependency tree. The frontier contains decisions whose prerequisites are settled.
 
 Ask the current frontier as a numbered round. Each question must include a recommended answer. Do not place two questions in the same round when one answer could change the other question.
 
@@ -66,52 +68,55 @@ Prefer one round of three to five questions. Use a second round only when earlie
 
 After each response, recompute the frontier. Allow short answers by number and allow the user to accept the recommended defaults together.
 
-If the frontier remains broad, treat that as evidence that the work is Large and recommend splitting it instead of extending the interview indefinitely.
+If the frontier remains broad, recommend splitting the task instead of extending the interview indefinitely. When the task contemplates a repository change, treat that breadth as evidence that the change is Large.
 
 ## 5. Know when investigation is ready
 
-Investigation is ready for a decision when the skill can state:
+Investigation is ready for the skill's output when it can state:
 
-- the intended outcome and non-goals
-- current behavior with repository evidence
-- likely change surface and important boundaries
+- the bounded question or intended outcome and its non-goals
+- current behavior or relevant facts with repository evidence
+- important interfaces and boundaries
 - applicable repository obligations
-- a credible verification path
-- remaining material decisions or explicit assumptions
-- a Small, Medium, or Large change size
+- a credible evidence or verification path
+- remaining material decisions, unknowns, or explicit assumptions
 
-If no material questions remain, proceed directly to the skill's decision output.
+Promise checks only when cheap evidence supports that they can run within the proposed effects. Do not inspect dependency caches, alternate toolchains, or setup details solely to prove future verification availability. If availability remains uncertain, label it as an assumption or blocked check; deepen only when feasibility determines the current decision.
+
+When the task contemplates a repository change, the skill must also know the likely change surface and a Small, Medium, or Large change size.
+
+If no unresolved material decisions remain, proceed directly to the skill's output.
 
 ## 6. Size the change
 
-Use change size, not time estimates.
+Size contemplated repository changes, not investigation effort or elapsed time.
 
 - **Small:** one bounded behavior area, known interfaces, low uncertainty, and one direct verification path.
 - **Medium:** multiple files or components, a non-trivial interface or behavior choice, or moderate verification cost.
 - **Large:** cross-component or public contract changes, migrations, external boundaries, high uncertainty, or multiple independently valuable outcomes.
 
-Large is an advisory signal, not a blocker. Recommend independently verifiable slices and let the user choose.
+If no change is contemplated, omit change size. Large is an advisory signal, not a blocker. Recommend independently verifiable slices and let the user choose.
 
 ## 7. Control drift without ceremony
 
-A user's decision authorizes the described scope. Do not add intermediate approval gates.
+For a skill that can mutate the repository, a user's decision authorizes the described scope. Do not add intermediate approval gates. A read-only skill never treats an investigation request as authorization to mutate.
 
 Pause and return to the user only when:
 
 - requested behavior or scope changes materially
 - a key assumption proves false
 - a destructive, irreversible, privileged, or external action becomes necessary
-- the work is substantially larger or riskier than the decision summary described
+- the work is substantially larger or riskier than the agreed scope or decision summary described
 
-Ordinary implementation discoveries inside the agreed scope do not require another decision.
+Ordinary implementation discoveries inside an agreed mutating scope do not require another decision.
 
 ## 8. Report evidence honestly
 
 Completion reports must separate:
 
-- changed behavior
-- verification performed and its result
+- findings or changed behavior
+- evidence or verification performed and its result
 - checks not run
 - remaining uncertainty or follow-up work
 
-Never turn an unverified expectation into a success claim.
+Read-only skills distinguish facts from inferences. Mutating skills identify what changed. Never turn an unverified expectation into a finding or success claim.

@@ -25,7 +25,7 @@ pi install /absolute/path/to/planforge
 
 ## Forge
 
-Forge is the first public skill in the suite:
+Forge is the delivery skill in the suite:
 
 ```text
 /skill:forge Build a small read-only Hacker News CLI. Keep it minimal.
@@ -43,12 +43,22 @@ Forge will:
 
 Forge remains read-only until the user chooses implementation. Ordinary language is sufficient; there is no special approval command.
 
+## Forge Investigate
+
+Forge Investigate answers a bounded repository question without modifying the repository:
+
+```text
+/skill:forge-investigate Trace how configuration flows through this project.
+```
+
+It traces the behavior path that owns the answer, supports material conclusions with local repository evidence, separates facts from inferences, and reports unknowns honestly. It does not use the network, create report files, or transition into implementation. Use Forge when the next step includes changes.
+
 ## Shared core
 
 Every Planforge skill follows:
 
 - [`docs/philosophy.md`](docs/philosophy.md) — engineering principles
-- [`docs/core.md`](docs/core.md) — cheap investigation, material decisions, sizing, drift, and evidence
+- [`docs/core.md`](docs/core.md) — cheap investigation, material decisions, conditional change sizing, drift, and evidence
 - [`docs/skills.md`](docs/skills.md) — public skill catalog
 
 The package intentionally ships no runtime extension or persistent workflow state. Future review, design, and debugging skills will reuse the same core.
