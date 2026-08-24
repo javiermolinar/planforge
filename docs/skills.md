@@ -10,8 +10,9 @@ For machine-checkable package expectations, see `AGENTS.md`.
 |---|---|---|
 | Forge | `/skill:forge` | Take an engineering task through cheap investigation, material decisions, implementation, and verification. |
 | Forge Investigate | `/skill:forge-investigate` | Answer a bounded repository question from local evidence without modifying the repository. |
+| Forge Review | `/skill:forge-review` | Review a pull request or local diff against intended functionality, repository obligations, and verification evidence. |
 
-Both skills are user-invoked. They do not activate implicitly for ordinary prompts. Forge Investigate remains read-only for its entire run.
+All skills are user-invoked. They do not activate implicitly for ordinary prompts. Forge Investigate and Forge Review remain read-only for their entire runs.
 
 ## Shared contract
 
@@ -22,4 +23,4 @@ Every Planforge skill must:
 - remain independent of runtime gate state
 - expose its own purpose, stopping point, and completion evidence
 
-Future review, design, and debugging skills should reuse the core directly rather than invoking Forge or creating another orchestration layer.
+Future design and debugging skills should reuse the core directly rather than invoking Forge or creating another orchestration layer.

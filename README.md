@@ -53,6 +53,17 @@ Forge Investigate answers a bounded repository question without modifying the re
 
 It traces the behavior path that owns the answer, supports material conclusions with local repository evidence, separates facts from inferences, and reports unknowns honestly. It does not use the network, create report files, or transition into implementation. Use Forge when the next step includes changes.
 
+## Forge Review
+
+Forge Review evaluates a GitHub pull request or local diff against the functionality it is meant to deliver:
+
+```text
+/skill:forge-review https://github.com/owner/repository/pull/123
+/skill:forge-review Review the current branch diff.
+```
+
+It pins the change set, reconstructs intended behavior from primary sources, traces functional coverage beyond the changed hunks, and distinguishes mandatory fixes from optional improvements. It remains read-only and recommends **approve**, **revise**, or **blocked**.
+
 ## Shared core
 
 Every Planforge skill follows:
@@ -61,7 +72,7 @@ Every Planforge skill follows:
 - [`docs/core.md`](docs/core.md) — cheap investigation, material decisions, conditional change sizing, drift, and evidence
 - [`docs/skills.md`](docs/skills.md) — public skill catalog
 
-The package intentionally ships no runtime extension or persistent workflow state. Future review, design, and debugging skills will reuse the same core.
+The package intentionally ships no runtime extension or persistent workflow state. Future design and debugging skills will reuse the same core.
 
 ## Status
 

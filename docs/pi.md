@@ -30,7 +30,14 @@ Start a read-only repository investigation with Forge Investigate:
 /skill:forge-investigate <bounded repository question>
 ```
 
-Pi exposes skill commands as `/skill:<name>`. Planforge does not register plain `/forge` or `/forge-investigate` aliases.
+Review a GitHub pull request or local diff with Forge Review:
+
+```text
+/skill:forge-review <pull request URL>
+/skill:forge-review Review the current branch diff.
+```
+
+Pi exposes skill commands as `/skill:<name>`. Planforge does not register plain `/forge`, `/forge-investigate`, or `/forge-review` aliases.
 
 Forge is user-invoked and follows this sequence:
 
@@ -41,6 +48,8 @@ Forge is user-invoked and follows this sequence:
 5. scoped implementation and verification
 
 Forge Investigate is also user-invoked. It stays read-only, traces the repository path that owns the answer, cites local evidence, and stops without implementation.
+
+Forge Review is user-invoked and read-only. It pins either a PR or local diff, reviews intended functionality before code quality, categorizes mandatory and optional findings, and recommends approve, revise, or blocked.
 
 There is no runtime approval extension, special approval command, status overlay, or persistent gate state. Read-only behavior is an instruction-level contract.
 

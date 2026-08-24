@@ -13,7 +13,7 @@ Repository contract for the Planforge engineering skill suite.
 <!-- SUITE_CONTRACT:BEGIN -->
 ```json
 {
-  "version": 5,
+  "version": 6,
   "suite": "planforge",
   "coreFiles": [
     "docs/philosophy.md",
@@ -40,6 +40,27 @@ Repository contract for the Planforge engineering skill suite.
       "userInvoked": true,
       "readOnly": true,
       "output": "investigation-report"
+    },
+    {
+      "id": "forge-review",
+      "startCommand": "/skill:forge-review",
+      "skillFile": "skills/forge-review/SKILL.md",
+      "userInvoked": true,
+      "readOnly": true,
+      "modes": [
+        "pull-request",
+        "diff"
+      ],
+      "output": "review-report",
+      "findingDispositions": [
+        "must-fix",
+        "optional"
+      ],
+      "recommendations": [
+        "approve",
+        "revise",
+        "blocked"
+      ]
     }
   ]
 }
@@ -52,5 +73,6 @@ Repository contract for the Planforge engineering skill suite.
 |---|---|---|
 | `forge` | `/skill:forge` | Investigate cheaply, resolve material decisions, present a sized summary, then implement only when the user chooses it. |
 | `forge-investigate` | `/skill:forge-investigate` | Answer a bounded repository question from local evidence without modifying the repository. |
+| `forge-review` | `/skill:forge-review` | Review a pull request or local diff against intended functionality and verification evidence without modifying it. |
 
 Planforge has no runtime approval extension, special approval command, or persistent workflow state. Read-only behavior is enforced by the skill contract rather than a runtime gate.
