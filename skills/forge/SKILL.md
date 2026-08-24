@@ -18,6 +18,11 @@ Before starting, read and follow:
 - Investigate automatically before asking the user repository-answerable questions.
 - Keep the initial investigation cheap and read-only.
 - Ask only material decisions, in dependency-aware rounds, with a recommendation for each question.
+- Treat unspecified public names and invocation commands as material interface decisions when multiple plausible choices exist.
+- Treat replacement of a working implementation as a strategy that needs a concrete outcome or constraint, not as self-justifying scope.
+- Do not research downstream dependencies, alternate toolchains, or detailed verification setup before the user chooses implementation, unless feasibility is needed for the current recommendation.
+- Promise verification only when cheap evidence shows it can run inside the proposed scope.
+- Give one explicit recommended decision in every decision summary.
 - Do not mutate the repository until the user chooses implementation from a decision summary.
 - Accept ordinary language such as `implement`, `go ahead`, or an unambiguous equivalent. Do not require a special command.
 - Once implementation starts, continue through the agreed scope without review gates.
@@ -30,7 +35,7 @@ Before starting, read and follow:
 
 Apply the cheap investigation pass from `docs/core.md`. Establish current behavior, likely change surface, repository obligations, and a credible verification path.
 
-Do not ask permission to inspect. Do not install dependencies, use the network, run a full suite, or execute commands expected to change the working tree during this pass.
+Do not ask permission to inspect. Do not install dependencies, use the network, run a full suite, or execute commands expected to change the working tree during this pass. Do not design an alternate implementation or inventory its dependency and toolchain details before the user chooses implementation, unless feasibility determines the current recommendation.
 
 ### 2. Clarify material decisions
 
@@ -43,7 +48,11 @@ If material decisions remain, ask the current decision frontier as a numbered ro
 
 Questions in one round must not depend on one another. Recompute after the user's answers. Let the user reply by number or accept all recommended defaults.
 
-Before a question round, state only the repository findings needed to understand those decisions. If no material questions remain, skip directly to the decision summary.
+Before a question round, state only the repository findings needed to understand those decisions. Public commands, routes, flags, package names, and other compatibility-bearing identifiers belong on the frontier when the user has not already chosen them. Internal names usually do not.
+
+A request to replace a working implementation specifies a strategy, not why its replacement cost is justified. If no concrete outcome or constraint is supplied, recommend **revise** to establish one. If the stated benefit lacks evidence, recommend **revise** or **stop** and name the cheapest evidence that could change the recommendation. Once the user makes an informed choice after those costs and alternatives are visible, honor it without repeated pushback.
+
+If no material questions remain, skip directly to the decision summary.
 
 ### 3. Present the decision summary
 
@@ -52,38 +61,32 @@ Use this compact structure:
 ```md
 ## Decision Summary
 
-### Goal
-- intended outcome
+### Outcome
+- goal, included scope, and explicit non-goals
 
-### Current Behavior / Evidence
-- relevant repository facts and source paths
+### Evidence
+- current behavior and relevant source paths
 
-### Scope
-- included work
-- explicit non-goals
+### Proposed Change
+- approach, important boundaries, likely files, and repository obligations
 
-### Approach
-- implementation outline and important boundaries
-
-### Likely Change Surface
-- files, modules, interfaces, and repository obligations
-
-### Change Size
-- Small, Medium, or Large, with the main reasons
-
-### Risks / Unknowns
-- only material items; omit when empty
+### Size / Risks
+- Small, Medium, or Large with the main reasons
+- material risks or unknowns only
 
 ### Verification
-- concrete checks and expected evidence
+- checks that will be run and their expected evidence
+- blocked or optional checks with a reason, only when they materially limit confidence
 
-### Suggested Slices
+### Slices
 - include only for Large work
+
+**Recommended:** **<decision>** — one sentence tied to the evidence above.
 
 Choose: **implement**, **revise**, **split**, or **stop**.
 ```
 
-Do not estimate elapsed time. Large work receives a split recommendation but remains the user's decision.
+Keep the five main sections short. Omit empty risk and blocked-check bullets, and omit Slices unless the work is Large. Replace `<decision>` with exactly one of **implement**, **revise**, **split**, or **stop**. Do not estimate elapsed time or promise checks that need unavailable setup, access, credentials, or an unapproved external effect. Large work receives a split recommendation but remains the user's decision.
 
 ### 4. Follow the user's decision
 
