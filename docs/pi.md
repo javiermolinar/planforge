@@ -42,10 +42,12 @@ Pi exposes skill commands as `/skill:<name>`. Planforge does not register plain 
 Forge is user-invoked and follows this sequence:
 
 1. cheap automatic investigation
-2. material clarification when needed
-3. a sized decision summary
+2. change sizing
+3. one compact proposal for Small work, or material clarification and a full summary for Medium and Large work
 4. an ordinary-language user decision
 5. scoped implementation and verification
+
+For a Small proposal, `go` accepts the stated recommendations and authorizes its scope without another decision round. Medium and Large work retains the dependency-aware question frontier and full **implement**, **revise**, **split**, or **stop** decision.
 
 Forge Investigate is also user-invoked. It stays read-only, traces the repository path that owns the answer, cites local evidence, and stops without implementation.
 

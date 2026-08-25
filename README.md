@@ -35,13 +35,13 @@ Forge will:
 
 1. investigate the repository automatically and cheaply
 2. separate discoverable facts from user decisions
-3. ask dependency-aware material questions, with recommended defaults
-4. present a decision summary with Small, Medium, or Large change size
-5. let the user choose **implement**, **revise**, **split**, or **stop**
+3. size the contemplated change
+4. present one compact proposal for Small work, or run the full decision frontier and summary for Medium and Large work
+5. wait for an ordinary-language implementation decision
 6. implement the agreed scope without intermediate approval gates
 7. report verified versus unverified results
 
-Forge remains read-only until the user chooses implementation. Ordinary language is sufficient; there is no special approval command.
+For a Small proposal, `go` accepts its stated recommendations and authorizes that scope; there is no separate question round or formal decision summary. Medium and Large changes retain the full **implement**, **revise**, **split**, or **stop** flow. Forge remains read-only until the user authorizes implementation, and it requires no special approval command.
 
 ## Forge Investigate
 

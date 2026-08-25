@@ -13,7 +13,7 @@ Repository contract for the Planforge engineering skill suite.
 <!-- SUITE_CONTRACT:BEGIN -->
 ```json
 {
-  "version": 6,
+  "version": 7,
   "suite": "planforge",
   "coreFiles": [
     "docs/philosophy.md",
@@ -26,6 +26,12 @@ Repository contract for the Planforge engineering skill suite.
       "skillFile": "skills/forge/SKILL.md",
       "userInvoked": true,
       "readOnlyUntilDecision": true,
+      "decisionPaths": {
+        "Small": "compact-proposal",
+        "Medium": "decision-frontier-and-summary",
+        "Large": "decision-frontier-and-summary"
+      },
+      "smallChangeAuthorization": "go-or-unambiguous-equivalent",
       "decisionOptions": [
         "implement",
         "revise",
@@ -71,7 +77,7 @@ Repository contract for the Planforge engineering skill suite.
 
 | Skill | Start command | Behavior |
 |---|---|---|
-| `forge` | `/skill:forge` | Investigate cheaply, resolve material decisions, present a sized summary, then implement only when the user chooses it. |
+| `forge` | `/skill:forge` | Investigate cheaply, use a compact proposal for Small changes or the full decision flow for Medium and Large changes, then implement only when the user authorizes it. |
 | `forge-investigate` | `/skill:forge-investigate` | Answer a bounded repository question from local evidence without modifying the repository. |
 | `forge-review` | `/skill:forge-review` | Review a pull request or local diff against intended functionality and verification evidence without modifying it. |
 

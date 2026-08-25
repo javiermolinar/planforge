@@ -62,11 +62,20 @@ Use a sensible default for reversible implementation details and disclose that d
 
 When the task contains unresolved material decisions, model them as a dependency tree. The frontier contains decisions whose prerequisites are settled.
 
-Ask the current frontier as a numbered round. Each question must include a recommended answer. Do not place two questions in the same round when one answer could change the other question.
+For Medium and Large changes, ask the current frontier as a numbered round. Each question must include a recommended answer. Do not place two questions in the same round when one answer could change the other question. If no material decisions remain, skip the question round but keep the skill's full decision output.
 
 Prefer one round of three to five questions. Use a second round only when earlier answers reveal new material decisions. This is a soft target, not a reason to hide uncertainty.
 
 After each response, recompute the frontier. Allow short answers by number and allow the user to accept the recommended defaults together.
+
+A mutating skill may replace the separate question round and full decision output with one compact proposal when all of these conditions hold:
+
+- the contemplated change is Small
+- one recommended implementation can be stated without hiding meaningful alternatives, material risk, or dependent decisions
+- the bounded outcome, relevant evidence, proposed change, accepted choices or defaults, and direct verification path fit in that proposal
+- the recommendation is to implement
+
+The proposal must identify the change as Small. An ordinary-language acceptance such as `go` accepts the stated recommendations and authorizes only the described scope. Do not follow that acceptance with another decision summary. If the work is Medium or Large, or a compact proposal would conceal a material choice, use the full decision path.
 
 If the frontier remains broad, recommend splitting the task instead of extending the interview indefinitely. When the task contemplates a repository change, treat that breadth as evidence that the change is Large.
 
@@ -106,7 +115,7 @@ Pause and return to the user only when:
 - requested behavior or scope changes materially
 - a key assumption proves false
 - a destructive, irreversible, privileged, or external action becomes necessary
-- the work is substantially larger or riskier than the agreed scope or decision summary described
+- the work substantially exceeds the scope or risk described in the authorized compact proposal or decision summary
 
 Ordinary implementation discoveries inside an agreed mutating scope do not require another decision.
 
