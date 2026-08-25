@@ -17,9 +17,11 @@ Before starting, read and follow:
 
 - Remain repository-read-only for the entire run. Do not edit files, change branches or refs, install dependencies, create commits, or submit a GitHub review.
 - Prefer a fresh session. Treat prior conversation and implementation claims as leads, not evidence.
+- Apply the same evidence standard regardless of author seniority, familiarity, or AI involvement.
 - Pin the exact review target before judging it. If the target changes during review, return **blocked** because the evidence is stale.
 - Review intended functionality before code quality. The diff is the target, but relevant callers, data paths, tests, and documentation are evidence.
 - Support every finding with a requirement, repository rule, concrete behavior path, or verification result.
+- Cite a readily available same-repository precedent when it clarifies a finding or suggestion. Do not search broadly for one or require the same implementation unless a repository contract does.
 - Report a few material findings. Omit weak style preferences and issues that predate the change unless the change worsens them.
 - If the target is too broad for a complete review, return **blocked** and propose behavior-aligned slices. Do not sample part of it and recommend approval.
 - Do not implement fixes. Describe the required outcome or optional improvement.
@@ -75,6 +77,8 @@ For each material intended behavior:
 - check user-visible behavior, errors, compatibility, persistence, external effects, and scope creep
 - inspect surrounding code when a diff hunk alone cannot establish behavior
 
+Probe only assumptions that could materially affect correctness or operations, such as nullability, data shape, cardinality, concurrency, or load. Prefer automated behavior evidence, then empirical operational data, then documented invariants. If local evidence cannot resolve a material assumption, state a precise question under **Residual Uncertainty**. Do not convert an unanswered question into a defect without a concrete failure path.
+
 Then look for concrete regressions, invalid assumptions, security or privacy failures, data loss, crashes, and unsafe failure paths. Do not report a hypothetical concern without naming the scenario and code path that make it possible.
 
 ## 3. Review verification
@@ -124,7 +128,7 @@ Use **must-fix** when evidence shows:
 - material behavior lacks credible verification
 - the change introduces an unapproved external effect or scope expansion
 
-A must-fix finding must cite the violated requirement, invariant, repository rule, or concrete failure path.
+A must-fix finding must cite the violated requirement, invariant, repository rule, or concrete failure path. Before assigning **must-fix**, name the concrete harm, material verification gap, or violated obligation that justifies merge delay and re-review. If deferral would not create material harm, leave material behavior unverified, or violate an obligation, classify the item **optional** or omit it.
 
 ### Optional
 
